@@ -161,7 +161,7 @@ class MeterPageState extends State<MeterPage> {
 
   void _onData(NoiseReading r) {
     setState(() {
-      _db = r.meanDecibel ?? 0.0;
+      _db = r.meanDecibel ;
       _maxDb = math.max(_maxDb, _db);
 
       final inRange = _db >= _minTarget && _db <= _maxTarget;
@@ -273,3 +273,6 @@ class MeterPageState extends State<MeterPage> {
     super.dispose();
   }
 }
+
+typedef MyApp = DbToneApp;
+// This is a basic Flutter widget test.
