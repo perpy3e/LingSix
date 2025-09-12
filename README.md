@@ -1,4 +1,4 @@
-# flutter_app
+# lingsix
 
 A new Flutter project.
 
