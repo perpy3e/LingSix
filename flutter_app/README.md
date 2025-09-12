@@ -18,16 +18,13 @@ samples, guidance on mobile development, and a full API reference.
 
 
 ## command
-npx @biomejs/biome format --write
+- npx @biomejs/biome format --write
 
-----
-
-flutter doctor (เช้คอุปกร)
-flutter devices (เช้คเลข iosเวลาจะรันกับเครื่อง)
-flutter run -d (รัน)
-flutter run -d emulator-5554
- (android studioโหลดก่อนอันนี้)
-flutter run -d ตามด้วยเลข ios
+- flutter doctor (เช้คอุปกร)
+- flutter devices (เช้คเลข iosเวลาจะรันกับเครื่อง)
+- flutter run -d (รัน)
+- flutter run -d emulator-5554 (android studioโหลดก่อนอันนี้)
+- flutter run -d ตามด้วยเลข ios
 
 
 ## Firebase Services
@@ -43,7 +40,7 @@ Add dependencies -> firebase_core: ^3.0.0
 firebase_auth: ^5.0.0
 run -> flutter pub get
 
-IOS
+### IOS
 1) ios/Runner.xcodeproj -> Bundle identifier 
 ชื่อไว้ใส่เวลา create app firebase
 2) download 
@@ -53,7 +50,7 @@ from firebase
 path ->
 ios/Runner/GoogleService-Info.plist
 
-Android
+### Android
 1) เอาชื่อมากจาก application id ใน build.gradle.kts 
 2) หลังใส่ชื่อในfirebase download google-services.json 
 แล้วก็ใส่ในpath -> android/app/google-services.json
