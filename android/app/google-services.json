@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "406340157010",
+    "project_id": "lingsix-tester",
+    "storage_bucket": "lingsix-tester.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:406340157010:android:a5a539e76cd21e524ce98b",
+        "android_client_info": {
+          "package_name": "com.example.flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATc1EKxtGqT6JBRV2r0jFB31ZIRIjxiOs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

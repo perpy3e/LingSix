@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:noise_meter/noise_meter.dart';
 import 'package:volume_controller/volume_controller.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const DbToneApp());
 }
 
@@ -20,11 +25,186 @@ class DbToneApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const HomePage(),
       debugShowCheckedModeBanner: false,
+      home: const AuthGate(),
     );
   }
 }
+
+/// Check if user is logged in
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasData) {
+          return const HomePage(); // your app
+        }
+        return const LoginPage();
+      },
+    );
+  }
+}
+
+//////////////////////
+/// LOGIN PAGE
+//////////////////////
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final emailOrUsernameController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  Future<void> _login() async {
+    final emailOrUsername = emailOrUsernameController.text.trim();
+    final password = passwordController.text.trim();
+
+    try {
+      String email = emailOrUsername;
+
+      // If user typed a username, lookup email in Firestore
+      if (!emailOrUsername.contains('@')) {
+        final snap = await FirebaseFirestore.instance
+            .collection('users')
+            .where('username', isEqualTo: emailOrUsername)
+            .limit(1)
+            .get();
+
+        if (snap.docs.isEmpty) {
+          throw FirebaseAuthException(
+              code: 'user-not-found', message: 'No user found with that username');
+        }
+        email = snap.docs.first['email'];
+      }
+
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Login failed')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Login")),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            TextField(
+              controller: emailOrUsernameController,
+              decoration: const InputDecoration(labelText: "Email or Username"),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: "Password"),
+              obscureText: true,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: _login, child: const Text("Login")),
+            TextButton(
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const SignUpPage()));
+              },
+              child: const Text("Don't have an account? Sign Up"),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+//////////////////////
+/// SIGNUP PAGE
+//////////////////////
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
+  @override
+  State<SignUpPage> createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
+  final emailController = TextEditingController();
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  Future<void> _signup() async {
+    final email = emailController.text.trim();
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
+
+    try {
+      // Create user in Firebase Auth
+      final cred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      // Save username + email in Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(cred.user!.uid)
+          .set({
+        'username': username,
+        'email': email,
+      });
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Sign Up failed')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Sign Up")),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
+            TextField(
+              controller: usernameController,
+              decoration: const InputDecoration(labelText: "Username"),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: "Password"),
+              obscureText: true,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: _signup, child: const Text("Sign Up")),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+//////////////////////
+/// YOUR ORIGINAL APP
+//////////////////////
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -36,6 +216,14 @@ class HomePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Ling Six Tester'),
+          actions: [
+            IconButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+              },
+              icon: const Icon(Icons.logout),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(icon: Icon(Icons.multitrack_audio), text: 'Ling Six'),
@@ -51,6 +239,9 @@ class HomePage extends StatelessWidget {
   }
 }
 
+//////////////////////
+/// LING SIX PAGE (same as your code)
+//////////////////////
 class LingSixPage extends StatefulWidget {
   const LingSixPage({super.key});
 
@@ -61,7 +252,6 @@ class LingSixPage extends StatefulWidget {
 class _LingSixPageState extends State<LingSixPage> {
   final AudioPlayer _player = AudioPlayer();
 
-  // Ling Six sounds
   final Map<String, String> _sounds = {
     "M": "assets/ling6/m.wav",
     "OO": "assets/ling6/oo.wav",
@@ -71,19 +261,13 @@ class _LingSixPageState extends State<LingSixPage> {
     "S": "assets/ling6/s.wav",
   };
 
-Future<void> _playSound(
-    String label, String path, double volume, double minDb, double maxDb) async {
-  // Change device volume (sync, no await)
-  VolumeController().setVolume(volume);
-
-  // Update meter lock target
-  MeterPageState.setTarget(minDb, maxDb);
-
-  // Play sound
-  await _player.stop();
-  await _player.play(AssetSource(path.replaceFirst("assets/", "")));
-}
-
+  Future<void> _playSound(
+      String label, String path, double volume, double minDb, double maxDb) async {
+    VolumeController().setVolume(volume);
+    MeterPageState.setTarget(minDb, maxDb);
+    await _player.stop();
+    await _player.play(AssetSource(path.replaceFirst("assets/", "")));
+  }
 
   @override
   void dispose() {
@@ -111,14 +295,12 @@ Future<void> _playSound(
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: () =>
-                          _playSound(label, path, 0.5, 55, 65), // ~60 dB
+                      onPressed: () => _playSound(label, path, 0.5, 55, 65),
                       child: const Text("Play @ 60 dB"),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
-                      onPressed: () =>
-                          _playSound(label, path, 1.0, 95, 105), // ~100 dB
+                      onPressed: () => _playSound(label, path, 1.0, 95, 105),
                       child: const Text("Play @ 100 dB"),
                     ),
                   ],
@@ -132,6 +314,9 @@ Future<void> _playSound(
   }
 }
 
+//////////////////////
+/// METER PAGE (same as your code)
+//////////////////////
 class MeterPage extends StatefulWidget {
   const MeterPage({super.key});
 
@@ -161,7 +346,7 @@ class MeterPageState extends State<MeterPage> {
 
   void _onData(NoiseReading r) {
     setState(() {
-      _db = r.meanDecibel ;
+      _db = r.meanDecibel ?? 0.0;
       _maxDb = math.max(_maxDb, _db);
 
       final inRange = _db >= _minTarget && _db <= _maxTarget;
@@ -273,6 +458,3 @@ class MeterPageState extends State<MeterPage> {
     super.dispose();
   }
 }
-
-typedef MyApp = DbToneApp;
-// This is a basic Flutter widget test.

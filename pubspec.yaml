@@ -1,4 +1,4 @@
-name: lingsix
+name: flutter_app
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -38,6 +38,9 @@ dependencies:
   noise_meter: ^5.1.0
   audioplayers: ^6.1.0
   volume_controller: ^2.0.7
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
 
 dev_dependencies:
   flutter_test:
