@@ -5,6 +5,7 @@ import 'package:volume_controller/volume_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,7 @@ class AuthGate extends StatelessWidget {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         if (snapshot.hasData) {
-          return const SoundSettingsPage(); // After login → go here
+          return const SoundSettingsPage();
         }
         return const LoginPage();
       },
@@ -97,33 +98,83 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  /// Google Sign-In
+  Future<void> _signInWithGoogle() async {
+    try {
+      print("Starting Google Sign-In...");
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        print("User cancelled Google Sign-In");
+        return; // user canceled
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Save user info in Firestore if new
+      if (userCred.additionalUserInfo!.isNewUser) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCred.user!.uid)
+            .set({
+          'username': userCred.user!.displayName ?? "",
+          'email': userCred.user!.email,
+        });
+      }
+
+      print("Google Sign-In successful: ${userCred.user!.email}");
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Google Sign-In failed')),
+      );
+    } catch (e) {
+      print("Google Sign-In error: $e");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Google Sign-In error')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Login")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: emailOrUsernameController,
-              decoration: const InputDecoration(labelText: "Email or Username"),
-            ),
-            TextField(
-              controller: passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: _login, child: const Text("Login")),
-            TextButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const SignUpPage()));
-              },
-              child: const Text("Don't have an account? Sign Up"),
-            )
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              TextField(
+                controller: emailOrUsernameController,
+                decoration: const InputDecoration(labelText: "Email or Username"),
+              ),
+              TextField(
+                controller: passwordController,
+                decoration: const InputDecoration(labelText: "Password"),
+                obscureText: true,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: _login, child: const Text("Login")),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: _signInWithGoogle,
+                icon: const Icon(Icons.login),
+                label: const Text("Sign in with Google"),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const SignUpPage()));
+                },
+                child: const Text("Don't have an account? Sign Up"),
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -174,35 +225,35 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Sign Up")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: usernameController,
-              decoration: const InputDecoration(labelText: "Username"),
-            ),
-            TextField(
-              controller: passwordController,
-              decoration: const InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: _signup, child: const Text("Sign Up")),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: "Email"),
+              ),
+              TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(labelText: "Username"),
+              ),
+              TextField(
+                controller: passwordController,
+                decoration: const InputDecoration(labelText: "Password"),
+                obscureText: true,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: _signup, child: const Text("Sign Up")),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-//////////////////////
 /// SOUND SETTINGS PAGE
-//////////////////////
 class SoundSettingsPage extends StatefulWidget {
   const SoundSettingsPage({super.key});
 
@@ -212,17 +263,13 @@ class SoundSettingsPage extends StatefulWidget {
 
 class _SoundSettingsPageState extends State<SoundSettingsPage> {
   final AudioPlayer _player = AudioPlayer();
-
-  double? _selectedDb; // store chosen dB
-
-  // dB options
+  double? _selectedDb;
   final List<double> _dbOptions = [40, 50, 60, 70];
 
   Future<void> _testSound(double db) async {
-    // play a sample "ss" sound at chosen db (replace with your asset)
-    VolumeController().setVolume(db / 100); 
+    VolumeController().setVolume(db / 100);
     await _player.stop();
-    await _player.play(AssetSource("ling6/s.wav"));
+    await _player.play(AssetSource("ling6/ee.wav"));
   }
 
   void _lockDb() {
@@ -234,15 +281,13 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Locked!"),
-        content: Text("You selected ${_selectedDb!.toInt()} dB "
-            "(range $min–$max dB)"),
+        title: const Text("ล็อคระดับเสียง!"),
+        content: Text(
+            "คุณได้เลือกระดับเสียง ${_selectedDb!.toInt()} dB (range $min–$max dB)"),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text("OK"),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("ตกลง"),
           )
         ],
       ),
@@ -268,10 +313,7 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
           children: [
             const Text("เลือกระดับเสียง",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-
             const SizedBox(height: 20),
-
-            // Options like big friendly buttons
             Wrap(
               spacing: 12,
               children: _dbOptions.map((db) {
@@ -287,20 +329,17 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                     });
                   },
                   child: Text("${db.toInt()}",
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold)),
                 );
               }).toList(),
             ),
-
             const SizedBox(height: 30),
-
             ElevatedButton(
               onPressed: _selectedDb != null ? () => _testSound(_selectedDb!) : null,
               child: const Text("ทดสอบระดับเสียง"),
             ),
-
             const SizedBox(height: 20),
-
             ElevatedButton(
               onPressed: _lockDb,
               child: const Text("ล็อกระดับเสียง"),
