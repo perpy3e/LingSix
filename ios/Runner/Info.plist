@@ -11,7 +11,7 @@
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>com.example.flutterdbapp</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -54,7 +54,7 @@
     <string>Editor</string>
     <key>CFBundleURLSchemes</key>
     <array>
-      <string>com.googleusercontent.apps.406340157010-b43d5fec528be2e54ce98b</string>
+      <string>com.googleusercontent.apps.406340157010-j7rukhv5mugeklnn09b2reduiovkl09k</string>
     </array>
   </dict>
 </array>

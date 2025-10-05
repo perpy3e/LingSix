@@ -98,14 +98,24 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  /// Google Sign-In
+  /// ✅ Google Sign-In (works on iOS and Android)
   Future<void> _signInWithGoogle() async {
     try {
       print("Starting Google Sign-In...");
-      final googleUser = await GoogleSignIn().signIn();
+
+      // ⚙️ Use your iOS client ID from GoogleService-Info.plist
+      const iosClientId =
+          '406340157010-j7rukhv5mugeklnn09b2reduiovkl09k.apps.googleusercontent.com';
+
+      final googleSignIn = GoogleSignIn(
+        clientId: iosClientId,
+        scopes: ['email', 'profile'],
+      );
+
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         print("User cancelled Google Sign-In");
-        return; // user canceled
+        return;
       }
 
       final googleAuth = await googleUser.authentication;
@@ -127,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
 
-      print("Google Sign-In successful: ${userCred.user!.email}");
+      print("✅ Google Sign-In successful: ${userCred.user!.email}");
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Google Sign-In failed')),
@@ -135,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       print("Google Sign-In error: $e");
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Google Sign-In error')));
+          .showSnackBar(const SnackBar(content: Text('Google Sign-In error')));
     }
   }
 
@@ -253,7 +263,9 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
+//////////////////////
 /// SOUND SETTINGS PAGE
+//////////////////////
 class SoundSettingsPage extends StatefulWidget {
   const SoundSettingsPage({super.key});
 
