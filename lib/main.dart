@@ -98,12 +98,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  /// ✅ Google Sign-In (works on iOS and Android)
+  /// Google sign in importanttttttttttt
   Future<void> _signInWithGoogle() async {
     try {
       print("Starting Google Sign-In...");
 
-      // ⚙️ Use your iOS client ID from GoogleService-Info.plist
+      // ***********
       const iosClientId =
           '406340157010-j7rukhv5mugeklnn09b2reduiovkl09k.apps.googleusercontent.com';
 
