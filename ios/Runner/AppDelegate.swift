@@ -21,9 +21,9 @@ import GoogleSignIn
       if let error = error {
         print("Error restoring previous sign-in: \(error.localizedDescription)")
       } else if let user = user {
-        print("✅ Restored previous Google user: \(user.profile?.email ?? "unknown")")
+        print("Restored previous Google user: \(user.profile?.email ?? "unknown")")
       } else {
-        print("ℹ️ No previous Google sign-in found")
+        print("No previous Google sign-in found")
       }
     }
 

@@ -108,46 +108,55 @@ class _LoginPageState extends State<LoginPage> {
           '406340157010-j7rukhv5mugeklnn09b2reduiovkl09k.apps.googleusercontent.com';
 
       final googleSignIn = GoogleSignIn(
-        clientId: iosClientId,
-        scopes: ['email', 'profile'],
-      );
+      clientId: iosClientId,
+      scopes: ['email', 'profile'],
+    );
 
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        print("User cancelled Google Sign-In");
-        return;
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
-
-      // Save user info in Firestore if new
-      if (userCred.additionalUserInfo!.isNewUser) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCred.user!.uid)
-            .set({
-          'username': userCred.user!.displayName ?? "",
-          'email': userCred.user!.email,
-        });
-      }
-
-      print("✅ Google Sign-In successful: ${userCred.user!.email}");
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Google Sign-In failed')),
-      );
-    } catch (e) {
-      print("Google Sign-In error: $e");
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Google Sign-In error')));
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      print("User cancelled Google Sign-In");
+      return;
     }
+
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
+
+    
+    final userDoc = FirebaseFirestore.instance.collection('users').doc(userCred.user!.uid);
+
+    final docSnapshot = await userDoc.get();
+
+    if (!docSnapshot.exists) {
+  
+      await userDoc.set({
+        'username': userCred.user!.displayName ?? "",
+        'email': userCred.user!.email,
+        'password': null, 
+        'isGoogleSignIn': true, 
+      });
+    } else {
+      await userDoc.update({
+        'email': userCred.user!.email,
+        'username': userCred.user!.displayName ?? "",
+      });
+    }
+
+    print("✅ Google Sign-In successful: ${userCred.user!.email}");
+  } on FirebaseAuthException catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.message ?? 'Google Sign-In failed')),
+    );
+  } catch (e) {
+    print("Google Sign-In error: $e");
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Google Sign-In error')));
   }
+}
 
   @override
   Widget build(BuildContext context) {
