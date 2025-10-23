@@ -38,10 +38,12 @@ dependencies:
   noise_meter: ^5.1.0
   audioplayers: ^6.1.0
   volume_controller: ^2.0.7
-  firebase_core: ^3.0.0
-  firebase_auth: ^5.0.0
-  cloud_firestore: ^5.0.0
+  firebase_core: ^3.3.0
+  firebase_auth: ^5.1.0
+  cloud_firestore: ^5.2.0
   google_sign_in: ^6.2.1
+  email_validator: ^2.1.17
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:
