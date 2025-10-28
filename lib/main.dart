@@ -191,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
         email = snap.docs.first['email'];
       }
 
-      // Temporarily sign in to send verification email
+      //Temporarily sign in to send verification email
       final methods =
           await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
       if (methods.isEmpty) {
