@@ -63,12 +63,12 @@ class _LingSixPageState extends State<LingSixPage> {
 
   // Ling Six sounds
   final Map<String, String> _sounds = {
-    "M": "assets/ling6/m.wav",
-    "OO": "assets/ling6/oo.wav",
-    "AH": "assets/ling6/ah.wav",
-    "EE": "assets/ling6/ee.wav",
-    "SH": "assets/ling6/sh.wav",
-    "S": "assets/ling6/s.wav",
+    "M": "assets/sound/m.wav",
+    "OO": "assets/sound/oo.wav",
+    "AH": "assets/sound/ah.wav",
+    "EE": "assets/sound/ee.wav",
+    "SH": "assets/sound/sh.wav",
+    "S": "assets/sound/s.wav",
   };
 
 Future<void> _playSound(

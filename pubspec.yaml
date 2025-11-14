@@ -57,12 +57,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/ling6/m.wav
-    - assets/ling6/oo.wav
-    - assets/ling6/ah.wav
-    - assets/ling6/ee.wav
-    - assets/ling6/sh.wav
-    - assets/ling6/s.wav
+    - assets/sound/m.wav
+    - assets/sound/oo.wav
+    - assets/sound/ah.wav
+    - assets/sound/ee.wav
+    - assets/sound/sh.wav
+    - assets/sound/s.wav
 
 
 
