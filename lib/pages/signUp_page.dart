@@ -23,15 +23,23 @@ class _SignUpPageState extends State<SignUpPage> {
       final user = await _authService.signUp(email, username, password);
       if (user == null) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content:
-              Text("Verification email sent. Please check your inbox.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Verification email sent. Please check your inbox."),
+        ),
+      );
 
-      Navigator.pushReplacementNamed(context, '/verify-pending',
-          arguments: user.email);
+      // To verify pending page & back to sign up
+      Navigator.pushNamed(
+     context,
+     '/verify-pending',
+    arguments: user.email,
+);
+
     } catch (e) {
+      final msg = e.toString().replaceFirst("Exception: ", "");
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+          .showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -57,7 +65,10 @@ class _SignUpPageState extends State<SignUpPage> {
               obscureText: true,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: _signup, child: const Text("Sign Up")),
+            ElevatedButton(
+              onPressed: _signup,
+              child: const Text("Sign Up"),
+            ),
           ],
         ),
       ),

@@ -15,12 +15,17 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
   Timer? _timer;
   bool _isResending = false;
   String? _email;
+  bool _timerStarted = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _email = ModalRoute.of(context)?.settings.arguments as String?;
-    _startCheckingVerification();
+
+    if (!_timerStarted) {
+      _timerStarted = true;
+      _email = ModalRoute.of(context)?.settings.arguments as String?;
+      _startCheckingVerification();
+    }
   }
 
   void _startCheckingVerification() {
@@ -61,7 +66,16 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Verify Your Email")),
+      appBar: AppBar(
+        title: const Text("Verify Your Email"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+            Navigator.pop(context);
+          },
+        ),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20),

@@ -15,6 +15,12 @@ class FirestoreService {
     return snap.docs.first;
   }
 
+  // Get user by UID 
+  Future<DocumentSnapshot?> getUserByUid(String uid) async {
+    final doc = await _db.collection('users').doc(uid).get();
+    return doc.exists ? doc : null;
+  }
+
   // Add new user
   Future<void> addUser(String uid, String email, String username,
       {bool isGoogleSignIn = false}) async {
