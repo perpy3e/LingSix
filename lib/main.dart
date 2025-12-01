@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
+import 'pages/auth_gate.dart';
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
 import 'pages/verify_pending_page.dart';
 import 'pages/verify_success_page.dart';
 import 'pages/forgot_password_page.dart';
 import 'pages/sound_settings_page.dart';
+import 'pages/home_page.dart';
+import 'pages/quiz_menu_page.dart';
+import 'pages/quiz_page.dart';
+import 'pages/quiz_summary_page.dart';
+import 'pages/dashboard_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,55 +33,50 @@ class DbToneApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
-      routes: {
-        '/': (_) => const AuthGate(),
-        '/login': (_) => const LoginPage(),
-        '/signup': (_) => const SignUpPage(),
-        '/verify-pending': (_) => const VerifyPendingPage(),
-        '/verify-success': (_) => const VerifySuccessPage(),
-        '/forgot-password': (_) => const ForgotPasswordPage(),
-        '/sound-settings': (_) => const SoundSettingsPage(),
-      },
-    );
-  }
-}
-
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // Splash/loading
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/':
+            return MaterialPageRoute(builder: (_) => const AuthGate());
+          case '/login':
+            return MaterialPageRoute(builder: (_) => const LoginPage());
+          case '/signup':
+            return MaterialPageRoute(builder: (_) => const SignUpPage());
+          case '/verify-pending':
+            final user = settings.arguments as User?;
+            if (user == null) throw Exception('User argument is required');
+            return MaterialPageRoute(
+              builder: (_) => VerifyPendingPage(user: user),
+            );
+          case '/verify-success':
+            return MaterialPageRoute(builder: (_) => const VerifySuccessPage());
+          case '/forgot-password':
+            return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
+          case '/sound-settings':
+            return MaterialPageRoute(builder: (_) => const SoundSettingsPage());
+          case '/home':
+            return MaterialPageRoute(builder: (_) => const HomePage());
+          case '/quiz-menu':
+            return MaterialPageRoute(builder: (_) => const QuizMenuPage());
+          case '/quiz':
+            final args = settings.arguments as Map<String, dynamic>?;
+            final quizId = args?['quizId'] as String? ?? 'quiz1';
+            return MaterialPageRoute(
+              builder: (_) => QuizPage(quizId: quizId),
+            );
+          case '/quiz-summary':
+            final args = settings.arguments as Map<String, dynamic>?;
+            return MaterialPageRoute(
+              builder: (_) => QuizSummaryPage(
+                correct: args?['correct'] as int? ?? 0,
+                total: args?['total'] as int? ?? 0,
+                quizId: args?['quizId'] as String? ?? 'quiz1',
+              ),
+            );
+          case '/dashboard':
+            return MaterialPageRoute(builder: (_) => const DashboardPage());
+          default:
+            return null;
         }
-
-        final user = snapshot.data;
-
-        if (user == null) {
-          // Not logged in
-          return const LoginPage();
-        }
-
-        // User logged in but not verified
-        if (!user.emailVerified) {
-          // Redirect to verify pending page
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, '/verify-pending',
-                arguments: user.email);
-          });
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        // Verified user → main app
-        return const SoundSettingsPage();
       },
     );
   }

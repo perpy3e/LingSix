@@ -5,7 +5,6 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirestoreService _firestore = FirestoreService();
 
-  // ========= ERROR HANDLER =========
   String _handleAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'email-already-in-use':
@@ -25,102 +24,66 @@ class AuthService {
     }
   }
 
-  // ========= LOGIN =========
   Future<User?> login(String emailOrUsername, String password) async {
     try {
       String email = emailOrUsername;
-
-      // Username login
       if (!emailOrUsername.contains('@')) {
         final userDoc = await _firestore.getUserByUsername(emailOrUsername);
-
         if (userDoc == null) {
-          throw FirebaseAuthException(
-            code: 'user-not-found',
-            message: 'No user found with that username.',
-          );
+          throw FirebaseAuthException(code: 'user-not-found', message: 'No user found with that username.');
         }
-
         email = userDoc['email'];
       }
-
-      final cred = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
+      final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return cred.user;
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthError(e));
     }
   }
 
-  // ========= SIGN UP =========
   Future<User?> signUp(String email, String username, String password) async {
     try {
-      final cred = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
+      final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       // Create Firestore user entry
-      await _firestore.addUser(
-        cred.user!.uid,
-        email,
-        username,
-        isGoogleSignIn: false,
-      );
-
+      await _firestore.addUser(cred.user!.uid, email, username, isGoogleSignIn: false);
+      // Initialize game stats for the new user
+      await _firestore.initUserStats(cred.user!.uid);
       // Send verification email
       await cred.user!.sendEmailVerification();
-
       return cred.user;
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthError(e));
     }
   }
 
-  // ========= GOOGLE SIGN-IN =========
   Future<User?> signInWithGoogle({required String clientId}) async {
-    throw UnimplementedError(
-        "GoogleSignIn must be called from the UI page. Only pass the credential to AuthService.");
+    throw UnimplementedError("GoogleSignIn must be called from the UI page. Only pass the credential to AuthService.");
   }
 
-  // ========= LOGOUT =========
   Future<void> logout() async {
     await _auth.signOut();
   }
 
-  // ========= PASSWORD RESET =========
   Future<void> sendPasswordReset(String emailOrUsername) async {
     try {
       String email = emailOrUsername;
-
       if (!emailOrUsername.contains('@')) {
         final userDoc = await _firestore.getUserByUsername(emailOrUsername);
-
         if (userDoc == null) {
-          throw FirebaseAuthException(
-            code: 'user-not-found',
-            message: 'No user found with that username.',
-          );
+          throw FirebaseAuthException(code: 'user-not-found', message: 'No user found with that username.');
         }
-
         email = userDoc['email'];
       }
-
       await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthError(e));
     }
   }
 
-  // ========= RESEND VERIFICATION =========
   Future<void> resendVerification(User user) async {
     await user.sendEmailVerification();
   }
 
-  // ========= RELOAD USER =========
   Future<User?> reloadUser(User user) async {
     await user.reload();
     return _auth.currentUser;

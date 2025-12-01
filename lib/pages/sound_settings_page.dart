@@ -13,18 +13,30 @@ class SoundSettingsPage extends StatefulWidget {
 class _SoundSettingsPageState extends State<SoundSettingsPage> {
   final AudioPlayer _player = AudioPlayer();
   final AuthService _authService = AuthService();
+  late final VolumeController _volumeController;
+
   double? _selectedDb;
   final List<double> _dbOptions = [40, 50, 60, 70];
 
+  @override
+  void initState() {
+    super.initState();
+    _volumeController = VolumeController.instance; // fixed
+    _volumeController.showSystemUI = true;
+  }
+
   Future<void> _testSound(double db) async {
-    VolumeController().setVolume(db / 100);
-    await _player.stop();
-    await _player.play(AssetSource("ling6/ee.wav"));
+    try {
+      await _volumeController.setVolume(db / 100);
+      await _player.stop();
+      await _player.play(AssetSource("ling6/ee.wav"));
+    } catch (e) {
+      debugPrint("Volume/Sound error: $e");
+    }
   }
 
   void _lockDb() {
     if (_selectedDb == null) return;
-
     final min = _selectedDb! - 5;
     final max = _selectedDb! + 5;
 
@@ -33,10 +45,13 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
       builder: (_) => AlertDialog(
         title: const Text("Lock Volume!"),
         content: Text(
-            "You selected ${_selectedDb!.toInt()} dB (range $min–$max dB)"),
+          "You selected ${_selectedDb!.toInt()} dB (range $min – $max dB)",
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text("OK"))
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
         ],
       ),
     );
@@ -52,40 +67,60 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Sound Settings"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () =>
+              Navigator.pushNamedAndRemoveUntil(context, '/home', (_) => false),
+        ),
         actions: [
-          IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+          )
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          const Text("Select Volume Level",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            children: _dbOptions.map((db) {
-              final selected = _selectedDb == db;
-              return ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: selected ? Colors.amber : Colors.blue,
-                  minimumSize: const Size(70, 70),
-                ),
-                onPressed: () => setState(() => _selectedDb = db),
-                child: Text("${db.toInt()}",
+        child: Column(
+          children: [
+            const Text(
+              "Select Volume Level",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 12,
+              children: _dbOptions.map((db) {
+                final selected = _selectedDb == db;
+                return ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: selected ? Colors.amber : Colors.blue,
+                    minimumSize: const Size(70, 70),
+                  ),
+                  onPressed: () => setState(() => _selectedDb = db),
+                  child: Text(
+                    "${db.toInt()}",
                     style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold)),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: _selectedDb != null ? () => _testSound(_selectedDb!) : null,
-            child: const Text("Test Sound"),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(onPressed: _lockDb, child: const Text("Lock Volume")),
-        ]),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed:
+                  _selectedDb != null ? () => _testSound(_selectedDb!) : null,
+              child: const Text("Test Sound"),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _lockDb,
+              child: const Text("Lock Volume"),
+            ),
+          ],
+        ),
       ),
     );
   }

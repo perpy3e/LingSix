@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 
 class VerifyPendingPage extends StatefulWidget {
-  const VerifyPendingPage({super.key});
+  final User user; // required user
+
+  const VerifyPendingPage({super.key, required this.user});
 
   @override
   State<VerifyPendingPage> createState() => _VerifyPendingPageState();
@@ -14,18 +16,12 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
   final _authService = AuthService();
   Timer? _timer;
   bool _isResending = false;
-  String? _email;
   bool _timerStarted = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (!_timerStarted) {
-      _timerStarted = true;
-      _email = ModalRoute.of(context)?.settings.arguments as String?;
-      _startCheckingVerification();
-    }
+  void initState() {
+    super.initState();
+    _startCheckingVerification();
   }
 
   void _startCheckingVerification() {
@@ -43,9 +39,8 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
   Future<void> _resendEmail() async {
     setState(() => _isResending = true);
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && !user.emailVerified) {
-        await _authService.resendVerification(user);
+      if (!widget.user.emailVerified) {
+        await _authService.resendVerification(widget.user);
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Verification email resent")));
       }
@@ -65,6 +60,7 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final email = widget.user.email ?? "your email";
     return Scaffold(
       appBar: AppBar(
         title: const Text("Verify Your Email"),
@@ -79,21 +75,28 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.mark_email_unread, size: 100, color: Colors.blue),
-            const SizedBox(height: 20),
-            Text("A verification link has been sent to:\n$_email",
-                textAlign: TextAlign.center, style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 20),
-            ElevatedButton(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.mark_email_unread, size: 100, color: Colors.blue),
+              const SizedBox(height: 20),
+              Text(
+                "A verification link has been sent to:\n$email",
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
                 onPressed: _isResending ? null : _resendEmail,
-                child: Text(_isResending ? "Sending..." : "Resend Verification Email")),
-            const SizedBox(height: 20),
-            const Text(
-              "Once verified, this page will automatically continue.",
-              textAlign: TextAlign.center,
-            ),
-          ]),
+                child: Text(_isResending ? "Sending..." : "Resend Verification Email"),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Once verified, this page will automatically continue.",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
