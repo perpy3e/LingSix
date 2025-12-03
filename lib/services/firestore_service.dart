@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final _db = FirebaseFirestore.instance;
 
-  // ========== existing methods ==========
+
   // Get user by username
   Future<DocumentSnapshot?> getUserByUsername(String username) async {
     final snap = await _db.collection('users').where('username', isEqualTo: username).limit(1).get();
@@ -34,8 +34,8 @@ class FirestoreService {
     }
   }
 
-  // ========== new functions for game analytics ==========
-  /// Initialize stats documents for a newly registered user.
+  // ========== game analytics ==========
+ 
   Future<void> initUserStats(String uid) async {
     final userRef = _db.collection('users').doc(uid);
     final gameStatsRef = userRef.collection('game_stats').doc('summary');
@@ -48,7 +48,7 @@ class FirestoreService {
       'quiz2': {'last_played': null, 'total_played': 0, 'total_correct': 0, 'cooldown_end': null},
     }, SetOptions(merge: true));
 
-    // Initialize six sounds counters
+    // six sounds counter
     batch.set(lingsixRef, {
       'ee': {'correct': 0, 'total': 0},
       'oo': {'correct': 0, 'total': 0},
@@ -58,13 +58,12 @@ class FirestoreService {
       'ah': {'correct': 0, 'total': 0},
     }, SetOptions(merge: true));
 
-    // add an empty recent_scores doc (optional)
-    // No-op: quiz_results collection exists if needed when we write to it.
+    
 
     await batch.commit();
   }
 
-  /// Record a quiz result. `perSound` is an optional breakdown map `{soundKey: correctCount}`.
+  /// record a quiz per sound
   Future<void> recordQuizResult(String uid, String quizId, int correct, int total, Map<String, int>? perSound) async {
     final userRef = _db.collection('users').doc(uid);
     final gameSummaryRef = userRef.collection('game_stats').doc('summary');
@@ -73,7 +72,7 @@ class FirestoreService {
     final now = Timestamp.now();
     final batch = _db.batch();
 
-    // Add a result document
+    // Add result document
     batch.set(quizResultsRef, {
       'quiz_id': quizId,
       'date': now,
@@ -98,7 +97,7 @@ class FirestoreService {
     quizSummary['last_played'] = now;
 
     if (quizId == 'quiz2') {
-      // Set cooldown_end to now + 24h
+      // 24 hrs countdown
       final cooldownEnd = Timestamp.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch + Duration(hours: 24).inMilliseconds);
       quizSummary['cooldown_end'] = cooldownEnd;
     }
@@ -117,7 +116,7 @@ class FirestoreService {
         final oldCorrect = (old['correct'] ?? 0) as int;
         final oldTotal = (old['total'] ?? 0) as int;
         final newCorrect = oldCorrect + correctCount;
-        final newTotal = oldTotal + total; // conservative: add total to each sound (adjust later)
+        final newTotal = oldTotal + total; 
         ldata[sound] = {'correct': newCorrect, 'total': newTotal};
       });
       batch.set(lingsixRef, ldata, SetOptions(merge: true));
@@ -126,8 +125,7 @@ class FirestoreService {
     await batch.commit();
   }
 
-  /// Check whether the user can play quiz (important for quiz2 cooldown).
-  /// Returns an object with `canPlay: bool` and `availableAt: DateTime?`
+  /// count 24 hrs cooldown for next quiz
   Future<_CanPlayResult> canPlayQuiz(String uid, String quizId) async {
     final gameSummaryRef = _db.collection('users').doc(uid).collection('game_stats').doc('summary');
     final snap = await gameSummaryRef.get();
@@ -145,7 +143,7 @@ class FirestoreService {
     }
   }
 
-  /// Fetch aggregated user stats for dashboard (simple shape)
+  /// dashboard stats
   Future<Map<String, dynamic>> fetchUserStats(String uid) async {
     final gameSummaryRef = _db.collection('users').doc(uid).collection('game_stats').doc('summary');
     final lingsixRef = _db.collection('users').doc(uid).collection('lingsix_stats').doc('summary');
@@ -176,3 +174,28 @@ class _CanPlayResult {
   final DateTime? availableAt;
   _CanPlayResult({required this.canPlay, required this.availableAt});
 }
+
+/**
+users (collection)
+ └── <uid> (document)
+      ├── email: string
+      ├── username: string
+      ├── password: string (nullable if using Google Sign-In)
+      ├── isGoogleSignIn: bool
+      ├── game_stats (subcollection)
+      │    └── summary (document)
+      │         ├── quiz1: { last_played, total_played, total_correct }
+      │         └── quiz2: { last_played, total_played, total_correct, cooldown_end }
+      ├── lingsix_stats (subcollection)
+      │    └── summary (document)
+      │         ├── ee: { correct, total }
+      │         ├── oo: { correct, total }
+      │         └── ...
+      └── quiz_results (subcollection)
+           ├── <autoId1>: { quiz_id, date, correct, total, per_sound }
+           ├── <autoId2>: ...
+
+
+
+
+ */

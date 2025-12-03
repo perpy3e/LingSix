@@ -44,9 +44,9 @@ class AuthService {
   Future<User?> signUp(String email, String username, String password) async {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      // Create Firestore user entry
+      // Create Firestore 
       await _firestore.addUser(cred.user!.uid, email, username, isGoogleSignIn: false);
-      // Initialize game stats for the new user
+      //  the new user
       await _firestore.initUserStats(cred.user!.uid);
       // Send verification email
       await cred.user!.sendEmailVerification();
