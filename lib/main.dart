@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'pages/login_page.dart';
-import 'pages/signup_page.dart';
+import 'pages/auth/login_page.dart';
+import 'pages/auth/signUp_page.dart';
 import 'pages/verify_pending_page.dart';
 import 'pages/verify_success_page.dart';
-import 'pages/forgot_password_page.dart';
-import 'pages/sound_settings_page.dart';
+import 'pages/auth/forgot_password_page.dart';
+import 'pages/settings/sound_settings_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const DbToneApp());
+  runApp(const MyApp());
 }
 
-class DbToneApp extends StatelessWidget {
-  const DbToneApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ling Six Tester',
+      title: "LingSix",
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
@@ -43,7 +43,6 @@ class DbToneApp extends StatelessWidget {
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
