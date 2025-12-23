@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:volume_controller/volume_controller.dart';
-import '../services/auth_service.dart';
+import '../../services/auth_service.dart';
 
 class SoundSettingsPage extends StatefulWidget {
   const SoundSettingsPage({super.key});

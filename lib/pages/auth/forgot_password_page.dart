@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import '../../services/auth_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -18,6 +18,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     try {
       await _authService.sendPasswordReset(input);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Password reset email sent to $input")));
       Navigator.pop(context);
