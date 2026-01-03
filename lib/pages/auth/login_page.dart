@@ -73,7 +73,6 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
   // -------------------------------------------------------------
   // GOOGLE SIGN-IN
   // -------------------------------------------------------------
