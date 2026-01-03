@@ -17,7 +17,7 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
   final List<double> _dbOptions = [40, 50, 60, 70];
 
   Future<void> _testSound(double db) async {
-    VolumeController().setVolume(db / 100);
+    await VolumeController.instance.setVolume(db / 100);
     await _player.stop();
     await _player.play(AssetSource("ling6/ee.wav"));
   }
@@ -43,9 +43,21 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
   }
 
   Future<void> _logout() async {
+  try {
     await _authService.logout();
+    if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+  } catch (e) {
+    debugPrint('Logout Error: $e'); // แสดง Error ใน Console ของคนเขียนโค้ด
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('เกิดข้อผิดพลาด: ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง'),
+        backgroundColor: Colors.red, // สีพื้นหลังแดงสื่อถึง Error
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -33,6 +33,7 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
       await _authService.reloadUser(user);
+      if (!mounted) return;
       if (user.emailVerified) {
         _timer?.cancel();
         Navigator.pushReplacementNamed(context, '/verify-success');
@@ -46,14 +47,18 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && !user.emailVerified) {
         await _authService.resendVerification(user);
+        if (!mounted) return;
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Verification email resent")));
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
-      setState(() => _isResending = false);
+      if (mounted) {
+        setState(() => _isResending = false);
+      }
     }
   }
 

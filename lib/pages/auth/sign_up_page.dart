@@ -22,6 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
     try {
       final user = await _authService.signUp(email, username, password);
       if (user == null) return;
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -37,6 +38,7 @@ class _SignUpPageState extends State<SignUpPage> {
 );
 
     } catch (e) {
+      if (!mounted) return;
       final msg = e.toString().replaceFirst("Exception: ", "");
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(msg)));

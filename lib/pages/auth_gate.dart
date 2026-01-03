@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'settings/sound_settings_page.dart';
+import 'home/home_page.dart';
 import 'auth/login_page.dart';
 
 class AuthGate extends StatelessWidget {
@@ -15,7 +15,7 @@ class AuthGate extends StatelessWidget {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         if (snapshot.hasData) {
-          return const SoundSettingsPage();
+          return const StartPage();
         }
         return const LoginPage();
       },
