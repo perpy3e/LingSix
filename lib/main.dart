@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'app/theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'pages/auth/login_page.dart';
-import 'pages/auth/signUp_page.dart';
+import 'pages/auth/sign_up_page.dart';
 import 'pages/verify_pending_page.dart';
 import 'pages/verify_success_page.dart';
 import 'pages/auth/forgot_password_page.dart';
+import 'package:lingsix/pages/home/home_page.dart';
 import 'pages/settings/sound_settings_page.dart';
 
 void main() async {
@@ -22,9 +25,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "LingSix",
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
+      theme: AppTheme.lightTheme.copyWith(
+        textTheme: GoogleFonts.notoSansThaiLoopedTextTheme(
+          AppTheme.lightTheme.textTheme,
+        ),
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
@@ -35,6 +39,7 @@ class MyApp extends StatelessWidget {
         '/verify-pending': (_) => const VerifyPendingPage(),
         '/verify-success': (_) => const VerifySuccessPage(),
         '/forgot-password': (_) => const ForgotPasswordPage(),
+        '/start-page': (_) => const StartPage(),
         '/sound-settings': (_) => const SoundSettingsPage(),
       },
     );
@@ -66,8 +71,11 @@ class AuthGate extends StatelessWidget {
         if (!user.emailVerified) {
           // Redirect to verify pending page
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, '/verify-pending',
-                arguments: user.email);
+            Navigator.pushReplacementNamed(
+              context,
+              '/verify-pending',
+              arguments: user.email,
+            );
           });
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -75,7 +83,7 @@ class AuthGate extends StatelessWidget {
         }
 
         // Verified user → main app
-        return const SoundSettingsPage();
+        return const StartPage();
       },
     );
   }
