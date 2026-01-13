@@ -8,7 +8,12 @@ import 'pages/auth/login_page.dart';
 import 'pages/auth/sign_up_page.dart';
 import 'pages/verify_pending_page.dart';
 import 'pages/verify_success_page.dart';
+
 import 'pages/auth/forgot_password_page.dart';
+import 'pages/auth/infodata_page.dart';
+
+import 'pages/profile/profile_page.dart';
+
 import 'package:lingsix/pages/home/home_page.dart';
 import 'pages/settings/sound_settings_page.dart';
 
@@ -41,6 +46,8 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (_) => const ForgotPasswordPage(),
         '/start-page': (_) => const StartPage(),
         '/sound-settings': (_) => const SoundSettingsPage(),
+        '/profile': (_) => ProfilePage(),
+        '/infodata': (_) => InfoDataPage(),
       },
     );
   }
