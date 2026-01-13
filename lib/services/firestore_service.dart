@@ -3,7 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final _db = FirebaseFirestore.instance;
 
-  // Get user by username
+  // ------------------------------
+  // GET USER BY USERNAME
+  // ------------------------------
   Future<DocumentSnapshot?> getUserByUsername(String username) async {
     final snap = await _db
         .collection('users')
@@ -15,31 +17,75 @@ class FirestoreService {
     return snap.docs.first;
   }
 
-  // Get user by UID 
+  // ------------------------------
+  // GET USER BY UID
+  // ------------------------------
   Future<DocumentSnapshot?> getUserByUid(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     return doc.exists ? doc : null;
   }
 
-  // Add new user
-  Future<void> addUser(String uid, String email, String username,
-      {bool isGoogleSignIn = false}) async {
+  // ------------------------------
+  // BASIC USER (LOGIN / GOOGLE)
+  // ------------------------------
+Future<void> addUser(
+  String uid,
+  String email,
+  String username, {
+  bool isGoogleSignIn = false,
+}) async {
+  await _db.collection('users').doc(uid).set({
+    'email': email,
+    'username': username,
+    'isGoogleSignIn': isGoogleSignIn,
+
+    'firstName': null,
+    'lastName': null,
+    'gender': null,
+    'birthday': null,
+
+    // gg
+    'profileCompleted': false,
+
+    'createdAt': FieldValue.serverTimestamp(),
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+}
+
+
+  // ------------------------------
+  // FULL USER (SIGN UP)
+  // ------------------------------
+  Future<void> createUser({
+    required String uid,
+    required String email,
+    required String username,
+    required bool isGoogleSignIn,
+    String? firstName,
+    String? lastName,
+    String? gender,
+    DateTime? birthday,
+  }) async {
     await _db.collection('users').doc(uid).set({
       'email': email,
       'username': username,
-      'password': null,
       'isGoogleSignIn': isGoogleSignIn,
+
+      'firstName': firstName,
+      'lastName': lastName,
+      'gender': gender,
+      'birthday': birthday != null ? Timestamp.fromDate(birthday) : null,
+
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  // Update existing user info
-  Future<void> updateUser(String uid, {String? email, String? username}) async {
-    final Map<String, dynamic> data = {};
-    if (email != null) data['email'] = email;
-    if (username != null) data['username'] = username;
-
-    if (data.isNotEmpty) {
-      await _db.collection('users').doc(uid).update(data);
-    }
+  // ------------------------------
+  // UPDATE USER
+  // ------------------------------
+  Future<void> updateUser(String uid, Map<String, dynamic> data) async {
+    data['updatedAt'] = FieldValue.serverTimestamp();
+    await _db.collection('users').doc(uid).update(data);
   }
 }

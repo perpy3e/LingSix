@@ -73,53 +73,69 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
   // -------------------------------------------------------------
   // GOOGLE SIGN-IN
   // -------------------------------------------------------------
-  Future<void> _googleLogin() async {
-    setState(() => _isGoogleLoading = true);
+Future<void> _googleLogin() async {
+  setState(() => _isGoogleLoading = true);
 
-    try {
-      final googleUser = await GoogleSignIn.instance.authenticate();
+  try {
+    final googleUser = await GoogleSignIn.instance.authenticate();
+    final googleAuth = googleUser.authentication;
 
-      final googleAuth = googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      idToken: googleAuth.idToken,
+    );
 
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
+    final userCred =
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+    final user = userCred.user;
+    if (user == null) throw Exception('Google user is null');
+
+    final userDoc = await _firestore.getUserByUid(user.uid);
+
+    // 🆕 NEW USER
+    if (userDoc == null) {
+      await _firestore.addUser(
+        user.uid,
+        user.email ?? '',
+        user.displayName ?? '',
+        isGoogleSignIn: true,
       );
 
-      final userCred = await FirebaseAuth.instance.signInWithCredential(
-        credential,
-      );
-
-      final user = userCred.user;
-      if (user == null) throw Exception('Google user is null');
-
-      final userDoc = await _firestore.getUserByUid(user.uid);
-
-      if (userDoc == null) {
-        await _firestore.addUser(
-          user.uid,
-          user.email ?? '',
-          user.displayName ?? '',
-          isGoogleSignIn: true,
-        );
-      }
-
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/start-page');
-    } catch (e) {
-      if (!mounted) return;
-      _showError('Google Sign-In failed\n$e');
-    } finally {
-      if (mounted) setState(() => _isGoogleLoading = false);
+      Navigator.pushReplacementNamed(context, '/infodata');
+      return;
     }
-  }
 
+    final data = userDoc.data() as Map<String, dynamic>;
+
+    // new sign-in
+    if (data['profileCompleted'] != true) {
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/infodata');
+      return;
+    }
+
+    // profile completed
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/start-page');
+  } catch (e) {
+    if (!mounted) return;
+    _showError('Google Sign-In failed\n$e');
+  } finally {
+    if (mounted) setState(() => _isGoogleLoading = false);
+  }
+}
+
+
+  
   void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   // -------------------------------------------------------------
@@ -143,7 +159,6 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 40),
 
-                  // Logo or App Name
                   Text(
                     'LingSix',
                     textAlign: TextAlign.center,
@@ -151,7 +166,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Subtitle
                   Text(
                     'Welcome back',
                     textAlign: TextAlign.center,
@@ -159,7 +173,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 60),
 
-                  // Email/Username TextField
                   CustomTextField(
                     controller: _emailOrUsernameController,
                     hintText: 'Email or Username',
@@ -168,7 +181,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Password TextField
                   CustomTextField(
                     controller: _passwordController,
                     hintText: 'Password',
@@ -177,7 +189,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -192,7 +203,6 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 24),
 
-                  // Login Button
                   CustomButton(
                     text: 'Login',
                     onPressed: _login,
@@ -200,7 +210,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Divider with "OR"
                   Row(
                     children: [
                       Expanded(child: Divider()),
@@ -209,9 +218,9 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           'OR',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.yellow700,
-                            fontWeight: FontWeight.w500,
-                          ),
+                                color: AppColors.yellow700,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ),
                       Expanded(child: Divider()),
@@ -231,7 +240,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                   const SizedBox(height: 32),
 
-                  // Sign Up Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -247,9 +255,6 @@ class _LoginPageState extends State<LoginPage> {
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 decoration: TextDecoration.underline,
-                                decorationColor: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.color,
                               ),
                         ),
                       ),
