@@ -281,11 +281,22 @@ Future<void> _googleLogin() async {
                         onTap: () => Navigator.pushNamed(context, '/signup'),
                         child: Text(
                           'Sign Up',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                              ),
+                          style: (() {
+                            final base = Theme.of(context).textTheme.bodyMedium;
+                            final color = base?.color ?? Theme.of(context).colorScheme.onSurface;
+                            return base?.copyWith(
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: color,
+                                ) ??
+                                TextStyle(
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: color,
+                                );
+                          })(),
                         ),
                       ),
                     ],
