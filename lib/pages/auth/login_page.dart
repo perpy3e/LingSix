@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 
-import '../../app/theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../components/textfields/textfield.dart';
@@ -23,6 +22,8 @@ class _LoginPageState extends State<LoginPage> {
   final _firestore = FirestoreService();
   bool _isLoading = false;
   bool _isGoogleLoading = false;
+  String? _emailOrUsernameError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -31,17 +32,32 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  void _clearErrors() {
+    setState(() {
+      _emailOrUsernameError = null;
+      _passwordError = null;
+    });
+  }
+
   // -------------------------------------------------------------
   // EMAIL / PASSWORD LOGIN
   // -------------------------------------------------------------
   Future<void> _login() async {
+    _clearErrors();
     final emailOrUsername = _emailOrUsernameController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (emailOrUsername.isEmpty || password.isEmpty) {
-      _showError('Please fill in all fields');
-      return;
+    // Validate fields
+    bool hasError = false;
+    if (emailOrUsername.isEmpty) {
+      setState(() => _emailOrUsernameError = 'Please enter email or username');
+      hasError = true;
     }
+    if (password.isEmpty) {
+      setState(() => _passwordError = 'Please enter password');
+      hasError = true;
+    }
+    if (hasError) return;
 
     setState(() => _isLoading = true);
 
@@ -68,7 +84,18 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacementNamed(context, '/start-page');
     } catch (e) {
       if (!mounted) return;
-      _showError(e.toString());
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      // Show specific field errors based on error message
+      if (errorMsg.toLowerCase().contains('user not found') ||
+          errorMsg.toLowerCase().contains('username') ||
+          errorMsg.toLowerCase().contains('email')) {
+        setState(() => _emailOrUsernameError = errorMsg);
+      } else if (errorMsg.toLowerCase().contains('password') ||
+          errorMsg.toLowerCase().contains('incorrect')) {
+        setState(() => _passwordError = errorMsg);
+      } else {
+        _showError(errorMsg);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -178,6 +205,7 @@ Future<void> _googleLogin() async {
                     hintText: 'Email or Username',
                     prefixIcon: Icons.person_outline,
                     keyboardType: TextInputType.emailAddress,
+                    errorText: _emailOrUsernameError,
                   ),
                   const SizedBox(height: 16),
 
@@ -186,6 +214,7 @@ Future<void> _googleLogin() async {
                     hintText: 'Password',
                     obscureText: true,
                     prefixIcon: Icons.lock_outline,
+                    errorText: _passwordError,
                   ),
                   const SizedBox(height: 12),
 
@@ -217,8 +246,9 @@ Future<void> _googleLogin() async {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'OR',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.yellow700,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).dividerColor,
                                 fontWeight: FontWeight.w500,
                               ),
                         ),

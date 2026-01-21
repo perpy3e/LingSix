@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../components/textfields/textfield.dart';
+import '../../components/button/button.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -11,37 +13,105 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _controller = TextEditingController();
   final _authService = AuthService();
+  String? _emailError;
+  bool _isLoading = false;
+
+  void _clearErrors() {
+    setState(() {
+      _emailError = null;
+    });
+  }
 
   Future<void> _resetPassword() async {
+    _clearErrors();
     final input = _controller.text.trim();
-    if (input.isEmpty) return;
+
+    // Validate field
+    if (input.isEmpty) {
+      setState(() => _emailError = 'Please enter email or username');
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     try {
       await _authService.sendPasswordReset(input);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Password reset email sent to $input")));
+        SnackBar(content: Text("Password reset email sent to $input")),
+      );
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst("Exception: ", "");
+      setState(() => _emailError = msg);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Forgot Password")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(children: [
-          TextField(
-            controller: _controller,
-            decoration: const InputDecoration(labelText: "Email or Username"),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/img/bgMain.png'),
+            fit: BoxFit.cover,
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(onPressed: _resetPassword, child: const Text("Send Reset Link")),
-        ]),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Positioned(
+                top: 8,
+                left: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, size: 28),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              // Main content
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 40),
+                      Text(
+                        "Forgot Password",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Enter your email or username to receive a password reset link",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 40),
+                      CustomTextField(
+                        controller: _controller,
+                        hintText: "Email or Username",
+                        prefixIcon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        errorText: _emailError,
+                      ),
+                      const SizedBox(height: 24),
+                      CustomButton(
+                        text: "Send Reset Link",
+                        onPressed: _resetPassword,
+                        isLoading: _isLoading,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
