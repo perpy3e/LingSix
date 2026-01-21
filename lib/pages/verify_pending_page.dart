@@ -48,13 +48,15 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       if (user != null && !user.emailVerified) {
         await _authService.resendVerification(user);
         if (!mounted) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Verification email resent")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Verification email resent")),
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() => _isResending = false);
@@ -77,6 +79,7 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () async {
             await FirebaseAuth.instance.signOut();
+            if (!context.mounted) return;
             Navigator.pop(context);
           },
         ),
@@ -84,21 +87,34 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.mark_email_unread, size: 100, color: Colors.blue),
-            const SizedBox(height: 20),
-            Text("A verification link has been sent to:\n$_email",
-                textAlign: TextAlign.center, style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 20),
-            ElevatedButton(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.mark_email_unread,
+                size: 100,
+                color: Colors.blue,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "A verification link has been sent to:\n$_email",
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
                 onPressed: _isResending ? null : _resendEmail,
-                child: Text(_isResending ? "Sending..." : "Resend Verification Email")),
-            const SizedBox(height: 20),
-            const Text(
-              "Once verified, this page will automatically continue.",
-              textAlign: TextAlign.center,
-            ),
-          ]),
+                child: Text(
+                  _isResending ? "Sending..." : "Resend Verification Email",
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Once verified, this page will automatically continue.",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -74,7 +74,7 @@ class _InfoDataPageState extends State<InfoDataPage> {
             const SizedBox(height: 20),
 
             DropdownButtonFormField<String>(
-              value: _gender,
+              initialValue: _gender,
               items: const [
                 DropdownMenuItem(value: 'Male', child: Text('Male')),
                 DropdownMenuItem(value: 'Female', child: Text('Female')),

@@ -28,17 +28,32 @@ class _ProfilePageState extends State<ProfilePage> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final doc = await _firestore.getUserByUid(uid);
-    userData = doc!.data() as Map<String, dynamic>;
+    final data = doc?.data() as Map<String, dynamic>?;
+    if (data == null) return;
 
-    _firstNameController.text = userData!['firstName'] ?? '';
-    _lastNameController.text = userData!['lastName'] ?? '';
-    _gender = userData!['gender'] ?? 'Other';
-    _birthday = (userData!['birthday'] as Timestamp?)?.toDate();
+    final firstName = (data['firstName'] ?? '') as String;
+    final lastName = (data['lastName'] ?? '') as String;
+    final gender = (data['gender'] ?? 'Other') as String;
+    final birthday = (data['birthday'] as Timestamp?)?.toDate();
 
-    setState(() {});
+    if (!mounted) return;
+    setState(() {
+      userData = data;
+      _firstNameController.text = firstName;
+      _lastNameController.text = lastName;
+      _gender = gender;
+      _birthday = birthday;
+    });
   }
 
   String _age(DateTime b) {
@@ -67,6 +82,8 @@ class _ProfilePageState extends State<ProfilePage> {
       updatedData,
     );
 
+    if (!mounted) return;
+
     setState(() {
       _edit = false;
     });
@@ -84,6 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
       firstDate: DateTime(now.year - 100),
       lastDate: now,
     );
+    if (!mounted) return;
     if (date != null) {
       setState(() => _birthday = date);
     }
@@ -197,7 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: DropdownButtonFormField<String>(
-        value: ['Male', 'Female', 'Other'].contains(_gender) ? _gender : null,
+       initialValue : ['Male', 'Female', 'Other'].contains(_gender) ? _gender : null,
         items: ['Male', 'Female', 'Other']
             .map((g) => DropdownMenuItem(value: g, child: Text(g)))
             .toList(),
