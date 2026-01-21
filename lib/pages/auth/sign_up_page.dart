@@ -124,8 +124,6 @@ class _SignUpPageState extends State<SignUpPage> {
         gender: _gender!,
         birthday: _birthday!,
       );
-      return;
-    }
 
       if (!mounted || user == null) return;
 
@@ -272,34 +270,26 @@ class _SignUpPageState extends State<SignUpPage> {
                                       _genderError = null;
                                     }),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
                                       decoration: BoxDecoration(
                                         color: _gender == 'male'
-                                            ? AppColors.skyBlue.withValues(
-                                                alpha: 0.3
-                                              )
+                                            ? Colors.blue.withValues(alpha: 0.2)
                                             : Colors.transparent,
                                         borderRadius: const BorderRadius.only(
                                           topLeft: Radius.circular(12),
                                           bottomLeft: Radius.circular(12),
                                         ),
                                         border: _gender == 'male'
-                                            ? Border.all(
-                                                color: AppColors.blue600,
-                                                width: 2,
-                                              )
+                                            ? Border.all(color: Colors.blue, width: 2)
                                             : null,
                                       ),
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Icon(
                                             Icons.male,
                                             color: _gender == 'male'
-                                                ? AppColors.blue600
+                                                ? Colors.blue
                                                 : AppColors.gray550,
                                           ),
                                           const SizedBox(width: 8),
@@ -307,7 +297,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                             'Male',
                                             style: TextStyle(
                                               color: _gender == 'male'
-                                                  ? AppColors.blue800
+                                                  ? Colors.blue.shade700
                                                   : AppColors.gray550,
                                               fontWeight: _gender == 'male'
                                                   ? FontWeight.bold
@@ -326,34 +316,26 @@ class _SignUpPageState extends State<SignUpPage> {
                                       _genderError = null;
                                     }),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
                                       decoration: BoxDecoration(
                                         color: _gender == 'female'
-                                            ? AppColors.pink.withValues(
-                                                alpha: 0.3
-                                              )
+                                            ? Colors.pink.withValues(alpha: 0.2)
                                             : Colors.transparent,
                                         borderRadius: const BorderRadius.only(
                                           topRight: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
                                         ),
                                         border: _gender == 'female'
-                                            ? Border.all(
-                                                color: AppColors.pink,
-                                                width: 2,
-                                              )
+                                            ? Border.all(color: Colors.pink, width: 2)
                                             : null,
                                       ),
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Icon(
                                             Icons.female,
                                             color: _gender == 'female'
-                                                ? AppColors.pink
+                                                ? Colors.pink
                                                 : AppColors.gray550,
                                           ),
                                           const SizedBox(width: 8),
@@ -361,7 +343,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                             'Female',
                                             style: TextStyle(
                                               color: _gender == 'female'
-                                                  ? AppColors.pink
+                                                  ? Colors.pink.shade700
                                                   : AppColors.gray550,
                                               fontWeight: _gender == 'female'
                                                   ? FontWeight.bold
@@ -406,10 +388,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: _birthdayError != null
-                                    ? Border.all(
-                                        color: AppColors.error,
-                                        width: 1,
-                                      )
+                                    ? Border.all(color: AppColors.error, width: 1)
                                     : null,
                               ),
                               child: Row(
