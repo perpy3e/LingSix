@@ -124,6 +124,8 @@ class _SignUpPageState extends State<SignUpPage> {
         gender: _gender!,
         birthday: _birthday!,
       );
+      return;
+    }
 
       if (!mounted || user == null) return;
 
