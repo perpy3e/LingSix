@@ -75,14 +75,21 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Verify Your Email"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut();
-            if (!context.mounted) return;
-            Navigator.pop(context);
-          },
-        ),
+        //back login fix bug
+      leading: IconButton(
+  icon: const Icon(Icons.arrow_back),
+  onPressed: () async {
+    await FirebaseAuth.instance.signOut();
+    if (!context.mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      '/login',
+      (route) => false,
+    );
+  },
+),
+//end back login fix bug
       ),
       body: Center(
         child: Padding(

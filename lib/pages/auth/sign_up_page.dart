@@ -127,24 +127,30 @@ class _SignUpPageState extends State<SignUpPage> {
 
       if (!mounted || user == null) return;
 
-      // To verify pending page & back to sign up
+      // verify pending page & back to sign up
       Navigator.pushNamed(context, '/verify-pending', arguments: user.email);
-    } catch (e) {
-      if (!mounted) return;
-      final msg = e.toString().replaceFirst("Exception: ", "");
-      // Show specific field errors based on error message
-      if (msg.toLowerCase().contains('email')) {
-        setState(() => _emailError = msg);
-      } else if (msg.toLowerCase().contains('username')) {
-        setState(() => _usernameError = msg);
-      } else if (msg.toLowerCase().contains('password')) {
-        setState(() => _passwordError = msg);
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-      }
-    }
+  } catch (e) {
+  if (!mounted) return;
+  final msg = e.toString().replaceFirst("Exception: ", "");
+
+  //  FIX sign up bug 1
+  if (msg.toLowerCase().contains('email')) {
+    await _authService.logout(); 
+    if (!mounted) return;
+    setState(() => _emailError = msg);
+    return;
+  }
+
+  if (msg.toLowerCase().contains('username')) {
+    setState(() => _usernameError = msg);
+  } else if (msg.toLowerCase().contains('password')) {
+    setState(() => _passwordError = msg);
+  } else {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
+}
+
   }
 
   @override
