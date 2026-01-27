@@ -76,9 +76,11 @@ flutter:
     - assets/sound/sh.wav
     - assets/sound/s.wav
     - assets/img/bgLogin.png
-    - assets/img/bgStart.png
     - assets/img/imgStart.png
     - assets/img/bgHome.png
+    - assets/img/bg1.png
+    - assets/img/bg2.png
+    - assets/img/bg3.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
