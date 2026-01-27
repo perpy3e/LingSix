@@ -172,7 +172,7 @@ Future<void> _googleLogin() async {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgMain.png'),
+            image: AssetImage('assets/img/bgLogin.png'),
             fit: BoxFit.cover,
           ),
         ),

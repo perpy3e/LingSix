@@ -13,7 +13,7 @@ import 'pages/auth/forgot_password_page.dart';
 import 'pages/auth/infodata_page.dart';
 
 import 'pages/profile/profile_page.dart';
-
+import 'pages/home/start_page.dart';
 import 'package:lingsix/pages/home/home_page.dart';
 import 'pages/settings/sound_settings_page.dart';
 
@@ -45,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/verify-success': (_) => const VerifySuccessPage(),
         '/forgot-password': (_) => const ForgotPasswordPage(),
         '/start-page': (_) => const StartPage(),
+        '/home-page': (_) => const HomePage(),
         '/sound-settings': (_) => const SoundSettingsPage(),
         '/profile': (_) => ProfilePage(),
         '/infodata': (_) => InfoDataPage(),

@@ -1,24 +1,42 @@
 import 'package:flutter/material.dart';
 
-class StartPage extends StatelessWidget {
-  const StartPage({super.key});
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.person_outline),
-          onPressed: () {
-            Navigator.pushNamed(context, '/profile');
-          },
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/img/bgHome.png'),
+            fit: BoxFit.cover,
+          ),
         ),
-        title: const Text('Start Page'),
-      ),
-      body: const Center(
-        child: Text(
-          'Home / Start Page',
-          style: TextStyle(fontSize: 18),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Positioned(
+                top: 8,
+                left: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.person_3_rounded, size: 28),
+                  onPressed: () => Navigator.pushNamed(context, '/profile'),
+                ),
+              ),
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                  ]
+              ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
