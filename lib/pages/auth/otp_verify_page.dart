@@ -71,7 +71,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgMain.png'),
+            image: AssetImage('assets/img/bgLogin.png'),
             fit: BoxFit.cover,
           ),
         ),
