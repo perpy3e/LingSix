@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
+import '../../utils/snackbar_helper.dart';
 
 class OtpVerifyPage extends StatefulWidget {
   const OtpVerifyPage({super.key});
@@ -47,7 +48,15 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("OTP verified successfully")),
+        SnackBar(
+          content: const Text("OTP verified successfully"),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 150,
+            left: 20,
+            right: 20,
+          ),
+        ),
       );
       Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
@@ -60,9 +69,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
   }
 
   Future<void> _resendOtp() async {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("OTP sent to your email")));
+    SnackBarHelper.show(context, "OTP sent to your email");
   }
 
   @override

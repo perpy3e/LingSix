@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firestore_service.dart';
 import '../../services/auth_service.dart';
 import '../../app/theme.dart';
+import '../../utils/snackbar_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -88,14 +89,7 @@ class _ProfilePageState extends State<ProfilePage> {
       _edit = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text("Profile updated successfully"),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+    SnackBarHelper.showSuccess(context, "อัปเดตโปรไฟล์สำเร็จ");
   }
 
   Future<void> _pickBirthday() async {
@@ -132,7 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
         body: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/img/bg3.png'),
+              image: AssetImage('assets/img/bg1.png'),
               fit: BoxFit.cover,
             ),
           ),
@@ -147,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bg3.png'),
+            image: AssetImage('assets/img/bg1.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -158,26 +152,25 @@ class _ProfilePageState extends State<ProfilePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Row(
                   children: [
-                    // Back button
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.blue800),
                       iconSize: 40,
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home-page');
+                        Navigator.pop(context);
                       },
                     ),
                     const Spacer(),
-                    // Edit button (pencil icon)
-                    IconButton(
-                      icon: Icon(
-                        _edit ? Icons.close_rounded : Icons.edit_rounded,
-                        color: Colors.white,
+                    // Title
+                    const Text(
+                      "โปรไฟล์",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blue800,
                       ),
-                      iconSize: 40,
-                      onPressed: () {
-                        setState(() => _edit = !_edit);
-                      },
                     ),
+                    const Spacer(),
+                    const SizedBox(width: 40), // Balance the back button
                   ],
                 ),
               ),
@@ -292,6 +285,23 @@ class _ProfilePageState extends State<ProfilePage> {
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.gray700,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  // Edit button
+                                  GestureDetector(
+                                    onTap: () => setState(() => _edit = !_edit),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: _edit ? AppColors.braveOrange : AppColors.blue100,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        _edit ? Icons.close_rounded : Icons.edit_rounded,
+                                        color: _edit ? Colors.white : AppColors.blue600,
+                                        size: 20,
+                                      ),
                                     ),
                                   ),
                                 ],

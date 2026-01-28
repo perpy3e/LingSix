@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 
 class VerifyPendingPage extends StatefulWidget {
   const VerifyPendingPage({super.key});
@@ -48,15 +49,11 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       if (user != null && !user.emailVerified) {
         await _authService.resendVerification(user);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Verification email resent")),
-        );
+        SnackBarHelper.showSuccess(context, "Verification email resent");
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      SnackBarHelper.showError(context, e.toString());
     } finally {
       if (mounted) {
         setState(() => _isResending = false);

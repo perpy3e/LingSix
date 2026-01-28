@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lingsix/app/theme.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -9,7 +10,7 @@ class HomePage extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgHome.png'),
+            image: AssetImage('assets/img/bg1.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -21,7 +22,7 @@ class HomePage extends StatelessWidget {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.settings, color: Colors.white),
+                      icon: Icon(Icons.settings, color: AppColors.blue800),
                       iconSize: 40,
                       onPressed: () {
                         Navigator.pushNamed(context, '/sound-settings');
@@ -29,7 +30,7 @@ class HomePage extends StatelessWidget {
                     ),
                     Spacer(),
                     IconButton(
-                      icon: Icon(Icons.account_circle, color: Colors.white), 
+                      icon: Icon(Icons.account_circle, color: AppColors.blue800), 
                       iconSize: 40,
                       onPressed: () {
                         Navigator.pushNamed(context, '/profile');
