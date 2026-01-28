@@ -46,6 +46,7 @@ dependencies:
   google_fonts: ^6.3.3
   flutter_signin_button: ^2.1.0
   shared_preferences: ^2.1.1 
+  rename_app: ^1.6.5
   
 
 
