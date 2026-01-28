@@ -104,5 +104,8 @@ class AppTheme {
         color: AppColors.yellow900,
       ),
     ),
+    snackBarTheme: const SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+    ),
   );
 }

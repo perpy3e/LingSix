@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/firestore_service.dart';
+import '../../utils/snackbar_helper.dart';
 
 class InfoDataPage extends StatefulWidget {
   const InfoDataPage({super.key});
@@ -34,9 +35,7 @@ class _InfoDataPageState extends State<InfoDataPage> {
         _lastName.text.trim().isEmpty ||
         _gender == null ||
         _birthday == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please complete all fields")),
-      );
+      SnackBarHelper.showError(context, "Please complete all fields");
       return;
     }
 

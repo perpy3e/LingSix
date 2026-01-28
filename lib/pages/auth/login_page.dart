@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
+import '../../utils/snackbar_helper.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -160,9 +161,7 @@ Future<void> _googleLogin() async {
 
   
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    SnackBarHelper.showError(context, message);
   }
 
   // -------------------------------------------------------------

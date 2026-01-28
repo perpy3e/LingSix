@@ -3,6 +3,7 @@ import '../../services/auth_service.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
 import '../../app/theme.dart';
+import '../../utils/snackbar_helper.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -146,8 +147,7 @@ class _SignUpPageState extends State<SignUpPage> {
   } else if (msg.toLowerCase().contains('password')) {
     setState(() => _passwordError = msg);
   } else {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    SnackBarHelper.showError(context, msg);
   }
 }
 
