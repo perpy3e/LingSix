@@ -8,7 +8,7 @@ class AuthService {
   String _handleAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'email-already-in-use':
-        return 'This email is already in use. Please log in or use another email to create an account.';
+        return 'This email is already in use. Please log in or use another email.';
       case 'invalid-email':
         return 'The email address is invalid. Please check and try again.';
       case 'weak-password':
@@ -27,14 +27,22 @@ class AuthService {
   Future<User?> login(String emailOrUsername, String password) async {
     try {
       String email = emailOrUsername;
+
+      // Resolve username → email if needed
       if (!emailOrUsername.contains('@')) {
         final userDoc = await _firestore.getUserByUsername(emailOrUsername);
         if (userDoc == null) {
-          throw FirebaseAuthException(code: 'user-not-found', message: 'No user found with that username.');
+          throw FirebaseAuthException(
+              code: 'user-not-found', message: 'No user found with that username.');
         }
         email = userDoc['email'];
       }
-      final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
+
+      final cred = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
       return cred.user;
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthError(e));
@@ -43,21 +51,27 @@ class AuthService {
 
   Future<User?> signUp(String email, String username, String password) async {
     try {
-      final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      // Create Firestore 
-      await _firestore.addUser(cred.user!.uid, email, username, isGoogleSignIn: false);
-      //  the new user
+      final cred = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Firestore user setup
+      await _firestore.addUser(
+        cred.user!.uid,
+        email,
+        username,
+        isGoogleSignIn: false,
+      );
       await _firestore.initUserStats(cred.user!.uid);
+
       // Send verification email
       await cred.user!.sendEmailVerification();
+
       return cred.user;
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthError(e));
     }
-  }
-
-  Future<User?> signInWithGoogle({required String clientId}) async {
-    throw UnimplementedError("GoogleSignIn must be called from the UI page. Only pass the credential to AuthService.");
   }
 
   Future<void> logout() async {
@@ -67,13 +81,16 @@ class AuthService {
   Future<void> sendPasswordReset(String emailOrUsername) async {
     try {
       String email = emailOrUsername;
+
       if (!emailOrUsername.contains('@')) {
         final userDoc = await _firestore.getUserByUsername(emailOrUsername);
         if (userDoc == null) {
-          throw FirebaseAuthException(code: 'user-not-found', message: 'No user found with that username.');
+          throw FirebaseAuthException(
+              code: 'user-not-found', message: 'No user found with that username.');
         }
         email = userDoc['email'];
       }
+
       await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthError(e));

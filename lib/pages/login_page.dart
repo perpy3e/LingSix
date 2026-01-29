@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import 'verify_pending_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,7 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   final _firestore = FirestoreService();
-
   bool _isLoading = false;
 
   // ----- Email/Password Login -----
@@ -25,8 +25,8 @@ class _LoginPageState extends State<LoginPage> {
     final password = _passwordController.text.trim();
 
     if (emailOrUsername.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please fill all fields")));
       return;
     }
 
@@ -36,10 +36,14 @@ class _LoginPageState extends State<LoginPage> {
       final user = await _authService.login(emailOrUsername, password);
       if (user == null) return;
 
-      // check verification status
       if (!user.emailVerified) {
-        await _authService.logout();
-        Navigator.pushReplacementNamed(context, '/verify-pending', arguments: user.email);
+        // Send to verify page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VerifyPendingPage(user: user),
+          ),
+        );
         return;
       }
 
@@ -60,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final googleSignIn = GoogleSignIn();
       final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return; // User canceled
+      if (googleUser == null) return;
 
       final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
@@ -72,7 +76,6 @@ class _LoginPageState extends State<LoginPage> {
           await FirebaseAuth.instance.signInWithCredential(credential);
       final user = userCred.user!;
 
-      // Check Firestore add user (1st time)
       final existingUser = await _firestore.getUserByUid(user.uid);
       if (existingUser == null) {
         await _firestore.addUser(
@@ -83,7 +86,6 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
 
-      // go to home page
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +131,8 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 10),
             TextButton(
-              onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/forgot-password'),
               child: const Text("Forgot Password?"),
             ),
             TextButton(

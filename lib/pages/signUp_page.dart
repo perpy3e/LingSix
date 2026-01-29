@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import 'verify_pending_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -24,26 +24,23 @@ class _SignUpPageState extends State<SignUpPage> {
 
     if (email.isEmpty || username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
-      );
+          const SnackBar(content: Text("Please fill in all fields")));
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      // Create new user in Firebase Auth & Firestore
       final User? user = await _authService.signUp(email, username, password);
+      if (user == null) return;
 
-      if (user != null) {
-        // Navigate to VerifyPendingPage with the user
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => VerifyPendingPage(user: user),
-          ),
-        );
-      }
+      // Navigate to VerifyPendingPage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyPendingPage(user: user),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(e.toString())));
@@ -85,9 +82,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   onPressed: _isLoading ? null : _signup,
                   child: _isLoading
                       ? const CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        )
+                          color: Colors.white, strokeWidth: 2)
                       : const Text("Sign Up", style: TextStyle(fontSize: 16)),
                 ),
               ),

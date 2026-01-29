@@ -2,9 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import 'verify_success_page.dart';
 
 class VerifyPendingPage extends StatefulWidget {
-  final User user; // required user
+  final User user;
 
   const VerifyPendingPage({super.key, required this.user});
 
@@ -16,7 +17,6 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
   final _authService = AuthService();
   Timer? _timer;
   bool _isResending = false;
-  bool _timerStarted = false;
 
   @override
   void initState() {
@@ -31,7 +31,12 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       await _authService.reloadUser(user);
       if (user.emailVerified) {
         _timer?.cancel();
-        Navigator.pushReplacementNamed(context, '/verify-success');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const VerifySuccessPage()),
+          );
+        }
       }
     });
   }
@@ -39,16 +44,18 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
   Future<void> _resendEmail() async {
     setState(() => _isResending = true);
     try {
-      if (!widget.user.emailVerified) {
-        await _authService.resendVerification(widget.user);
+      await _authService.resendVerification(widget.user);
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Verification email resent")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     } finally {
-      setState(() => _isResending = false);
+      if (mounted) setState(() => _isResending = false);
     }
   }
 
@@ -60,43 +67,26 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final email = widget.user.email ?? "your email";
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Verify Your Email"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut();
-            Navigator.pop(context);
-          },
-        ),
+        title: const Text("Verify Pending"),
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.mark_email_unread, size: 100, color: Colors.blue),
-              const SizedBox(height: 20),
-              Text(
-                "A verification link has been sent to:\n$email",
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isResending ? null : _resendEmail,
-                child: Text(_isResending ? "Sending..." : "Resend Verification Email"),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Once verified, this page will automatically continue.",
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              "A verification email has been sent. Please check your inbox.",
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            _isResending
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _resendEmail,
+                    child: const Text("Resend Email"),
+                  ),
+          ],
         ),
       ),
     );
