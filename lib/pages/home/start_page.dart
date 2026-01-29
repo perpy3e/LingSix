@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lingsix/app/theme.dart';
+import 'package:lingsix/app/router.dart';
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
@@ -35,7 +36,7 @@ class StartPage extends StatelessWidget {
                   height: 60,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/home-page');
+                      Navigator.pushNamed(context, AppRouter.homePage);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.braveOrange,

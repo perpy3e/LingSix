@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/router.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
 import '../../utils/snackbar_helper.dart';
@@ -58,7 +59,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
           ),
         ),
       );
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pushReplacementNamed(context, AppRouter.login);
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().replaceFirst("Exception: ", "");

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../app/router.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/snackbar_helper.dart';
 
@@ -50,7 +51,7 @@ class _InfoDataPageState extends State<InfoDataPage> {
     });
 
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/start-page');
+    Navigator.pushReplacementNamed(context, AppRouter.startPage);
   }
 
   @override
