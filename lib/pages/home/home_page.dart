@@ -105,11 +105,11 @@ class HomePage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.white.withOpacity(0.95),
+            color: AppColors.white.withAlpha(200),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.blue600.withOpacity(0.3),
+                color: AppColors.blue600.withAlpha(100),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -130,7 +130,7 @@ class HomePage extends StatelessWidget {
             fontSize: 36,
             shadows: [
               Shadow(
-                color: AppColors.blue900.withOpacity(0.3),
+                color: AppColors.blue900.withAlpha(150),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -141,7 +141,7 @@ class HomePage extends StatelessWidget {
         Text(
           'เรียนรู้และพัฒนาทักษะของคุณ',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withAlpha(220),
             fontSize: 16,
           ),
         ),
@@ -222,7 +222,7 @@ class HomePage extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.4),
+              color: color.withAlpha(100),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -241,7 +241,7 @@ class HomePage extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
+                            color: Colors.white.withAlpha(64),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(icon, color: Colors.white, size: 32),
@@ -264,7 +264,7 @@ class HomePage extends StatelessWidget {
                               Text(
                                 subtitle,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
+                                  color: Colors.white.withAlpha(220),
                                   fontSize: 14,
                                 ),
                               ),
@@ -273,7 +273,7 @@ class HomePage extends StatelessWidget {
                         ),
                         Icon(
                           Icons.arrow_forward_ios,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withAlpha(200),
                           size: 20,
                         ),
                       ],
@@ -284,7 +284,7 @@ class HomePage extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
+                            color: Colors.white.withAlpha(64),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(icon, color: Colors.white, size: 32),
@@ -303,7 +303,7 @@ class HomePage extends StatelessWidget {
                           subtitle,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withAlpha(220),
                             fontSize: 12,
                           ),
                         ),

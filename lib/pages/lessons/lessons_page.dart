@@ -28,7 +28,7 @@ class LessonsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withAlpha(100),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
