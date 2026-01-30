@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/router.dart';
 import '../../services/auth_service.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
@@ -129,7 +130,7 @@ class _SignUpPageState extends State<SignUpPage> {
       if (!mounted || user == null) return;
 
       // verify pending page & back to sign up
-      Navigator.pushNamed(context, '/verify-pending', arguments: user.email);
+      Navigator.pushNamed(context, AppRouter.verifyPending, arguments: user.email);
   } catch (e) {
   if (!mounted) return;
   final msg = e.toString().replaceFirst("Exception: ", "");
@@ -172,7 +173,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back, size: 28),
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/login');
+                    Navigator.pushReplacementNamed(context, AppRouter.login);
                   },
                 ),
               ),

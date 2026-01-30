@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:lingsix/app/theme.dart';
 
-class QuizPage extends StatelessWidget {
-  const QuizPage({super.key});
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ทดสอบ'),
-        backgroundColor: AppColors.yellow600,
+        title: const Text('ผลการทดสอบ'),
+        backgroundColor: AppColors.success,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.yellow400, AppColors.yellow600],
+            colors: [AppColors.greenLight, AppColors.success],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -32,14 +32,14 @@ class QuizPage extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.quiz,
+                  Icons.bar_chart,
                   size: 80,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 24),
               Text(
-                'ทดสอบ',
+                'ผลการทดสอบ',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

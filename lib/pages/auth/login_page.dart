@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 
+import '../../app/router.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../components/textfields/textfield.dart';
@@ -76,13 +77,13 @@ class _LoginPageState extends State<LoginPage> {
 
         Navigator.pushReplacementNamed(
           context,
-          '/verify-pending',
+          AppRouter.verifyPending,
           arguments: user.email,
         );
         return;
       }
 
-      Navigator.pushReplacementNamed(context, '/start-page');
+      Navigator.pushReplacementNamed(context, AppRouter.startPage);
     } catch (e) {
       if (!mounted) return;
       final errorMsg = e.toString().replaceFirst('Exception: ', '');
@@ -134,7 +135,7 @@ Future<void> _googleLogin() async {
       );
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/infodata');
+      Navigator.pushReplacementNamed(context, AppRouter.infodata);
       return;
     }
 
@@ -143,13 +144,13 @@ Future<void> _googleLogin() async {
     // new sign-in
     if (data['profileCompleted'] != true) {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/infodata');
+      Navigator.pushReplacementNamed(context, AppRouter.infodata);
       return;
     }
 
     // profile completed
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/start-page');
+    Navigator.pushReplacementNamed(context, AppRouter.startPage);
   } catch (e) {
     if (!mounted) return;
     _showError('Google Sign-In failed\n$e');
@@ -221,7 +222,7 @@ Future<void> _googleLogin() async {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () =>
-                          Navigator.pushNamed(context, '/forgot-password'),
+                          Navigator.pushNamed(context, AppRouter.forgotPassword),
                       child: Text(
                         'Forgot Password?',
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -277,7 +278,7 @@ Future<void> _googleLogin() async {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/signup'),
+                        onTap: () => Navigator.pushNamed(context, AppRouter.signup),
                         child: Text(
                           'Sign Up',
                           style: (() {

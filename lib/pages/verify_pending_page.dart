@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../app/router.dart';
 import '../services/auth_service.dart';
 import '../utils/snackbar_helper.dart';
 
@@ -37,7 +38,7 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
       if (!mounted) return;
       if (user.emailVerified) {
         _timer?.cancel();
-        Navigator.pushReplacementNamed(context, '/verify-success');
+        Navigator.pushReplacementNamed(context, AppRouter.verifySuccess);
       }
     });
   }
