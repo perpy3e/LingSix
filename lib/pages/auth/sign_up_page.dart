@@ -170,11 +170,17 @@ class _SignUpPageState extends State<SignUpPage> {
               Positioned(
                 top: 8,
                 left: 8,
+                //back icon***
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back, size: 28),
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, AppRouter.login);
-                  },
+  Navigator.pushNamedAndRemoveUntil(
+    context,
+    AppRouter.login,
+    (route) => false,
+  );
+},
+
                 ),
               ),
               // Main content
