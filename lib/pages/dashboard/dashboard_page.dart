@@ -10,16 +10,20 @@ class DashboardPage extends StatelessWidget {
   final double overallAccuracy = 16.7;
 
   final Map<String, Map<String, dynamic>> perSoundAccuracy = const {
-    'sh': {'correct': 0, 'total': 0, 'percent': 0.0},
-    'ss': {'correct': 0, 'total': 0, 'percent': 0.0},
-    'ah': {'correct': 0, 'total': 0, 'percent': 0.0},
-    'ee': {'correct': 2, 'total': 12, 'percent': 16.7},
-    'oo': {'correct': 0, 'total': 0, 'percent': 0.0},
-    'mm': {'correct': 0, 'total': 0, 'percent': 0.0},
+    'sh': {'correct': 8, 'total': 10, 'percent': 80.0},
+    'ss': {'correct': 5, 'total': 8, 'percent': 62.5},
+    'ah': {'correct': 3, 'total': 6, 'percent': 50.0},
+    'ee': {'correct': 10, 'total': 12, 'percent': 83.3},
+    'oo': {'correct': 4, 'total': 10, 'percent': 40.0},
+    'mm': {'correct': 7, 'total': 9, 'percent': 77.8},
   };
 
   final List<Map<String, dynamic>> recentScores = const [
     {'correct': 2, 'total': 12},
+    {'correct': 5, 'total': 12},
+    {'correct': 8, 'total': 12},
+    {'correct': 6, 'total': 12},
+    {'correct': 10, 'total': 12},
   ];
 
   @override
