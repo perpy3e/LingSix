@@ -5,8 +5,8 @@ import 'package:lingsix/pages/auth/login_page.dart';
 import 'package:lingsix/pages/auth/sign_up_page.dart';
 import 'package:lingsix/pages/auth/forgot_password_page.dart';
 import 'package:lingsix/pages/auth/infodata_page.dart';
-import 'package:lingsix/pages/verify_pending_page.dart';
-import 'package:lingsix/pages/verify_success_page.dart';
+import 'package:lingsix/pages/auth/verify_pending_page.dart';
+import 'package:lingsix/pages/auth/verify_success_page.dart';
 
 // Main Pages
 import 'package:lingsix/pages/home/start_page.dart';
