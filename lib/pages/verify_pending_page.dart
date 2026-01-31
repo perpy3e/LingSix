@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../app/router.dart';
 import '../services/auth_service.dart';
 import '../utils/snackbar_helper.dart';
+import '../components/button/button.dart';
 
 class VerifyPendingPage extends StatefulWidget {
   const VerifyPendingPage({super.key});
@@ -71,52 +72,84 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Verify Your Email"),
-        //back login fix bug
-      leading: IconButton(
-  icon: const Icon(Icons.arrow_back),
-  onPressed: () async {
-    await FirebaseAuth.instance.signOut();
-    if (!context.mounted) return;
-
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/login',
-      (route) => false,
-    );
-  },
-),
-//end back login fix bug
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/img/bgLogin.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
             children: [
-              const Icon(
-                Icons.mark_email_unread,
-                size: 100,
-                color: Colors.blue,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                "A verification link has been sent to:\n$_email",
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isResending ? null : _resendEmail,
-                child: Text(
-                  _isResending ? "Sending..." : "Resend Verification Email",
+              // Back button
+              Positioned(
+                top: 8,
+                left: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, size: 28),
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    if (!context.mounted) return;
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (route) => false,
+                    );
+                  },
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                "Once verified, this page will automatically continue.",
-                textAlign: TextAlign.center,
+              // Main content
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 40),
+                      const Icon(
+                        Icons.mark_email_unread,
+                        size: 100,
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        "Verify Your Email",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "A verification link has been sent to:",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _email ?? "",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 32),
+                      CustomButton(
+                        text: "Resend Verification Email",
+                        onPressed: _resendEmail,
+                        isLoading: _isResending,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        "Once verified, this page will automatically continue.",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

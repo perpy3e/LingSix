@@ -130,28 +130,31 @@ class _SignUpPageState extends State<SignUpPage> {
       if (!mounted || user == null) return;
 
       // verify pending page & back to sign up
-      Navigator.pushNamed(context, AppRouter.verifyPending, arguments: user.email);
-  } catch (e) {
-  if (!mounted) return;
-  final msg = e.toString().replaceFirst("Exception: ", "");
+      Navigator.pushNamed(
+        context,
+        AppRouter.verifyPending,
+        arguments: user.email,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst("Exception: ", "");
 
-  //  FIX sign up bug 1
-  if (msg.toLowerCase().contains('email')) {
-    await _authService.logout(); 
-    if (!mounted) return;
-    setState(() => _emailError = msg);
-    return;
-  }
+      //  FIX sign up bug 1
+      if (msg.toLowerCase().contains('email')) {
+        await _authService.logout();
+        if (!mounted) return;
+        setState(() => _emailError = msg);
+        return;
+      }
 
-  if (msg.toLowerCase().contains('username')) {
-    setState(() => _usernameError = msg);
-  } else if (msg.toLowerCase().contains('password')) {
-    setState(() => _passwordError = msg);
-  } else {
-    SnackBarHelper.showError(context, msg);
-  }
-}
-
+      if (msg.toLowerCase().contains('username')) {
+        setState(() => _usernameError = msg);
+      } else if (msg.toLowerCase().contains('password')) {
+        setState(() => _passwordError = msg);
+      } else {
+        SnackBarHelper.showError(context, msg);
+      }
+    }
   }
 
   @override
@@ -174,13 +177,12 @@ class _SignUpPageState extends State<SignUpPage> {
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back, size: 28),
                   onPressed: () {
-  Navigator.pushNamedAndRemoveUntil(
-    context,
-    AppRouter.login,
-    (route) => false,
-  );
-},
-
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      AppRouter.login,
+                      (route) => false,
+                    );
+                  },
                 ),
               ),
               // Main content
@@ -283,7 +285,9 @@ class _SignUpPageState extends State<SignUpPage> {
                                       _genderError = null;
                                     }),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: _gender == 'male'
                                             ? Colors.blue.withValues(alpha: 0.2)
@@ -293,11 +297,15 @@ class _SignUpPageState extends State<SignUpPage> {
                                           bottomLeft: Radius.circular(12),
                                         ),
                                         border: _gender == 'male'
-                                            ? Border.all(color: Colors.blue, width: 2)
+                                            ? Border.all(
+                                                color: Colors.blue,
+                                                width: 2,
+                                              )
                                             : null,
                                       ),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Icon(
                                             Icons.male,
@@ -329,7 +337,9 @@ class _SignUpPageState extends State<SignUpPage> {
                                       _genderError = null;
                                     }),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: _gender == 'female'
                                             ? Colors.pink.withValues(alpha: 0.2)
@@ -339,11 +349,15 @@ class _SignUpPageState extends State<SignUpPage> {
                                           bottomRight: Radius.circular(12),
                                         ),
                                         border: _gender == 'female'
-                                            ? Border.all(color: Colors.pink, width: 2)
+                                            ? Border.all(
+                                                color: Colors.pink,
+                                                width: 2,
+                                              )
                                             : null,
                                       ),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Icon(
                                             Icons.female,
@@ -401,7 +415,10 @@ class _SignUpPageState extends State<SignUpPage> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: _birthdayError != null
-                                    ? Border.all(color: AppColors.error, width: 1)
+                                    ? Border.all(
+                                        color: AppColors.error,
+                                        width: 1,
+                                      )
                                     : null,
                               ),
                               child: Row(
