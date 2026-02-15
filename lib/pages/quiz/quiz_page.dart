@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:lingsix/app/theme.dart';
+import 'package:lingsix/pages/quiz/quiz_questions_page.dart';
 
 class QuizPage extends StatelessWidget {
   const QuizPage({super.key});
+
+  static final List<Map<String, dynamic>> quizzes =
+      List.generate(10, (index) {
+    return {
+      "quizId": "quiz_${index + 1}",
+      "title": "Quiz ${index + 1}",
+      "topic": "LingSix Sound",
+    };
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +21,6 @@ class QuizPage extends StatelessWidget {
         title: const Text('ทดสอบ'),
         backgroundColor: AppColors.yellow600,
         foregroundColor: Colors.white,
-        elevation: 0,
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -21,39 +30,47 @@ class QuizPage extends StatelessWidget {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: quizzes.length,
+          itemBuilder: (context, index) {
+            final quiz = quizzes[index];
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => QuizQuestionsPage(
+                      quizId: quiz["quizId"],
+                      title: quiz["title"],
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(100),
-                  shape: BoxShape.circle,
+                  color: Colors.white.withAlpha(230),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.quiz,
-                  size: 80,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'ทดสอบ',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'เร็วๆ นี้...',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white70,
+                child: Row(
+                  children: [
+                    const Icon(Icons.quiz, size: 40),
+                    const SizedBox(width: 16),
+                    Text(
+                      quiz["title"],
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
