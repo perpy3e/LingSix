@@ -169,307 +169,274 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
         child: SafeArea(
           child: Stack(
-            children: [
-              Positioned(
-                top: 8,
-                left: 8,
-                //back icon***
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 28),
-                  onPressed: () {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      AppRouter.login,
-                      (route) => false,
-                    );
-                  },
+  children: [
+
+    // Main content
+    Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 40),
+            Text(
+              "สร้างบัญชีผู้ใช้",
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+            const SizedBox(height: 40),
+
+            // Email
+            CustomTextField(
+              controller: _emailController,
+              hintText: "อีเมล",
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              errorText: _emailError,
+            ),
+            const SizedBox(height: 16),
+
+            // Username
+            CustomTextField(
+              controller: _usernameController,
+              hintText: "ชื่อผู้ใช้",
+              prefixIcon: Icons.person_outline,
+              errorText: _usernameError,
+            ),
+            const SizedBox(height: 16),
+
+            // Password
+            CustomTextField(
+              controller: _passwordController,
+              hintText: "รหัสผ่าน",
+              obscureText: true,
+              prefixIcon: Icons.lock_outline,
+              errorText: _passwordError,
+            ),
+            const SizedBox(height: 24),
+
+            // Divider
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    "ข้อมูลส่วนตัว",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
-              ),
-              // Main content
-              Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // First Name
+            CustomTextField(
+              controller: _firstNameController,
+              hintText: "ชื่อจริง",
+              prefixIcon: Icons.badge_outlined,
+              errorText: _firstNameError,
+            ),
+            const SizedBox(height: 16),
+
+            // Last Name
+            CustomTextField(
+              controller: _lastNameController,
+              hintText: "นามสกุล",
+              prefixIcon: Icons.badge_outlined,
+              errorText: _lastNameError,
+            ),
+            const SizedBox(height: 16),
+
+            // Gender Selection
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: _genderError != null
+                        ? Border.all(color: AppColors.error, width: 1)
+                        : null,
+                  ),
+                  child: Row(
                     children: [
-                      const SizedBox(height: 40),
-                      Text(
-                        "สร้างบัญชีผู้ใช้",
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 40),
-
-                      // Email
-                      CustomTextField(
-                        controller: _emailController,
-                        hintText: "อีเมล",
-                        prefixIcon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        errorText: _emailError,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Username
-                      CustomTextField(
-                        controller: _usernameController,
-                        hintText: "ชื่อผู้ใช้",
-                        prefixIcon: Icons.person_outline,
-                        errorText: _usernameError,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password
-                      CustomTextField(
-                        controller: _passwordController,
-                        hintText: "รหัสผ่าน",
-                        obscureText: true,
-                        prefixIcon: Icons.lock_outline,
-                        errorText: _passwordError,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Divider
-                      Row(
-                        children: [
-                          const Expanded(child: Divider()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              "ข้อมูลส่วนตัว",
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                          const Expanded(child: Divider()),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // First Name
-                      CustomTextField(
-                        controller: _firstNameController,
-                        hintText: "ชื่อจริง",
-                        prefixIcon: Icons.badge_outlined,
-                        errorText: _firstNameError,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Last Name
-                      CustomTextField(
-                        controller: _lastNameController,
-                        hintText: "นามสกุล",
-                        prefixIcon: Icons.badge_outlined,
-                        errorText: _lastNameError,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Gender Selection
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() {
+                            _gender = 'male';
+                            _genderError = null;
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: _genderError != null
-                                  ? Border.all(color: AppColors.error, width: 1)
+                              color: _gender == 'male'
+                                  ? Colors.blue.withValues(alpha: 0.2)
+                                  : Colors.transparent,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                bottomLeft: Radius.circular(12),
+                              ),
+                              border: _gender == 'male'
+                                  ? Border.all(color: Colors.blue, width: 2)
                                   : null,
                             ),
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () => setState(() {
-                                      _gender = 'male';
-                                      _genderError = null;
-                                    }),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _gender == 'male'
-                                            ? Colors.blue.withValues(alpha: 0.2)
-                                            : Colors.transparent,
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(12),
-                                          bottomLeft: Radius.circular(12),
-                                        ),
-                                        border: _gender == 'male'
-                                            ? Border.all(
-                                                color: Colors.blue,
-                                                width: 2,
-                                              )
-                                            : null,
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.male,
-                                            color: _gender == 'male'
-                                                ? Colors.blue
-                                                : AppColors.gray550,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Male',
-                                            style: TextStyle(
-                                              color: _gender == 'male'
-                                                  ? Colors.blue.shade700
-                                                  : AppColors.gray550,
-                                              fontWeight: _gender == 'male'
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                Icon(
+                                  Icons.male,
+                                  color: _gender == 'male'
+                                      ? Colors.blue
+                                      : AppColors.gray550,
                                 ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () => setState(() {
-                                      _gender = 'female';
-                                      _genderError = null;
-                                    }),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _gender == 'female'
-                                            ? Colors.pink.withValues(alpha: 0.2)
-                                            : Colors.transparent,
-                                        borderRadius: const BorderRadius.only(
-                                          topRight: Radius.circular(12),
-                                          bottomRight: Radius.circular(12),
-                                        ),
-                                        border: _gender == 'female'
-                                            ? Border.all(
-                                                color: Colors.pink,
-                                                width: 2,
-                                              )
-                                            : null,
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.female,
-                                            color: _gender == 'female'
-                                                ? Colors.pink
-                                                : AppColors.gray550,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Female',
-                                            style: TextStyle(
-                                              color: _gender == 'female'
-                                                  ? Colors.pink.shade700
-                                                  : AppColors.gray550,
-                                              fontWeight: _gender == 'female'
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Male',
+                                  style: TextStyle(
+                                    color: _gender == 'male'
+                                        ? Colors.blue.shade700
+                                        : AppColors.gray550,
+                                    fontWeight: _gender == 'male'
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          if (_genderError != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6, left: 12),
-                              child: Text(
-                                _genderError!,
-                                style: const TextStyle(
-                                  color: AppColors.error,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Birthday Picker
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onTap: _pickBirthday,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 18,
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() {
+                            _gender = 'female';
+                            _genderError = null;
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: _gender == 'female'
+                                  ? Colors.pink.withValues(alpha: 0.2)
+                                  : Colors.transparent,
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(12),
+                                bottomRight: Radius.circular(12),
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: _birthdayError != null
-                                    ? Border.all(
-                                        color: AppColors.error,
-                                        width: 1,
-                                      )
-                                    : null,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.calendar_today,
-                                    color: _birthdayError != null
-                                        ? AppColors.error
+                              border: _gender == 'female'
+                                  ? Border.all(color: Colors.pink, width: 2)
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.female,
+                                  color: _gender == 'female'
+                                      ? Colors.pink
+                                      : AppColors.gray550,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Female',
+                                  style: TextStyle(
+                                    color: _gender == 'female'
+                                        ? Colors.pink.shade700
                                         : AppColors.gray550,
+                                    fontWeight: _gender == 'female'
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    _birthday == null
-                                        ? 'เลือกวันเกิด'
-                                        : '${_birthday!.day}/${_birthday!.month}/${_birthday!.year}',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: _birthday == null
-                                          ? AppColors.gray300
-                                          : AppColors.yellow900,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                          if (_birthdayError != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6, left: 12),
-                              child: Text(
-                                _birthdayError!,
-                                style: const TextStyle(
-                                  color: AppColors.error,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 24),
-
-                      CustomButton(text: "Sign Up", onPressed: _signup),
-                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
+                if (_genderError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, left: 12),
+                    child: Text(
+                      _genderError!,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Birthday Picker
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: _pickBirthday,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: _birthdayError != null
+                          ? Border.all(color: AppColors.error, width: 1)
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          color: _birthdayError != null
+                              ? AppColors.error
+                              : AppColors.gray550,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _birthday == null
+                              ? 'เลือกวันเกิด'
+                              : '${_birthday!.day}/${_birthday!.month}/${_birthday!.year}',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            CustomButton(text: "Sign Up", onPressed: _signup),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    ),
+
+    // Back button
+    Positioned(
+      top: 8,
+      left: 8,
+      child: IconButton(
+        icon: const Icon(Icons.arrow_back, size: 28),
+        onPressed: () {
+          Navigator.pushReplacementNamed(context, '/');
+        },
+      ),
+    ),
+  ],
+),
         ),
       ),
     );
   }
 }
+

@@ -131,9 +131,15 @@ class AuthService {
   // ------------------------------
   // RESEND VERIFICATION
   // ------------------------------
-  Future<void> resendVerification(User user) async {
-    await user.sendEmailVerification();
+Future<void> resendVerification(User user) async {
+  await user.reload();
+  final refreshedUser = FirebaseAuth.instance.currentUser;
+
+  if (refreshedUser != null && !refreshedUser.emailVerified) {
+    await refreshedUser.sendEmailVerification();
   }
+}
+
 
   // ------------------------------
   // RELOAD USER
