@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/services/firestore_service.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -11,8 +12,11 @@ class DashboardPage extends StatefulWidget {
       _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
-  final FirestoreService _firestoreService =
+class _DashboardPageState
+    extends State<DashboardPage> {
+
+  final FirestoreService
+      _firestoreService =
       FirestoreService();
 
   bool isLoading = true;
@@ -24,7 +28,29 @@ class _DashboardPageState extends State<DashboardPage> {
   Map<String, Map<String, dynamic>>
       perSoundAccuracy = {};
 
-  List<Map<String, dynamic>> recentScores = [];
+  List<Map<String, dynamic>>
+      recentScores = [];
+
+  List<Map<String, dynamic>>
+      filteredScores = [];
+
+  String selectedMonth = "ทั้งหมด";
+
+  final List<String> months = const [
+    "ทั้งหมด",
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม"
+  ];
 
   @override
   void initState() {
@@ -33,6 +59,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> loadDashboard() async {
+
     final user =
         FirebaseAuth.instance.currentUser;
 
@@ -43,66 +70,119 @@ class _DashboardPageState extends State<DashboardPage> {
 
     final summary =
         await _firestoreService
-            .getDashboardSummary(user.uid);
+            .getDashboardSummary(
+                user.uid);
+
+    recentScores =
+        List<Map<String, dynamic>>.from(
+            summary['recentScores'] ??
+                []);
+
+    perSoundAccuracy =
+        Map<String, Map<String,
+            dynamic>>.from(
+      summary['perSoundAccuracy'] ??
+          {},
+    );
+
+    totalQuizzes =
+        summary['totalQuizzes'] ?? 0;
+
+    totalCorrect =
+        summary['totalCorrect'] ?? 0;
+
+    overallAccuracy =
+        (summary['overallAccuracy'] ??
+                0)
+            .toDouble();
+
+    applyMonthFilter();
 
     setState(() {
-      totalQuizzes =
-          summary['totalQuizzes'] ?? 0;
-
-      totalCorrect =
-          summary['totalCorrect'] ?? 0;
-
-      overallAccuracy =
-          (summary['overallAccuracy'] ?? 0)
-              .toDouble();
-
-      perSoundAccuracy =
-          Map<String, Map<String, dynamic>>
-              .from(summary[
-                  'perSoundAccuracy'] ??
-                  {});
-
-      recentScores =
-          List<Map<String, dynamic>>.from(
-              summary['recentScores'] ??
-                  []);
-
       isLoading = false;
     });
   }
 
+  void applyMonthFilter() {
+
+    if (selectedMonth == "ทั้งหมด") {
+      filteredScores = recentScores;
+      return;
+    }
+
+    final monthIndex =
+        months.indexOf(selectedMonth);
+
+    filteredScores =
+        recentScores.where((score) {
+
+      if (score['date'] == null)
+        return false;
+
+      final date =
+          score['date'] as DateTime;
+
+      return date.month ==
+          monthIndex;
+    }).toList();
+  }
+
+  double percent(int correct,
+      int total) {
+
+    if (total == 0) return 0;
+
+    final value =
+        (correct / total) * 100;
+
+    return value.clamp(0, 100);
+  }
+
   @override
   Widget build(BuildContext context) {
+
     if (isLoading) {
       return const Scaffold(
         body: Center(
-          child:
-              CircularProgressIndicator(),
-        ),
+            child:
+                CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
+
       body: Container(
-        decoration: const BoxDecoration(
+
+        decoration:
+            const BoxDecoration(
           image: DecorationImage(
             image: AssetImage(
                 'assets/img/bg4.png'),
             fit: BoxFit.cover,
           ),
         ),
+
         child: SafeArea(
+
           child: Column(
+
             children: [
+
               _buildHeader(),
 
               Expanded(
-                child: SingleChildScrollView(
+
+                child:
+                    SingleChildScrollView(
+
                   padding:
-                      const EdgeInsets.all(
-                          24),
+                      const EdgeInsets
+                          .all(24),
+
                   child: Column(
+
                     children: [
+
                       _buildSummaryCard(),
 
                       const SizedBox(
@@ -113,10 +193,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       const SizedBox(
                           height: 20),
 
-                      _buildRecentScoresCard(),
-
-                      const SizedBox(
-                          height: 20),
+                      _buildQuizCard(),
                     ],
                   ),
                 ),
@@ -128,283 +205,748 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ==========================
-  // HEADER
-  // ==========================
-
   Widget _buildHeader() {
+
     return Padding(
+
       padding:
           const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 16),
+        horizontal: 24,
+        vertical: 16,
+      ),
+
       child: Row(
+
         children: [
+
           IconButton(
+
             icon: const Icon(
               Icons
                   .arrow_back_ios_new_rounded,
-              color: AppColors.blue800,
+              color:
+                  AppColors.blue800,
             ),
-            iconSize: 32,
+
             onPressed: () =>
-                Navigator.pop(context),
+                Navigator.pop(
+                    context),
           ),
+
           const Spacer(),
+
           const Text(
+
             "ผลการทดสอบ",
+
             style: TextStyle(
+
               fontSize: 22,
+
               fontWeight:
                   FontWeight.bold,
+
               color:
                   AppColors.blue800,
             ),
           ),
+
           const Spacer(),
-          const SizedBox(width: 32),
+
+          const SizedBox(
+              width: 32),
         ],
       ),
     );
   }
 
-  // ==========================
-  // SUMMARY CARD
-  // ==========================
-
   Widget _buildSummaryCard() {
-    return Container(
-      padding:
-          const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color:
-            Colors.white.withAlpha(
-                235),
-        borderRadius:
-            BorderRadius.circular(
-                16),
-      ),
+
+    return _card(
+
       child: Column(
+
         children: [
+
           const Text(
+
             "ภาพรวม",
+
             style: TextStyle(
+
               fontSize: 20,
+
               fontWeight:
                   FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(
+              height: 16),
 
-          _buildStatRow(
-              "จำนวน Quiz",
+          _stat("จำนวน Quiz",
               totalQuizzes
                   .toString()),
 
-          _buildStatRow(
-              "ตอบถูกทั้งหมด",
+          _stat("ตอบถูกทั้งหมด",
               totalCorrect
                   .toString()),
 
-          _buildStatRow(
-            "Accuracy",
-            "${overallAccuracy.toStringAsFixed(1)}%",
-          ),
+          _stat(
+              "Accuracy",
+              "${overallAccuracy.toStringAsFixed(1)}%"),
         ],
       ),
     );
   }
-
-  Widget _buildStatRow(
-      String label,
-      String value) {
-    return Padding(
-      padding:
-          const EdgeInsets.symmetric(
-              vertical: 6),
-      child: Row(
-        mainAxisAlignment:
-            MainAxisAlignment
-                .spaceBetween,
-        children: [
-          Text(label),
-          Text(
-            value,
-            style:
-                const TextStyle(
-              fontWeight:
-                  FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================
-  // PER SOUND CARD
-  // ==========================
 
   Widget _buildPerSoundCard() {
-    return Container(
-      padding:
-          const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color:
-            Colors.white.withAlpha(
-                235),
-        borderRadius:
-            BorderRadius.circular(
-                16),
-      ),
+
+    final sounds =
+        perSoundAccuracy
+            .entries
+            .toList();
+
+    if (sounds.isEmpty) {
+
+      return _card(
+        child: const Center(
+          child: Text(
+              "No sound accuracy data"),
+        ),
+      );
+    }
+
+    return _card(
+
       child: Column(
+
         crossAxisAlignment:
             CrossAxisAlignment.start,
+
         children: [
+
           const Text(
+
             "LingSix Sound Accuracy",
+
             style: TextStyle(
+
               fontSize: 20,
+
               fontWeight:
                   FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(
+              height: 20),
 
-          if (perSoundAccuracy
-              .isEmpty)
-            const Text(
-                "ยังไม่มีข้อมูล"),
+          Column(
 
-          ...perSoundAccuracy
-              .entries
-              .map((entry) {
-            final sound =
-                entry.key;
+            children:
+                sounds.map((entry) {
 
-            final data =
-                entry.value;
+              final sound =
+                  entry.key;
 
-            final percent =
-                (data['percent']
-                        as num)
-                    .toDouble();
+              final p =
+                  (entry.value[
+                              'percent'] ??
+                          0)
+                      .toDouble();
 
-            return Padding(
-              padding:
-                  const EdgeInsets
-                      .symmetric(
-                          vertical:
-                              6),
-              child: Row(
+              return Row(
+
                 mainAxisAlignment:
                     MainAxisAlignment
                         .spaceBetween,
+
                 children: [
+
                   Text(sound),
 
                   Text(
-                    "${percent.toStringAsFixed(1)}%",
-                    style:
-                        const TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .bold,
-                    ),
+                      "${p.toStringAsFixed(1)}%"),
+                ],
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(
+              height: 24),
+
+          SizedBox(
+
+            height: 220,
+
+            child: LineChart(
+
+              LineChartData(
+
+                minY: 0,
+
+                maxY: 100,
+
+                lineBarsData: [
+
+                  LineChartBarData(
+
+                    isCurved: true,
+
+                    spots: sounds
+                        .asMap()
+                        .entries
+                        .map((e) {
+
+                      final p =
+                          (e.value.value[
+                                      'percent'] ??
+                                  0)
+                              .toDouble();
+
+                      return FlSpot(
+                        e.key
+                            .toDouble(),
+                        p.clamp(
+                            0, 100),
+                      );
+                    }).toList(),
                   ),
                 ],
+
+                titlesData:
+                    FlTitlesData(
+
+                  bottomTitles:
+                      AxisTitles(
+
+                    sideTitles:
+                        SideTitles(
+
+                      showTitles:
+                          true,
+
+                      getTitlesWidget:
+                          (value,
+                              meta) {
+
+                        if (value
+                                .toInt() >=
+                            sounds
+                                .length)
+                          return const SizedBox();
+
+                        return Text(
+                            sounds[value
+                                    .toInt()]
+                                .key);
+                      },
+                    ),
+                  ),
+                ),
               ),
-            );
-          }),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // ==========================
-  // RECENT SCORES CARD
-  // ==========================
+  Widget _buildQuizCard() {
 
-  Widget _buildRecentScoresCard() {
-    return Container(
-      padding:
-          const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color:
-            Colors.white.withAlpha(
-                235),
-        borderRadius:
-            BorderRadius.circular(
-                16),
-      ),
+    return _card(
+
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+
         children: [
-          const Text(
-            "Quiz ล่าสุด",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight:
-                  FontWeight.bold,
-            ),
+
+          Row(
+
+            mainAxisAlignment:
+                MainAxisAlignment
+                    .spaceBetween,
+
+            children: [
+
+              const Text(
+
+                "Quiz Accuracy",
+
+                style:
+                    TextStyle(
+
+                  fontSize: 20,
+
+                  fontWeight:
+                      FontWeight
+                          .bold,
+                ),
+              ),
+
+              _buildMonthDropdown(),
+            ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(
+              height: 20),
 
-          if (recentScores
-              .isEmpty)
-            const Text(
-                "ยังไม่มีการทำ Quiz"),
+          SizedBox(
+              height: 220,
+              child:
+                  _buildQuizBarChart()),
 
-          ...recentScores.map(
-              (scoreData) {
-            final correct =
-                scoreData[
-                        'correct']
-                    as int;
+          const SizedBox(
+              height: 20),
 
-            final total =
-                scoreData[
-                        'total']
-                    as int;
+          _buildQuizList(),
+        ],
+      ),
+    );
+  }
 
-            final percent =
-                (correct /
-                        total) *
-                    100;
+  Widget _buildQuizBarChart() {
 
-            return Padding(
-              padding:
-                  const EdgeInsets
-                      .symmetric(
-                          vertical:
-                              6),
-              child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
+    return BarChart(
+
+      BarChartData(
+
+        minY: 0,
+
+        maxY: 100,
+
+        titlesData:
+            FlTitlesData(
+
+          bottomTitles:
+              AxisTitles(
+
+            sideTitles:
+                SideTitles(
+
+              showTitles:
+                  true,
+
+              getTitlesWidget:
+                  (value,
+                      meta) {
+
+                final index =
+                    value
+                        .toInt();
+
+                if (index >=
+                    filteredScores
+                        .length)
+                  return const SizedBox();
+
+                return Text(
+                    "Quiz ${index + 1}");
+              },
+            ),
+          ),
+        ),
+
+        barGroups:
+            filteredScores
+                .asMap()
+                .entries
+                .map((e) {
+
+          return BarChartGroupData(
+
+            x: e.key,
+
+            barRods: [
+
+              BarChartRodData(
+                toY: percent(
+                    e.value[
+                        'correct'],
+                    e.value[
+                        'total']),
+              )
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildQuizList() {
+
+    return Column(
+
+      children:
+          filteredScores
+              .asMap()
+              .entries
+              .map((entry) {
+
+        final index =
+            entry.key + 1;
+
+        final score =
+            entry.value;
+
+        final p =
+            percent(
+                score[
+                    'correct'],
+                score[
+                    'total']);
+
+        return Card(
+
+          child: ListTile(
+
+            title:
+                Text("Quiz $index"),
+
+            subtitle: Column(
+
+              crossAxisAlignment:
+                  CrossAxisAlignment
+                      .start,
+
+              children: [
+
+                Text(
+                    "Score: ${score['correct']}/${score['total']}"),
+
+                Text(
+                    "Accuracy: ${p.toStringAsFixed(1)}%"),
+              ],
+            ),
+
+            trailing:
+                IconButton(
+
+              icon: const Icon(
+                  Icons
+                      .more_vert),
+
+              onPressed: () {
+
+                _showQuizDetail(
+                    score,
+                    index);
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+// month dropdown 
+Widget _buildMonthDropdown() {
+
+  return Container(
+
+    height: 36,
+
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+
+    decoration: BoxDecoration(
+
+      color: Colors.white,
+
+      borderRadius: BorderRadius.circular(20),
+
+      border: Border.all(
+        color: Colors.grey.shade300,
+      ),
+
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.06),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+
+    child: DropdownButtonHideUnderline(
+
+      child: DropdownButton<String>(
+
+        value: selectedMonth,
+
+        borderRadius: BorderRadius.circular(16),
+
+        dropdownColor: Colors.white,
+
+        elevation: 3,
+//menu max height
+        menuMaxHeight: 250, 
+
+        icon: const Icon(
+          Icons.keyboard_arrow_down_rounded,
+          size: 20,
+        ),
+
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+        ),
+
+        items: months.map((m) {
+
+          return DropdownMenuItem(
+            value: m,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 6,
+                horizontal: 6,
+              ),
+              child: Text(m),
+            ),
+          );
+
+        }).toList(),
+
+        onChanged: (value) {
+
+          selectedMonth = value!;
+
+          applyMonthFilter();
+
+          setState(() {});
+        },
+      ),
+    ),
+  );
+}
+
+
+// quiz detail
+void _showQuizDetail(
+    Map<String, dynamic> quiz,
+    int index) {
+
+  final soundResults =
+      Map<String, dynamic>.from(
+          quiz['soundResults'] ?? {});
+
+  showDialog(
+
+    context: context,
+
+    builder: (context) {
+
+      return Dialog(
+
+        backgroundColor: Colors.transparent,
+
+        child: Container(
+
+          padding: const EdgeInsets.all(20),
+
+          decoration: BoxDecoration(
+
+            color: Colors.white,
+
+            borderRadius: BorderRadius.circular(24),
+
+            boxShadow: [
+
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+
+          child: Column(
+
+            mainAxisSize: MainAxisSize.min,
+
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+
+            children: [
+
+              /// HEADER
+              Row(
+
                 children: [
-                  Text(
-                      "$correct / $total"),
 
-                  Text(
-                    "${percent.toStringAsFixed(1)}%",
-                    style:
-                        const TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .bold,
+                  Expanded(
+                    child: Text(
+                      "Quiz $index Detail",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  GestureDetector(
+
+                    onTap: () =>
+                        Navigator.pop(context),
+
+                    child: Container(
+
+                      decoration: BoxDecoration(
+
+                        color: Colors.grey.shade200,
+
+                        shape: BoxShape.circle,
+                      ),
+
+                      padding:
+                          const EdgeInsets.all(6),
+
+                      child: const Icon(
+                        Icons.close,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ],
               ),
-            );
-          }),
-        ],
+
+              const SizedBox(height: 12),
+
+              Text(
+                "Score: ${quiz['correct']}/${quiz['total']}",
+              ),
+
+              Text(
+                "Accuracy: ${percent(
+                  quiz['correct'],
+                  quiz['total'],
+                ).toStringAsFixed(1)}%",
+              ),
+
+              const SizedBox(height: 16),
+
+              const Text(
+                "Sound Accuracy",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              if (soundResults.isEmpty)
+                const Text("No sound data"),
+
+              if (soundResults.isNotEmpty)
+                Column(
+
+                  children:
+                      soundResults.entries.map((entry) {
+
+                    final sound = entry.key;
+
+                    final data =
+                        Map<String, dynamic>.from(
+                            entry.value);
+
+                    final correct =
+                        data['correct'] ?? 0;
+
+                    final total =
+                        data['total'] ?? 0;
+
+                    final p =
+                        percent(correct, total);
+
+                    return Container(
+
+                      margin:
+                          const EdgeInsets.symmetric(
+                              vertical: 4),
+
+                      padding:
+                          const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12),
+
+                      decoration: BoxDecoration(
+
+                        color: Colors.grey.shade50,
+
+                        borderRadius:
+                            BorderRadius.circular(12),
+                      ),
+
+                      child: Row(
+
+                        mainAxisAlignment:
+                            MainAxisAlignment
+                                .spaceBetween,
+
+                        children: [
+
+                          Text(sound),
+
+                          Text(
+                            "${p.toStringAsFixed(1)}%",
+                            style: const TextStyle(
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                  }).toList(),
+                ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
+
+  Widget _card({required Widget child}) {
+
+    return Container(
+
+      padding:
+          const EdgeInsets.all(
+              20),
+
+      decoration: BoxDecoration(
+
+        color: Colors.white
+            .withAlpha(235),
+
+        borderRadius:
+            BorderRadius.circular(
+                16),
       ),
+
+      child: child,
+    );
+  }
+
+  Widget _stat(
+      String label,
+      String value) {
+
+    return Row(
+
+      mainAxisAlignment:
+          MainAxisAlignment
+              .spaceBetween,
+
+      children: [
+
+        Text(label),
+
+        Text(value),
+      ],
     );
   }
 }

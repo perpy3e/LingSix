@@ -157,7 +157,7 @@ class FirestoreService {
 
     Map<String, Map<String, int>> soundStats = {};
     List<Map<String, dynamic>> recentScores = [];
-
+// to dashboard
     for (var doc in attempts) {
       final data =
           doc.data() as Map<String, dynamic>;
@@ -169,10 +169,24 @@ class FirestoreService {
       totalCorrect += score;
       totalQuestions += total;
 
-      recentScores.add({
-        'correct': score,
-        'total': total,
-      });
+     final Timestamp? ts = data['playedAt'];
+final DateTime? playedDate = ts?.toDate();
+
+recentScores.add({
+  'correct': score,
+  'total': total,
+
+  
+  'date': playedDate,
+
+  
+  'soundResults':
+      data['perSoundAccuracy'] ?? {},
+
+  // optional
+  'accuracy': data['accuracy'] ?? 0,
+  'quizId': data['quizId'],
+});
 
       final perSound =
           data['perSoundAccuracy']
@@ -198,7 +212,7 @@ class FirestoreService {
         });
       }
     }
-
+//
     Map<String, Map<String, dynamic>>
         perSoundAccuracy = {};
 

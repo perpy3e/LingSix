@@ -195,7 +195,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     children: [
                       const SizedBox(height: 40),
                       Text(
-                        "Create an Account",
+                        "สร้างบัญชีผู้ใช้",
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
@@ -204,7 +204,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       // Email
                       CustomTextField(
                         controller: _emailController,
-                        hintText: "Email",
+                        hintText: "อีเมล",
                         prefixIcon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         errorText: _emailError,
@@ -214,7 +214,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       // Username
                       CustomTextField(
                         controller: _usernameController,
-                        hintText: "Username",
+                        hintText: "ชื่อผู้ใช้",
                         prefixIcon: Icons.person_outline,
                         errorText: _usernameError,
                       ),
@@ -223,7 +223,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       // Password
                       CustomTextField(
                         controller: _passwordController,
-                        hintText: "Password",
+                        hintText: "รหัสผ่าน",
                         obscureText: true,
                         prefixIcon: Icons.lock_outline,
                         errorText: _passwordError,
@@ -237,7 +237,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
-                              "Personal Info",
+                              "ข้อมูลส่วนตัว",
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
@@ -249,7 +249,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       // First Name
                       CustomTextField(
                         controller: _firstNameController,
-                        hintText: "First Name",
+                        hintText: "ชื่อจริง",
                         prefixIcon: Icons.badge_outlined,
                         errorText: _firstNameError,
                       ),
@@ -258,7 +258,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       // Last Name
                       CustomTextField(
                         controller: _lastNameController,
-                        hintText: "Last Name",
+                        hintText: "นามสกุล",
                         prefixIcon: Icons.badge_outlined,
                         errorText: _lastNameError,
                       ),
@@ -432,7 +432,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   const SizedBox(width: 12),
                                   Text(
                                     _birthday == null
-                                        ? 'Select Birthday'
+                                        ? 'เลือกวันเกิด'
                                         : '${_birthday!.day}/${_birthday!.month}/${_birthday!.year}',
                                     style: TextStyle(
                                       fontSize: 16,

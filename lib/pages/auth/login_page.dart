@@ -52,11 +52,11 @@ class _LoginPageState extends State<LoginPage> {
     // Validate fields
     bool hasError = false;
     if (emailOrUsername.isEmpty) {
-      setState(() => _emailOrUsernameError = 'Please enter email or username');
+      setState(() => _emailOrUsernameError = 'โปรดกรอกอีเมลหรือชื่อบัญชีผู้ใช้ที่ลงทะเบียนไว้');
       hasError = true;
     }
     if (password.isEmpty) {
-      setState(() => _passwordError = 'Please enter password');
+      setState(() => _passwordError = 'โปรดกรอกรหัสผ่าน');
       hasError = true;
     }
     if (hasError) return;
@@ -151,10 +151,26 @@ Future<void> _googleLogin() async {
     // profile completed
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, AppRouter.startPage);
-  } catch (e) {
+
+   } catch (e) {
+
     if (!mounted) return;
-    _showError('Google Sign-In failed\n$e');
-  } finally {
+
+    final error = e.toString().toLowerCase();
+
+    // ignore red message gg sign in (click back -> log in )
+    if (error.contains('canceled') ||
+        error.contains('cancelled') ||
+        error.contains('sign_in_canceled') ||
+        error.contains('aborted') ||
+        error.contains('nslocalizeddescription')) {
+      return;
+    }
+
+    _showError('เข้าสู่ระบบด้วย Google ไม่สำเร็จ');
+
+  } 
+  finally {
     if (mounted) setState(() => _isGoogleLoading = false);
   }
 }
@@ -194,7 +210,7 @@ Future<void> _googleLogin() async {
                   const SizedBox(height: 8),
 
                   Text(
-                    'Welcome back',
+                    'ยินดีต้อนรับกลับ',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
@@ -202,7 +218,7 @@ Future<void> _googleLogin() async {
 
                   CustomTextField(
                     controller: _emailOrUsernameController,
-                    hintText: 'Email or Username',
+                    hintText: 'อีเมล หรือ ชื่อผู้ใช้',
                     prefixIcon: Icons.person_outline,
                     keyboardType: TextInputType.emailAddress,
                     errorText: _emailOrUsernameError,
@@ -211,7 +227,7 @@ Future<void> _googleLogin() async {
 
                   CustomTextField(
                     controller: _passwordController,
-                    hintText: 'Password',
+                    hintText: 'รหัสผ่าน',
                     obscureText: true,
                     prefixIcon: Icons.lock_outline,
                     errorText: _passwordError,
@@ -224,7 +240,7 @@ Future<void> _googleLogin() async {
                       onPressed: () =>
                           Navigator.pushNamed(context, AppRouter.forgotPassword),
                       child: Text(
-                        'Forgot Password?',
+                        'ลืมรหัสผ่าน?',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
@@ -233,7 +249,7 @@ Future<void> _googleLogin() async {
                   const SizedBox(height: 24),
 
                   CustomButton(
-                    text: 'Login',
+                    text: 'เข้าสู่ระบบ',
                     onPressed: _login,
                     isLoading: _isLoading,
                   ),
@@ -245,7 +261,7 @@ Future<void> _googleLogin() async {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'OR',
+                          'หรือ',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: Theme.of(context).dividerColor,
@@ -264,7 +280,7 @@ Future<void> _googleLogin() async {
                           height: 50,
                           child: SignInButton(
                             Buttons.Google,
-                            text: "Sign up with Google",
+                            text: "เข้าสู่ระบบด้วยบัญชี Google",
                             onPressed: _googleLogin,
                           ),
                         ),
@@ -274,13 +290,13 @@ Future<void> _googleLogin() async {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        "ยังไม่มีบัญชี? ",
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(context, AppRouter.signup),
                         child: Text(
-                          'Sign Up',
+                          'ลงทะเบียน',
                           style: (() {
                             final base = Theme.of(context).textTheme.bodyMedium;
                             final color = base?.color ?? Theme.of(context).colorScheme.onSurface;
