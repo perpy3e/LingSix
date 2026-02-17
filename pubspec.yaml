@@ -48,7 +48,9 @@ dependencies:
   shared_preferences: ^2.1.1 
   rename_app: ^1.6.5
   fl_chart: ^1.1.1
-
+  csv: ^5.1.1
+  path_provider: ^2.1.2
+  share_plus: ^7.2.1
  
 
 

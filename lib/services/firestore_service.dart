@@ -40,28 +40,38 @@ class FirestoreService {
   }
 
   Future<void> createUser({
-    required String uid,
-    required String email,
-    required String username,
-    required bool isGoogleSignIn,
-    String? firstName,
-    String? lastName,
-    String? gender,
-    DateTime? birthday,
-  }) async {
-    await _db.collection('users').doc(uid).set({
-      'email': email,
-      'username': username,
-      'isGoogleSignIn': isGoogleSignIn,
-      'firstName': firstName,
-      'lastName': lastName,
-      'gender': gender,
-      'birthday':
-          birthday != null ? Timestamp.fromDate(birthday) : null,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-  }
+  required String uid,
+  required String email,
+  required String username,
+  required bool isGoogleSignIn,
+  String? firstName,
+  String? lastName,
+  String? gender,
+  DateTime? birthday,
+}) async {
+  await _db.collection('users').doc(uid).set({
+    'email': email,
+    'username': username,
+    'isGoogleSignIn': isGoogleSignIn,
+
+    'firstName': firstName,
+    'lastName': lastName,
+    'gender': gender,
+    'birthday': birthday != null
+        ? Timestamp.fromDate(birthday)
+        : null,
+
+    // profile completed
+    'profileCompleted': firstName != null &&
+        lastName != null &&
+        gender != null &&
+        birthday != null,
+
+    'createdAt': FieldValue.serverTimestamp(),
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+}
+
 
   Future<void> updateUser(
       String uid, Map<String, dynamic> data) async {

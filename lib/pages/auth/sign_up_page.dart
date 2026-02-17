@@ -551,7 +551,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                       const SizedBox(height: 24),
 
-                      CustomButton(text: "Sign Up", onPressed: _signup),
+                      CustomButton(text: "ลงทะเบียน", onPressed: _signup),
 
                       const SizedBox(height: 40),
                     ],
