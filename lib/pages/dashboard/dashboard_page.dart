@@ -247,7 +247,7 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-
+ 
   Widget _buildSummaryCard() {
    return _card(
 

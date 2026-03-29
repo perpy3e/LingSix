@@ -43,14 +43,14 @@ dependencies:
   google_sign_in: ^7.2.0
   email_validator: ^3.0.0
   http: ^1.2.0
-  google_fonts: ^6.3.3
+  google_fonts: ^8.0.2
   flutter_signin_button: ^2.1.0
   shared_preferences: ^2.1.1 
   rename_app: ^1.6.5
   fl_chart: ^1.1.1
-  csv: ^5.1.1
+  csv: ^8.0.0
   path_provider: ^2.1.2
-  share_plus: ^7.2.1
+  share_plus: ^12.0.1
  
 
 
