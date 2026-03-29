@@ -44,7 +44,7 @@ dependencies:
   email_validator: ^3.0.0
   http: ^1.2.0
   google_fonts: ^8.0.2
-  flutter_signin_button: ^2.1.0
+  flutter_signin_button: ^2.1.1
   shared_preferences: ^2.1.1 
   rename_app: ^1.6.5
   fl_chart: ^1.1.1

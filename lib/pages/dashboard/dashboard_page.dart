@@ -48,7 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
     ]);
   }
 
-  String csv = const ListToCsvConverter().convert(rows);
+  String csv = const CsvEncoder().convert(rows);
 
   final dir = await getTemporaryDirectory();
 
@@ -384,8 +384,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       showTitles: true,
 
                       getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= sounds.length)
+                        if (value.toInt() >= sounds.length) {
                           return const SizedBox();
+                        }
 
                         return Text(sounds[value.toInt()].key);
                       },

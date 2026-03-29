@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>CADisableMinimumFrameDurationOnPhone</key>
-    <true/>
+    <true />
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
@@ -25,11 +25,11 @@
     <key>CFBundleVersion</key>
     <string>$(FLUTTER_BUILD_NUMBER)</string>
     <key>LSRequiresIPhoneOS</key>
-    <true/>
+    <true />
     <key>NSMicrophoneUsageDescription</key>
     <string>This app uses the microphone to measure sound levels.</string>
     <key>UIApplicationSupportsIndirectInputEvents</key>
-    <true/>
+    <true />
     <key>UILaunchStoryboardName</key>
     <string>LaunchScreen</string>
     <key>UIMainStoryboardFile</key>
@@ -60,5 +60,22 @@
     </array>
     <key>GIDClientID</key>
     <string>406340157010-j7rukhv5mugeklnn09b2reduiovkl09k.apps.googleusercontent.com</string>
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+      <key>UIApplicationSupportsMultipleScenes</key>
+      <false />
+      <key>UISceneConfigurations</key>
+      <dict>
+        <key>UIWindowSceneSessionRoleApplication</key>
+        <array>
+          <dict>
+            <key>UISceneConfigurationName</key>
+            <string>Default Configuration</string>
+            <key>UISceneDelegateClassName</key>
+            <string></string>
+          </dict>
+        </array>
+      </dict>
+    </dict>
   </dict>
 </plist>
