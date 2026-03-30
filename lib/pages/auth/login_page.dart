@@ -106,14 +106,23 @@ class _LoginPageState extends State<LoginPage> {
   // -------------------------------------------------------------
   // GOOGLE SIGN-IN
   // -------------------------------------------------------------
+final GoogleSignIn _googleSignIn = GoogleSignIn();
+
 Future<void> _googleLogin() async {
   setState(() => _isGoogleLoading = true);
 
   try {
-    final googleUser = await GoogleSignIn.instance.authenticate();
-    final googleAuth = googleUser.authentication;
+    final googleUser = await _googleSignIn.signIn();
+
+    if (googleUser == null) {
+      print("❌ User cancelled");
+      return;
+    }
+
+    final googleAuth = await googleUser.authentication;
 
     final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
@@ -125,7 +134,6 @@ Future<void> _googleLogin() async {
 
     final userDoc = await _firestore.getUserByUid(user.uid);
 
-    // 🆕 NEW USER
     if (userDoc == null) {
       await _firestore.addUser(
         user.uid,
@@ -134,48 +142,29 @@ Future<void> _googleLogin() async {
         isGoogleSignIn: true,
       );
 
-      if (!mounted) return;
       Navigator.pushReplacementNamed(context, AppRouter.infodata);
       return;
     }
 
     final data = userDoc.data() as Map<String, dynamic>;
 
-    // new sign-in
     if (data['profileCompleted'] != true) {
-      if (!mounted) return;
       Navigator.pushReplacementNamed(context, AppRouter.infodata);
       return;
     }
 
-    // profile completed
-    if (!mounted) return;
     Navigator.pushReplacementNamed(context, AppRouter.startPage);
 
-   } catch (e) {
-
-    if (!mounted) return;
-
-    final error = e.toString().toLowerCase();
-
-    // ignore red message gg sign in (click back -> log in )
-    if (error.contains('canceled') ||
-        error.contains('cancelled') ||
-        error.contains('sign_in_canceled') ||
-        error.contains('aborted') ||
-        error.contains('nslocalizeddescription')) {
-      return;
-    }
-
+  } catch (e) {
+    print("❌ ERROR: $e");
     _showError('เข้าสู่ระบบด้วย Google ไม่สำเร็จ');
-
-  } 
-  finally {
+  } finally {
     if (mounted) setState(() => _isGoogleLoading = false);
   }
 }
-
-
+// -------------------------------------------------------------
+  // GOOGLE SIGN-IN (END)
+//-------------------------------------------------------------
   
   void _showError(String message) {
     SnackBarHelper.showError(context, message);
