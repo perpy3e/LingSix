@@ -10,7 +10,9 @@ import GoogleSignIn
   ) -> Bool {
     
    
-    FirebaseApp.configure()    
+    //❌‼️❌‼️❌‼️❌‼️❌‼️❌‼️FirebaseApp.configure() ❌‼️❌‼️❌‼️❌‼️❌‼️❌‼️
+    // main.dart -> await Firebase.initializeApp(); --->> no FirebaseApp.configure() 
+    
     
     GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
       if let error = error {
