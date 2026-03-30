@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:sign_in_button/sign_in_button.dart';
 
 import '../../app/router.dart';
 import '../../services/auth_service.dart';
@@ -279,7 +279,7 @@ Future<void> _googleLogin() async {
                       : SizedBox(
                           height: 50,
                           child: SignInButton(
-                            Buttons.Google,
+                            Buttons.google,
                             text: "เข้าสู่ระบบด้วยบัญชี Google",
                             onPressed: _googleLogin,
                           ),
