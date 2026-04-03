@@ -119,7 +119,7 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bg1.png'),
+            image: AssetImage('assets/common/bg/setting.png'),
             fit: BoxFit.cover,
           ),
         ),

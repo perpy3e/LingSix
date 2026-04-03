@@ -175,7 +175,7 @@ class _DashboardPageState extends State<DashboardPage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bg4.png'),
+            image: AssetImage('assets/common/bg/dashboard.png'),
             fit: BoxFit.cover,
           ),
         ),

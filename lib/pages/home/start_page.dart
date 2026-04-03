@@ -11,7 +11,7 @@ class StartPage extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bg1.png'),
+            image: AssetImage('assets/themes/default/bg/home.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -23,7 +23,7 @@ class StartPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Image.asset(
-                  'assets/img/imgStart.png',
+                  'assets/common/illustrations/start_character.png',
                   fit: BoxFit.contain,
                 ),
               ),

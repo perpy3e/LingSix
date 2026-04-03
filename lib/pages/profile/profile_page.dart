@@ -126,7 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
         body: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/img/bg1.png'),
+              image: AssetImage('assets/img/bg.png'),
               fit: BoxFit.cover,
             ),
           ),
@@ -141,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bg1.png'),
+            image: AssetImage('assets/img/bg.png'),
             fit: BoxFit.cover,
           ),
         ),

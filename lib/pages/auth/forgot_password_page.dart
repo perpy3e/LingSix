@@ -55,7 +55,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgLogin.png'),
+            image: AssetImage('assets/common/bg/login.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -66,7 +66,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 top: 8,
                 left: 8,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 28),
+                  icon: const Icon(Icons.arrow_back, size: 30),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
