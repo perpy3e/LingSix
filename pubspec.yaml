@@ -79,9 +79,13 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/common/
+    - assets/common/bg/
+    - assets/common/illustrations/
+    - assets/common/logo/
     - assets/content/
-    - assets/themes/
+    - assets/themes/default/
+    - assets/themes/summer/
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

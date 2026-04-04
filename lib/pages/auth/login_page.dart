@@ -191,21 +191,13 @@ Future<void> _googleLogin() async {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 40),
-
                   Image.asset(
                     'assets/common/logo/app_logo.png',
-                    height: 80,
-                    width: 80,
+                    height: 200,
+                    width: 200,
                   ),
-                  const SizedBox(height: 8),
 
-                  Text(
-                    'ยินดีต้อนรับกลับ',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
                   const SizedBox(height: 60),
-
                   CustomTextField(
                     controller: _emailOrUsernameController,
                     hintText: 'อีเมล หรือ ชื่อผู้ใช้',
