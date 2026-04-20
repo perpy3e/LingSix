@@ -56,7 +56,9 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   }
 
   Future<void> loadQuestions() async {
-    final jsonString = await rootBundle.loadString('assets/data/vocabulary.json');
+    final jsonString = await rootBundle.loadString(
+      'assets/data/vocabulary.json',
+    );
     final Map<String, dynamic> data = json.decode(jsonString);
 
     final generated = <Map<String, String>>[];
@@ -139,9 +141,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final question = questions[questionIndex];
@@ -172,7 +172,10 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                               color: AppColors.blue800,
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, AppRouter.soundSettings);
+                              Navigator.pushNamed(
+                                context,
+                                AppRouter.soundSettings,
+                              );
                             },
                           ),
                           const Spacer(),
@@ -196,45 +199,61 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: () => playCurrentWord(),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.yellow200,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.volume_up,
+                          color: AppColors.yellow800,
+                          size: 30,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       "ออกเสียงถูกหรือไม่",
-                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w700,
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20),
-                    IconButton(
-                      onPressed: playCurrentWord,
-                      icon: const Icon(Icons.volume_up_rounded),
-                      iconSize: 44,
-                      color: AppColors.yellow700,
-                      tooltip: "Play sound",
+                    const SizedBox(height: 100),
+                    Image.asset(
+                      question["image"]!,
+                      height: 250,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 250,
+                          color: Colors.grey[300],
+                          child: const Center(child: Text('Image not found')),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Image.asset(
-                        question["image"]!,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Text('Image not found'),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                    const Spacer(),
                     Row(
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () => onAnswer(isCheck: true),
-                            icon: const Icon(Icons.check_circle_outline, size: 28),
+                            icon: const Icon(
+                              Icons.check_circle_outline,
+                              size: 28,
+                            ),
                             label: const Text(
                               "Check",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size.fromHeight(64),
@@ -250,11 +269,14 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                             icon: const Icon(Icons.cancel_outlined, size: 28),
                             label: const Text(
                               "Uncheck",
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size.fromHeight(64),
-                              backgroundColor: Colors.grey.shade700,
+                              backgroundColor: AppColors.error,
                               foregroundColor: Colors.white,
                             ),
                           ),
