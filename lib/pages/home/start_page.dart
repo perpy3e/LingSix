@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/app/router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
@@ -35,9 +36,18 @@ class StartPage extends StatelessWidget {
                   width: double.infinity,
                   height: 60,
                   child: ElevatedButton(
+                    // On pressed 
                     onPressed: () {
-                      Navigator.pushNamed(context, AppRouter.homePage);
-                    },
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) {
+    Navigator.pushNamed(context, AppRouter.login);
+  } else {
+    Navigator.pushNamed(context, AppRouter.homePage);
+  }
+},
+//end on pressed update 20/04
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.braveOrange,
                       foregroundColor: Colors.white,

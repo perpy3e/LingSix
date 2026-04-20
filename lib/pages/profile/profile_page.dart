@@ -37,25 +37,37 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _load() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final doc = await _firestore.getUserByUid(uid);
-    final data = doc?.data() as Map<String, dynamic>?;
-    if (data == null) return;
+  final user = FirebaseAuth.instance.currentUser;
 
-    final firstName = (data['firstName'] ?? '') as String;
-    final lastName = (data['lastName'] ?? '') as String;
-    final gender = (data['gender'] ?? 'Other') as String;
-    final birthday = (data['birthday'] as Timestamp?)?.toDate();
+  // if user is null → go login
+  if (user == null) {
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/login');
+    return;
+  }
 
+  final doc = await _firestore.getUserByUid(user.uid);
+
+  // 
+  if (doc == null || doc.data() == null) {
     if (!mounted) return;
     setState(() {
-      userData = data;
-      _firstNameController.text = firstName;
-      _lastNameController.text = lastName;
-      _gender = gender;
-      _birthday = birthday;
+      userData = {}; // stop loading spinner
     });
+    return;
   }
+
+  final data = doc.data() as Map<String, dynamic>;
+
+  if (!mounted) return;
+  setState(() {
+    userData = data;
+    _firstNameController.text = data['firstName'] ?? '';
+    _lastNameController.text = data['lastName'] ?? '';
+    _gender = data['gender'] ?? 'Other';
+    _birthday = (data['birthday'] as Timestamp?)?.toDate();
+  });
+}
 
   String _age(DateTime b) {
     final now = DateTime.now();

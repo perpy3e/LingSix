@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firestore_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -96,10 +96,18 @@ class AuthService {
   }
 
   // ------------------------------
-  // LOGOUT
+  // LOGOUT update clear cache 20/04
   // ------------------------------
- Future<void> logout() async {
+Future<void> logout() async {
   await FirebaseAuth.instance.signOut();
+
+  final googleSignIn = GoogleSignIn();
+
+  try {
+    await googleSignIn.disconnect(); 
+  } catch (_) {}
+
+  await googleSignIn.signOut();
 }
 
 
