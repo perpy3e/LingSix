@@ -191,6 +191,7 @@ Future<void> _googleLogin() async {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 40),
+
                   Image.asset(
                     'assets/common/logo/app_logo.png',
                     height: 200,
@@ -309,5 +310,4 @@ Future<void> _googleLogin() async {
     );
   }
 }
-
 

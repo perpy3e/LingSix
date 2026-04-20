@@ -1,8 +1,13 @@
-import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:lingsix/app/router.dart';
 import 'package:lingsix/app/theme.dart';
+import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/services/firestore_service.dart';
 import 'package:lingsix/pages/quiz/quiz_result_page.dart';
 
@@ -23,89 +28,92 @@ class QuizQuestionsPage extends StatefulWidget {
 class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   final firestoreService = FirestoreService();
   final user = FirebaseAuth.instance.currentUser;
+  final AudioPlayer _player = AudioPlayer();
+
+  static const int questionsPerSet = 12;
 
   int questionIndex = 0;
   int score = 0;
-
-  bool answered = false;
-  int correctChoice = 0;
-  int? selectedChoice;
+  bool isLoading = true;
 
   Map<String, Map<String, int>> soundStats = {};
 
-  final sounds = ["sh", "ss", "ah", "ee", "oo", "mm"];
+  final sounds = ["ah", "ee", "m", "oo", "s", "sh"];
   final random = Random();
 
-  late List<Map<String, dynamic>> questions;
+  List<Map<String, String>> questions = [];
 
   @override
   void initState() {
     super.initState();
-    generateQuestions();
+    loadQuestions();
   }
 
-  void generateQuestions() {
-    questions = List.generate(12, (index) {
-      final sound = sounds[random.nextInt(sounds.length)];
-
-      return {
-        "sound": sound,
-        "correct": random.nextInt(4),
-      };
-    });
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
   }
 
-  void selectAnswer(int index) {
-    if (answered) return;
+  Future<void> loadQuestions() async {
+    final jsonString = await rootBundle.loadString('assets/data/vocabulary.json');
+    final Map<String, dynamic> data = json.decode(jsonString);
 
-    final question = questions[questionIndex];
-    correctChoice = question["correct"];
-    selectedChoice = index;
+    final generated = <Map<String, String>>[];
 
-    final sound = question["sound"];
+    for (final sound in sounds) {
+      final words = (data[sound] as List<dynamic>).cast<String>().toList();
+      words.shuffle(random);
 
-    soundStats.putIfAbsent(sound, () => {
-          "correct": 0,
-          "total": 0,
+      for (final word in words.take(2)) {
+        generated.add({
+          "sound": sound,
+          "word": word,
+          "image": "assets/content/vocabulary/$sound/$word/image.png",
+          "audio": "content/vocabulary/$sound/$word/sound.mp3",
         });
-
-    soundStats[sound]!["total"] =
-        soundStats[sound]!["total"]! + 1;
-
-    if (index == correctChoice) {
-      score++;
-      soundStats[sound]!["correct"] =
-          soundStats[sound]!["correct"]! + 1;
+      }
     }
 
-    setState(() {
-      answered = true;
-    });
+    generated.shuffle(random);
 
-    Timer(const Duration(seconds: 1), nextQuestion);
+    if (!mounted) return;
+    setState(() {
+      questions = generated;
+      isLoading = false;
+    });
   }
 
-  void nextQuestion() {
-    if (questionIndex < 11) {
+  Future<void> onAnswer({required bool isCheck}) async {
+    final question = questions[questionIndex];
+    final sound = question["sound"]!;
+
+    soundStats.putIfAbsent(sound, () => {"correct": 0, "total": 0});
+    soundStats[sound]!["total"] = soundStats[sound]!["total"]! + 1;
+
+    if (isCheck) {
+      score++;
+      soundStats[sound]!["correct"] = soundStats[sound]!["correct"]! + 1;
+    }
+
+    if (questionIndex < questionsPerSet - 1) {
       setState(() {
         questionIndex++;
-        answered = false;
-        selectedChoice = null;
       });
     } else {
-      finishQuiz();
+      await finishQuiz();
     }
   }
 
   Future<void> finishQuiz() async {
-    final accuracy = (score / 12) * 100;
+    final accuracy = (score / questionsPerSet) * 100;
 
     if (user != null) {
       await firestoreService.saveQuizAttempt(
         uid: user!.uid,
         quizId: widget.quizId,
         score: score,
-        totalQuestions: 12,
+        totalQuestions: questionsPerSet,
         accuracy: accuracy,
         perSoundAccuracy: soundStats,
       );
@@ -116,83 +124,149 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       MaterialPageRoute(
         builder: (_) => QuizResultPage(
           score: score,
-          total: 12,
+          total: questionsPerSet,
           accuracy: accuracy,
         ),
       ),
     );
   }
 
-  Color getButtonColor(int index) {
-    if (!answered) return Colors.white;
-
-    if (index == correctChoice) {
-      return Colors.green;
-    }
-
-    if (index == selectedChoice) {
-      return Colors.red;
-    }
-
-    return Colors.white;
-  }
-
-  String getEmoji(int index) {
-    if (!answered) return "";
-
-    if (index == correctChoice) return "✅";
-    if (index == selectedChoice) return "❌";
-
-    return "";
+  Future<void> playCurrentWord() async {
+    final audioPath = questions[questionIndex]["audio"]!;
+    await _player.play(AssetSource(audioPath));
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final question = questions[questionIndex];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("${widget.title} (${questionIndex + 1}/12)"),
-        backgroundColor: AppColors.yellow600,
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
-
-          Container(
-            width: 200,
-            height: 200,
-            color: Colors.grey[300],
-            child: const Icon(Icons.image, size: 100),
-          ),
-
-          const SizedBox(height: 40),
-
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(20),
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
+      body: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(themeProvider.getWallpaperPath('quiz')),
+                fit: BoxFit.cover,
               ),
-              itemCount: 4,
-              itemBuilder: (context, index) {
-                return ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: getButtonColor(index),
-                  ),
-                  onPressed: () => selectAnswer(index),
-                  child: Text(
-                    "${index + 1} ${getEmoji(index)}",
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                );
-              },
             ),
-          )
-        ],
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.settings,
+                              size: 28,
+                              color: AppColors.blue800,
+                            ),
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRouter.soundSettings);
+                            },
+                          ),
+                          const Spacer(),
+                          Text(
+                            "${widget.title} (${questionIndex + 1}/$questionsPerSet)",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.blue800,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              size: 30,
+                              color: AppColors.blue800,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "ออกเสียงถูกหรือไม่",
+                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    IconButton(
+                      onPressed: playCurrentWord,
+                      icon: const Icon(Icons.volume_up_rounded),
+                      iconSize: 44,
+                      color: AppColors.yellow700,
+                      tooltip: "Play sound",
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Image.asset(
+                        question["image"]!,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Text('Image not found'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => onAnswer(isCheck: true),
+                            icon: const Icon(Icons.check_circle_outline, size: 28),
+                            label: const Text(
+                              "Check",
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(64),
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => onAnswer(isCheck: false),
+                            icon: const Icon(Icons.cancel_outlined, size: 28),
+                            label: const Text(
+                              "Uncheck",
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(64),
+                              backgroundColor: Colors.grey.shade700,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

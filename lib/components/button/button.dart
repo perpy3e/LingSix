@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lingsix/app/theme.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -26,10 +27,14 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
-          foregroundColor: textColor ?? Colors.white,
+          backgroundColor: backgroundColor ?? AppColors.yellow200,
+          foregroundColor: textColor ?? AppColors.yellow700,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+            color: Colors.white,
+            width: 2,
+            ),
           ),
           elevation: 0,
           disabledBackgroundColor: Colors.grey[400],
@@ -63,7 +68,7 @@ class CustomButton extends StatelessWidget {
                     text,
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
                   ),

@@ -30,8 +30,9 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
       // Convert volume (0-1) to dB approximation (40-70 range)
       final dbValue = (volume * 100).clamp(40, 70).toDouble();
       // Find closest dB option
-      _originalDb = _dbOptions.reduce((a, b) => 
-        (a - dbValue).abs() < (b - dbValue).abs() ? a : b);
+      _originalDb = _dbOptions.reduce(
+        (a, b) => (a - dbValue).abs() < (b - dbValue).abs() ? a : b,
+      );
     });
   }
 
@@ -40,7 +41,7 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
   Future<void> _testSound(double db) async {
     await VolumeController.instance.setVolume(db / 100);
     await _player.stop();
-    await _player.play(AssetSource('sound/ee.wav'));
+    await _player.play(AssetSource('common/sounds/setting.mp3'));
   }
 
   Future<void> _saveVolume() async {
@@ -57,7 +58,10 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
 
     if (!mounted) return;
 
-    SnackBarHelper.showSuccess(context, "บันทึกระดับเสียง ${_originalDb!.toInt()} dB สำเร็จ");
+    SnackBarHelper.showSuccess(
+      context,
+      "บันทึกระดับเสียง ${_originalDb!.toInt()} dB สำเร็จ",
+    );
   }
 
   void _lockDb() {
@@ -89,7 +93,8 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
           ],
         ),
         content: Text(
-            "คุณต้องการล็อคระดับเสียงที่ ${_selectedDb!.toInt()} dB (อยู่ในช่วง $min–$max dB) ใช่หรือไม่?"),
+          "คุณต้องการล็อคระดับเสียงที่ ${_selectedDb!.toInt()} dB (อยู่ในช่วง $min–$max dB) ใช่หรือไม่?",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -128,27 +133,29 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.blue800),
-                      iconSize: 40,
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        size: 28,
+                        color: AppColors.blue800,
+                      ),
+                      onPressed: () => Navigator.pop(context),
                     ),
                     const Spacer(),
-                    const Text(
+                    Text(
                       "การตั้งค่าระดับเสียง",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: AppColors.blue800,
                       ),
                     ),
                     const Spacer(),
-                    const SizedBox(width: 40), // Balance the back button
+                    const SizedBox(width: 48), // Balance the back button
                   ],
                 ),
               ),
@@ -187,7 +194,10 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                                       color: AppColors.blue100,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(Icons.speaker_rounded, color: AppColors.blue600),
+                                    child: const Icon(
+                                      Icons.speaker_rounded,
+                                      color: AppColors.blue600,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   const Text(
@@ -226,7 +236,10 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                               if (_hasChanged) ...[
                                 const SizedBox(height: 12),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppColors.braveOrange.withAlpha(25),
                                     borderRadius: BorderRadius.circular(20),
@@ -234,7 +247,11 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.arrow_forward_rounded, size: 18, color: AppColors.braveOrange),
+                                      const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 18,
+                                        color: AppColors.braveOrange,
+                                      ),
                                       const SizedBox(width: 8),
                                       Text(
                                         "เปลี่ยนเป็น ${_selectedDb!.toInt()} dB",
@@ -281,7 +298,10 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                                       color: AppColors.blue100,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(Icons.volume_up_rounded, color: AppColors.blue600),
+                                    child: const Icon(
+                                      Icons.volume_up_rounded,
+                                      color: AppColors.blue600,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   const Expanded(
@@ -297,7 +317,10 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                                   // Info icon with tap to show
                                   GestureDetector(
                                     onTap: () {
-                                      SnackBarHelper.show(context, "เลือกระดับเสียงใหม่ที่ต้องการ โปรดกดทดสอบเสียงก่อนยืนยัน");
+                                      SnackBarHelper.show(
+                                        context,
+                                        "เลือกระดับเสียงใหม่ที่ต้องการ โปรดกดทดสอบเสียงก่อนยืนยัน",
+                                      );
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.all(6),
@@ -320,26 +343,38 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
 
                               // Volume buttons
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: _dbOptions.map((db) {
                                   final selected = _selectedDb == db;
-                                  final isOriginal = _originalDb == db && _selectedDb == null;
+                                  final isOriginal =
+                                      _originalDb == db && _selectedDb == null;
                                   return GestureDetector(
-                                    onTap: () => setState(() => _selectedDb = db),
+                                    onTap: () =>
+                                        setState(() => _selectedDb = db),
                                     child: Container(
                                       width: 70,
                                       height: 70,
                                       decoration: BoxDecoration(
-                                        color: selected ? AppColors.braveOrange : (isOriginal ? AppColors.blue600 : AppColors.blue100),
+                                        color: selected
+                                            ? AppColors.braveOrange
+                                            : (isOriginal
+                                                  ? AppColors.blue600
+                                                  : AppColors.blue100),
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
-                                          color: selected ? AppColors.braveOrange : (isOriginal ? AppColors.blue600 : AppColors.blue300),
+                                          color: selected
+                                              ? AppColors.braveOrange
+                                              : (isOriginal
+                                                    ? AppColors.blue600
+                                                    : AppColors.blue300),
                                           width: 2,
                                         ),
                                         boxShadow: selected
                                             ? [
                                                 BoxShadow(
-                                                  color: AppColors.braveOrange.withAlpha(80),
+                                                  color: AppColors.braveOrange
+                                                      .withAlpha(80),
                                                   blurRadius: 12,
                                                   offset: const Offset(0, 4),
                                                 ),
@@ -352,7 +387,9 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                                           style: TextStyle(
                                             fontSize: 24,
                                             fontWeight: FontWeight.bold,
-                                            color: (selected || isOriginal) ? Colors.white : AppColors.blue700,
+                                            color: (selected || isOriginal)
+                                                ? Colors.white
+                                                : AppColors.blue700,
                                           ),
                                         ),
                                       ),
@@ -383,7 +420,10 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton.icon(
-                          icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
+                          icon: const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                          ),
                           label: const Text(
                             "ทดสอบเสียง",
                             style: TextStyle(
@@ -399,7 +439,9 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          onPressed: _selectedDb != null ? () => _testSound(_selectedDb!) : null,
+                          onPressed: _selectedDb != null
+                              ? () => _testSound(_selectedDb!)
+                              : null,
                         ),
                       ),
 
@@ -411,18 +453,24 @@ class _SoundSettingsPageState extends State<SoundSettingsPage> {
                         child: ElevatedButton.icon(
                           icon: Icon(
                             Icons.lock_rounded,
-                            color: _hasChanged ? Colors.white : AppColors.gray550,
+                            color: _hasChanged
+                                ? Colors.white
+                                : AppColors.gray550,
                           ),
                           label: Text(
                             "ล็อคระดับเสียง",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: _hasChanged ? Colors.white : AppColors.gray550,
+                              color: _hasChanged
+                                  ? Colors.white
+                                  : AppColors.gray550,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _hasChanged ? AppColors.braveOrange : AppColors.gray100,
+                            backgroundColor: _hasChanged
+                                ? AppColors.braveOrange
+                                : AppColors.gray100,
                             disabledBackgroundColor: AppColors.gray100,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),

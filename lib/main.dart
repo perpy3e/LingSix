@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'app/theme.dart';
 import 'app/router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lingsix/providers/theme_provider.dart';
 
 import 'pages/auth/login_page.dart';
 import 'pages/home/start_page.dart';
@@ -19,19 +21,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "LingSix",
-      theme: AppTheme.lightTheme.copyWith(
-        textTheme: GoogleFonts.notoSansThaiLoopedTextTheme(
-          AppTheme.lightTheme.textTheme,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: MaterialApp(
+        title: "LingSix",
+        theme: AppTheme.lightTheme.copyWith(
+          textTheme: GoogleFonts.notoSansThaiLoopedTextTheme(
+            AppTheme.lightTheme.textTheme,
+          ),
         ),
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/',
+        routes: {
+          '/': (_) => const AuthGate(),
+          ...AppRouter.routes,
+        },
       ),
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      routes: {
-        '/': (_) => const AuthGate(),
-        ...AppRouter.routes,
-      },
     );
   }
 }

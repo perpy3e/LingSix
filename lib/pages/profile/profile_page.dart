@@ -126,7 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
         body: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/img/bg.png'),
+              image: AssetImage('assets/common/bg/profile.png'),
               fit: BoxFit.cover,
             ),
           ),
@@ -141,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bg.png'),
+            image: AssetImage('assets/common/bg/profile.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -153,24 +153,21 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.blue800),
-                      iconSize: 40,
+                      icon: const Icon(Icons.arrow_back, size: 28),
                       onPressed: () {
                         Navigator.pop(context);
                       },
                     ),
                     const Spacer(),
                     // Title
-                    const Text(
+                    Text(
                       "โปรไฟล์",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blue800,
-                      ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.blue800,
+                          ),
                     ),
                     const Spacer(),
-                    const SizedBox(width: 40), // Balance the back button
+                    const SizedBox(width: 48), // Balance the back button
                   ],
                 ),
               ),
