@@ -157,100 +157,85 @@ class FirestoreService {
   // DASHBOARD SUMMARY
   // =============================
 
-  Future<Map<String, dynamic>> getDashboardSummary(
-      String uid) async {
-    final attempts = await getQuizAttempts(uid);
+  Future<Map<String, dynamic>> getDashboardSummary(String uid) async {
+  final attempts = await getQuizAttempts(uid);
 
-    int totalQuizzes = attempts.length;
-    int totalCorrect = 0;
-    int totalQuestions = 0;
+  int totalQuizzes = attempts.length;
+  int totalCorrect = 0;
+  int totalQuestions = 0;
 
-    Map<String, Map<String, int>> soundStats = {};
-    List<Map<String, dynamic>> recentScores = [];
-// to dashboard
-    for (var doc in attempts) {
-      final data =
-          doc.data() as Map<String, dynamic>;
+  Map<String, Map<String, int>> soundStats = {};
+  List<Map<String, dynamic>> recentScores = [];
 
-      final score = (data['score'] ?? 0) as int;
-      final total =
-          (data['totalQuestions'] ?? 0) as int;
+  for (var doc in attempts) {
+    final data = doc.data() as Map<String, dynamic>;
 
-      totalCorrect += score;
-      totalQuestions += total;
+    final score = (data['score'] ?? 0) as int;
+    final total = (data['totalQuestions'] ?? 0) as int;
 
-     final Timestamp? ts = data['playedAt'];
-final DateTime? playedDate = ts?.toDate();
+    totalCorrect += score;
+    totalQuestions += total;
 
-recentScores.add({
-  'correct': score,
-  'total': total,
+    final Timestamp? ts = data['playedAt'];
+    final DateTime? playedDate = ts?.toDate();
 
-  
-  'date': playedDate,
-
-  
-  'soundResults':
-      data['perSoundAccuracy'] ?? {},
-
-  // optional
-  'accuracy': data['accuracy'] ?? 0,
-  'quizId': data['quizId'],
-});
-
-      final perSound =
-          data['perSoundAccuracy']
-              as Map<String, dynamic>?;
-
-      if (perSound != null) {
-        perSound.forEach((sound, value) {
-          final correct =
-              (value['correct'] ?? 0) as int;
-          final total =
-              (value['total'] ?? 0) as int;
-
-          soundStats.putIfAbsent(sound,
-              () => {'correct': 0, 'total': 0});
-
-          soundStats[sound]!['correct'] =
-              soundStats[sound]!['correct']! +
-                  correct;
-
-          soundStats[sound]!['total'] =
-              soundStats[sound]!['total']! +
-                  total;
-        });
-      }
-    }
-//
-    Map<String, Map<String, dynamic>>
-        perSoundAccuracy = {};
-
-    soundStats.forEach((sound, stats) {
-      final correct = stats['correct']!;
-      final total = stats['total']!;
-      final percent =
-          total > 0 ? (correct / total) * 100 : 0.0;
-
-      perSoundAccuracy[sound] = {
-        'correct': correct,
-        'total': total,
-        'percent': percent,
-      };
+    recentScores.add({
+      'correct': score,
+      'total': total,
+      'date': playedDate,
+      'soundResults': data['perSoundAccuracy'] ?? {},
+      'accuracy': data['accuracy'] ?? 0,
+      'quizId': data['quizId'],
     });
 
-    final overallAccuracy =
-        totalQuestions > 0
-            ? (totalCorrect / totalQuestions) *
-                100
-            : 0.0;
+    final perSound = data['perSoundAccuracy'] as Map<String, dynamic>?;
 
-    return {
-      'totalQuizzes': totalQuizzes,
-      'totalCorrect': totalCorrect,
-      'overallAccuracy': overallAccuracy,
-      'perSoundAccuracy': perSoundAccuracy,
-      'recentScores': recentScores.take(5).toList(),
-    };
+    if (perSound != null) {
+      perSound.forEach((sound, value) {
+        final correct = (value['correct'] ?? 0) as int;
+        final total = (value['total'] ?? 0) as int;
+
+        soundStats.putIfAbsent(sound, () => {'correct': 0, 'total': 0});
+
+        soundStats[sound]!['correct'] =
+            soundStats[sound]!['correct']! + correct;
+
+        soundStats[sound]!['total'] =
+            soundStats[sound]!['total']! + total;
+      });
+    }
   }
+
+  // 🔥 FIX (ONLY THIS PART ADDED)
+  final allSounds = ["ah", "ee", "m", "oo", "s", "sh"];
+  for (final sound in allSounds) {
+    soundStats.putIfAbsent(sound, () => {'correct': 0, 'total': 0});
+  }
+  // 🔥 END FIX
+
+  Map<String, Map<String, dynamic>> perSoundAccuracy = {};
+
+  soundStats.forEach((sound, stats) {
+    final correct = stats['correct']!;
+    final total = stats['total']!;
+    final percent = total > 0 ? (correct / total) * 100 : 0.0;
+
+    perSoundAccuracy[sound] = {
+      'correct': correct,
+      'total': total,
+      'percent': percent,
+    };
+  });
+
+  final overallAccuracy =
+      totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0.0;
+
+  return {
+    'totalQuizzes': totalQuizzes,
+    'totalCorrect': totalCorrect,
+    'overallAccuracy': overallAccuracy,
+    'perSoundAccuracy': perSoundAccuracy,
+    'recentScores': recentScores.take(5).toList(),
+  };
+}
 }

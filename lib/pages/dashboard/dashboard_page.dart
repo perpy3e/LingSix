@@ -104,7 +104,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     if (user == null) {
       setState(() => isLoading = false);
-      return;
+      return;      
     }
 
     final summary = await _firestoreService.getDashboardSummary(user.uid);
@@ -275,8 +275,14 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+// ah ee ........
   Widget _buildPerSoundCard() {
-    final sounds = perSoundAccuracy.entries.toList();
+    final orderedKeys = ["ah", "ee", "m", "oo", "s", "sh"];
+
+final sounds = orderedKeys
+    .where((key) => perSoundAccuracy.containsKey(key))
+    .map((key) => MapEntry(key, perSoundAccuracy[key]!))
+    .toList();
 
     if (sounds.isEmpty) {
       return _card(
