@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 
+
 import '../../app/router.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
@@ -177,7 +178,7 @@ Future<void> _googleLogin() async {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgLogin.png'),
+            image: AssetImage('assets/common/bg/login.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -191,20 +192,13 @@ Future<void> _googleLogin() async {
                 children: [
                   const SizedBox(height: 40),
 
-                  Text(
-                    'LingSix',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineLarge,
+                  Image.asset(
+                    'assets/common/logo/app_logo.png',
+                    height: 200,
+                    width: 200,
                   ),
-                  const SizedBox(height: 8),
 
-                  Text(
-                    'ยินดีต้อนรับกลับ',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
                   const SizedBox(height: 60),
-
                   CustomTextField(
                     controller: _emailOrUsernameController,
                     hintText: 'อีเมล หรือ ชื่อผู้ใช้',
@@ -316,5 +310,4 @@ Future<void> _googleLogin() async {
     );
   }
 }
-
 

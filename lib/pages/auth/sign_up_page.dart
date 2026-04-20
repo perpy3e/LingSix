@@ -37,7 +37,7 @@ class _SignUpPageState extends State<SignUpPage> {
   // PASSWORD STATE
   double _passwordStrength = 0;
   String _passwordStrengthText = "";
-  Color _passwordStrengthColor = Colors.red;
+  Color _passwordStrengthColor = AppColors.error;
 
   bool _hasMinLength = false;
   bool _hasUppercase = false;
@@ -88,14 +88,14 @@ class _SignUpPageState extends State<SignUpPage> {
       if (score == 0) {
         _passwordStrengthText = "";
       } else if (score == 1) {
-        _passwordStrengthText = "Weak password";
-        _passwordStrengthColor = Colors.red;
+        _passwordStrengthText = "รหัสผ่านไม่ปลอดภัย";
+        _passwordStrengthColor = AppColors.error;
       } else if (score == 2) {
-        _passwordStrengthText = "Medium password";
-        _passwordStrengthColor = Colors.orange;
+        _passwordStrengthText = "รหัสผ่านปานกลาง";
+        _passwordStrengthColor = AppColors.warning;
       } else if (score == 3) {
-        _passwordStrengthText = "Strong password";
-        _passwordStrengthColor = Colors.green;
+        _passwordStrengthText = "รหัสผ่านปลอดภัย";
+        _passwordStrengthColor = AppColors.success;
       }
     });
   }
@@ -149,43 +149,43 @@ class _SignUpPageState extends State<SignUpPage> {
     bool hasError = false;
 
     if (email.isEmpty) {
-      setState(() => _emailError = 'Please enter email');
+      setState(() => _emailError = 'กรุณากรอกอีเมล');
       hasError = true;
     } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      setState(() => _emailError = 'Please enter a valid email');
+      setState(() => _emailError = 'กรุณากรอกอีเมลให้ถูกต้อง');
       hasError = true;
     }
 
     if (username.isEmpty) {
-      setState(() => _usernameError = 'Please enter username');
+      setState(() => _usernameError = 'กรุณากรอกชื่อผู้ใช้');
       hasError = true;
     }
 
     if (password.isEmpty) {
-      setState(() => _passwordError = 'Please enter password');
+      setState(() => _passwordError = 'กรุณากรอกรหัสผ่าน');
       hasError = true;
     } else if (!_hasMinLength || !_hasUppercase || !_hasNumber) {
-      setState(() => _passwordError = 'Password not strong enough');
+      setState(() => _passwordError = 'รหัสผ่านยังไม่ปลอดภัย');
       hasError = true;
     }
 
     if (firstName.isEmpty) {
-      setState(() => _firstNameError = 'Please enter first name');
+      setState(() => _firstNameError = 'กรุณากรอกชื่อ');
       hasError = true;
     }
 
     if (lastName.isEmpty) {
-      setState(() => _lastNameError = 'Please enter last name');
+      setState(() => _lastNameError = 'กรุณากรอกนามสกุล');
       hasError = true;
     }
 
     if (_gender == null) {
-      setState(() => _genderError = 'Please select gender');
+      setState(() => _genderError = 'กรุณาเลือกเพศ');
       hasError = true;
     }
 
     if (_birthday == null) {
-      setState(() => _birthdayError = 'Please select birthday');
+      setState(() => _birthdayError = 'กรุณาเลือกวันเกิด');
       hasError = true;
     }
 
@@ -210,25 +210,29 @@ class _SignUpPageState extends State<SignUpPage> {
         arguments: user.email,
       );
     } catch (e) {
-      if (!mounted) return;
+  if (!mounted) return;
 
-      final msg = e.toString().replaceFirst("Exception: ", "");
+  final msg = e.toString().replaceFirst("Exception: ", "").toLowerCase();
 
-      if (msg.toLowerCase().contains('email')) {
-        await _authService.logout();
-        if (!mounted) return;
-        setState(() => _emailError = msg);
-        return;
-      }
+  if (msg.contains('email')) {
+    await _authService.logout();
+    if (!mounted) return;
 
-      if (msg.toLowerCase().contains('username')) {
-        setState(() => _usernameError = msg);
-      } else if (msg.toLowerCase().contains('password')) {
-        setState(() => _passwordError = msg);
-      } else {
-        SnackBarHelper.showError(context, msg);
-      }
-    }
+    setState(() => _emailError = 'อีเมลนี้ถูกใช้งานแล้ว');
+    return;
+  }
+
+  if (msg.contains('username')) {
+    setState(() => _usernameError = 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
+  } else if (msg.contains('password')) {
+    setState(() => _passwordError = 'รหัสผ่านยังไม่ปลอดภัย');
+  } else {
+    SnackBarHelper.showError(
+      context,
+      'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+    );
+  }
+}
   }
 
   @override
@@ -237,28 +241,45 @@ class _SignUpPageState extends State<SignUpPage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgLogin.png'),
+            image: AssetImage('assets/common/bg/login.png'),
             fit: BoxFit.cover,
           ),
         ),
         child: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
-              Center(
+              // Fixed header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, size: 28),
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                    ),
+                    Expanded(
+                      child: Text(
+                        "สร้างบัญชีผู้ใช้",
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.blue800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48), // Balance the back button
+                  ],
+                ),
+              ),
+              // Scrollable content
+              Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 40),
-
-                      Text(
-                        "สร้างบัญชีผู้ใช้",
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 24),
 
                       CustomTextField(
                         controller: _emailController,
@@ -368,7 +389,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ✅ LABEL
                           const Text(
                             "เพศ",
                             style: TextStyle(
@@ -556,17 +576,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       const SizedBox(height: 40),
                     ],
                   ),
-                ),
-              ),
-
-              Positioned(
-                top: 8,
-                left: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 28),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/');
-                  },
                 ),
               ),
             ],

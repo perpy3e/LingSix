@@ -29,7 +29,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     // Validate field
     if (input.isEmpty) {
-      setState(() => _emailError = 'Please enter email or username');
+      setState(() => _emailError = 'กรุณากรอกอีเมลหรือชื่อผู้ใช้');
       return;
     }
 
@@ -38,7 +38,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     try {
       await _authService.sendPasswordReset(input);
       if (!mounted) return;
-      SnackBarHelper.showSuccess(context, "Password reset email sent to $input");
+      SnackBarHelper.showSuccess(context, "ส่งอีเมลรีเซ็ตรหัสผ่านไปที่ $input แล้ว");
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
@@ -55,7 +55,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgLogin.png'),
+            image: AssetImage('assets/common/bg/login.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -66,7 +66,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 top: 8,
                 left: 8,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 28),
+                  icon: const Icon(Icons.arrow_back, size: 30),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -80,27 +80,27 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     children: [
                       const SizedBox(height: 40),
                       Text(
-                        "Forgot Password",
+                        "ลืมรหัสผ่าน",
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        "Enter your email or username to receive a password reset link",
+                        "กรอกอีเมลหรือชื่อผู้ใช้ของคุณ เพื่อรับลิงก์สำหรับรีเซ็ตรหัสผ่าน",
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 40),
                       CustomTextField(
                         controller: _controller,
-                        hintText: "Email or Username",
+                        hintText: "อีเมล หรือ ชื่อผู้ใช้",
                         prefixIcon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         errorText: _emailError,
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
-                        text: "Send Reset Link",
+                        text: "ส่งลิงก์รีเซ็ตรหัสผ่าน",
                         onPressed: _resetPassword,
                         isLoading: _isLoading,
                       ),

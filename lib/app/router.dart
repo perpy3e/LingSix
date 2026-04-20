@@ -51,7 +51,7 @@ class AppRouter {
     profile: (_) => ProfilePage(),
     soundSettings: (_) => const SoundSettingsPage(),
     
-    lessons: (_) => const LessonsPage(),
+    lessons: (_) => const LessonsPage(category: "u"),
     quiz: (_) => const QuizPage(),
     dashboard: (_) => const DashboardPage(),
   };

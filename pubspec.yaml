@@ -51,7 +51,7 @@ dependencies:
   csv: ^8.0.0
   path_provider: ^2.1.2
   share_plus: ^12.0.1
- 
+  provider: ^6.0.0
 
 
 dev_dependencies:
@@ -64,6 +64,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/common/logo/app_logo.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -72,20 +78,78 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/sound/m.wav
-    - assets/sound/oo.wav
-    - assets/sound/ah.wav
-    - assets/sound/ee.wav
-    - assets/sound/sh.wav
-    - assets/sound/s.wav
-    - assets/img/bgLogin.png
-    - assets/img/imgStart.png
-    - assets/img/bg1.png
-    - assets/img/bg2.png
-    - assets/img/bg3.png
-    - assets/img/bg4.png
+    - assets/common/bg/
+    - assets/common/illustrations/
+    - assets/common/illustrations/home/
+    - assets/common/logo/
+    - assets/common/sounds/
+    - assets/themes/default/bg/
+    - assets/themes/default/characters/
+    - assets/themes/summer/
+    - assets/data/vocabulary.json
+    - assets/content/vocabulary/ah/ban/
+    - assets/content/vocabulary/ah/chan/
+    - assets/content/vocabulary/ah/fa/
+    - assets/content/vocabulary/ah/khao/
+    - assets/content/vocabulary/ah/ma/
+    - assets/content/vocabulary/ah/pa/
+    - assets/content/vocabulary/ah/pak/
+    - assets/content/vocabulary/ah/pla/
+    - assets/content/vocabulary/ah/ta/
+    - assets/content/vocabulary/ah/ya/
+    - assets/content/vocabulary/ah/ya2/
+    - assets/content/vocabulary/ee/chi/
+    - assets/content/vocabulary/ee/di/
+    - assets/content/vocabulary/ee/khi/
+    - assets/content/vocabulary/ee/mhee/
+    - assets/content/vocabulary/ee/mit/
+    - assets/content/vocabulary/ee/ni/
+    - assets/content/vocabulary/ee/phi/
+    - assets/content/vocabulary/ee/pi/
+    - assets/content/vocabulary/ee/si/
+    - assets/content/vocabulary/ee/ti/
+    - assets/content/vocabulary/m/mae/
+    - assets/content/vocabulary/m/maeo/
+    - assets/content/vocabulary/m/mai/
+    - assets/content/vocabulary/m/mamuang/
+    - assets/content/vocabulary/m/mek/
+    - assets/content/vocabulary/m/mo/
+    - assets/content/vocabulary/m/mon/
+    - assets/content/vocabulary/m/muak/
+    - assets/content/vocabulary/m/mue/
+    - assets/content/vocabulary/m/muek/
+    - assets/content/vocabulary/s/sabu/
+    - assets/content/vocabulary/s/saeng/
+    - assets/content/vocabulary/s/sai/
+    - assets/content/vocabulary/s/si/
+    - assets/content/vocabulary/s/siang/
+    - assets/content/vocabulary/s/so/
+    - assets/content/vocabulary/s/som/
+    - assets/content/vocabulary/s/soup/
+    - assets/content/vocabulary/s/suea/
+    - assets/content/vocabulary/s/suea2/
+    - assets/content/vocabulary/sh/cha/
+    - assets/content/vocabulary/sh/chai/
+    - assets/content/vocabulary/sh/chao/
+    - assets/content/vocabulary/sh/cheese/
+    - assets/content/vocabulary/sh/chingcha/
+    - assets/content/vocabulary/sh/chiwit/
+    - assets/content/vocabulary/sh/chon/
+    - assets/content/vocabulary/sh/chop/
+    - assets/content/vocabulary/sh/chue/
+    - assets/content/vocabulary/sh/chut/
+    - assets/content/vocabulary/oo/chung/
+    - assets/content/vocabulary/oo/du/
+    - assets/content/vocabulary/oo/hu/
+    - assets/content/vocabulary/oo/khu/
+    - assets/content/vocabulary/oo/mu/
+    - assets/content/vocabulary/oo/ngu/
+    - assets/content/vocabulary/oo/nu/
+    - assets/content/vocabulary/oo/phukhao/
+    - assets/content/vocabulary/oo/pu/
+    - assets/content/vocabulary/oo/tu/
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

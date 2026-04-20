@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/app/router.dart';
+import 'package:lingsix/providers/theme_provider.dart';
+import 'package:lingsix/pages/lessons/category_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -8,13 +11,15 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/img/bg1.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+      body: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(themeProvider.getWallpaperPath('home')),
+                fit: BoxFit.cover,
+              ),
+            ),
         child: SafeArea(
           child: Column(
             children: [
@@ -45,6 +50,8 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
+          );
+        },
       ),
     );
   }
@@ -90,8 +97,7 @@ class HomePage extends StatelessWidget {
     required VoidCallback onPressed,
   }) {
     return IconButton(
-      icon: Icon(icon, color: AppColors.blue800),
-      iconSize: 40,
+      icon: Icon(icon, color: AppColors.blue800, size: 28),
       tooltip: tooltip,
       onPressed: onPressed,
     );
@@ -101,49 +107,11 @@ class HomePage extends StatelessWidget {
   Widget _buildWelcomeSection(BuildContext context) {
     return Column(
       children: [
-        // App Logo or Icon
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.white.withAlpha(200),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.blue600.withAlpha(100),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.music_note,
-            size: 60,
-            color: AppColors.blue600,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'LingSix',
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 36,
-            shadows: [
-              Shadow(
-                color: AppColors.blue900.withAlpha(150),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'เรียนรู้และพัฒนาทักษะของคุณ',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Colors.white.withAlpha(220),
-            fontSize: 16,
-          ),
+        // App Logo
+        Image.asset(
+          'assets/common/logo/app_logo.png',
+          width: 300,
+          height: 300,
         ),
       ],
     );
@@ -153,47 +121,40 @@ class HomePage extends StatelessWidget {
   Widget _buildFeatureCards(BuildContext context) {
     return Column(
       children: [
-        // Row 1: Lessons & Quiz
-        Row(
-          children: [
-            Expanded(
-              child: _buildFeatureCard(
-                context: context,
-                icon: Icons.menu_book,
-                title: 'บทเรียน',
-                subtitle: 'เรียนรู้ทฤษฎีดนตรี',
-                color: AppColors.blue500,
-                gradientColors: [AppColors.blue400, AppColors.blue600],
-                onTap: () => Navigator.pushNamed(context, AppRouter.lessons),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildFeatureCard(
-                context: context,
-                icon: Icons.quiz,
-                title: 'ทดสอบ',
-                subtitle: 'ทดสอบความรู้',
-                color: AppColors.yellow500,
-                gradientColors: [AppColors.yellow400, AppColors.yellow600],
-                onTap: () => Navigator.pushNamed(context, AppRouter.quiz),
-              ),
-            ),
-          ],
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Row 2: Dashboard (Full Width)
+        // Row 1: Lessons
         _buildFeatureCard(
           context: context,
-          icon: Icons.bar_chart,
+          imageAsset: 'assets/common/illustrations/home/learn.png',
+          title: 'บทเรียน',
+          backgroundColor: const Color(0xFFBB240A),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CategoryPage(),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Row 2: Quiz
+        _buildFeatureCard(
+          context: context,
+          imageAsset: 'assets/common/illustrations/home/quiz.png',
+          title: 'ทดสอบ',
+          backgroundColor: const Color(0xFFEDCC4D),
+          onTap: () => Navigator.pushNamed(context, AppRouter.quiz),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Row 3: Result
+        _buildFeatureCard(
+          context: context,
+          imageAsset: 'assets/common/illustrations/home/result.png',
           title: 'ผลการทดสอบ',
-          subtitle: 'ดูความก้าวหน้าและสถิติของคุณ',
-          color: AppColors.greenLight,
-          gradientColors: [AppColors.greenLight, AppColors.success],
+          backgroundColor: const Color(0xFF016FBA),
           onTap: () => Navigator.pushNamed(context, AppRouter.dashboard),
-          isFullWidth: true,
         ),
       ],
     );
@@ -201,28 +162,25 @@ class HomePage extends StatelessWidget {
 
   Widget _buildFeatureCard({
     required BuildContext context,
-    required IconData icon,
+    required String imageAsset,
     required String title,
-    required String subtitle,
-    required Color color,
-    required List<Color> gradientColors,
+    required Color backgroundColor,
     required VoidCallback onTap,
-    bool isFullWidth = false,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: isFullWidth ? 100 : 160,
+        height: 100,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white,
+            width: 3,
+          ),
           boxShadow: [
             BoxShadow(
-              color: color.withAlpha(100),
+              color: backgroundColor.withAlpha(100),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -235,80 +193,41 @@ class HomePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: isFullWidth
-                  ? Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(64),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(icon, color: Colors.white, size: 32),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                subtitle,
-                                style: TextStyle(
-                                  color: Colors.white.withAlpha(220),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white.withAlpha(200),
-                          size: 20,
-                        ),
-                      ],
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(64),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(icon, color: Colors.white, size: 32),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(220),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: Image.asset(
+                      imageAsset,
+                      fit: BoxFit.contain,
                     ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: AppColors.gray550,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white.withAlpha(220),
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
