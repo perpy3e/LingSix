@@ -43,6 +43,16 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
 
   List<Map<String, String>> questions = [];
 
+  List<String> _extractWords(dynamic categoryData) {
+    if (categoryData is Map) {
+      return categoryData.keys.map((key) => '$key').toList();
+    }
+    if (categoryData is List) {
+      return categoryData.map((word) => '$word').toList();
+    }
+    return <String>[];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +74,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
     final generated = <Map<String, String>>[];
 
     for (final sound in sounds) {
-      final words = (data[sound] as List<dynamic>).cast<String>().toList();
+      final words = _extractWords(data[sound]);
       words.shuffle(random);
 
       for (final word in words.take(2)) {

@@ -44,14 +44,32 @@ class _LessonsPageState extends State<LessonsPage> {
     final Map<String, dynamic> data = json.decode(jsonString);
 
     List<Map<String, String>> list = [];
+    final categoryData = data[widget.category];
 
-    if (data.containsKey(widget.category)) {
-      for (var word in data[widget.category]) {
+    if (categoryData is Map) {
+      for (final entry in categoryData.entries) {
+        final word = '${entry.key}';
+        final displayWord = '${entry.value}';
         list.add({
+          "word": word,
+          "displayWord": displayWord,
           "image":
               "assets/content/vocabulary/${widget.category}/$word/image.png",
           "sound":
               "content/vocabulary/${widget.category}/$word/sound.mp3",
+        });
+      }
+    } else if (categoryData is List) {
+      // Backward compatibility with old array structure.
+      for (final word in categoryData) {
+        final romanized = '$word';
+        list.add({
+          "word": romanized,
+          "displayWord": romanized,
+          "image":
+              "assets/content/vocabulary/${widget.category}/$romanized/image.png",
+          "sound":
+              "content/vocabulary/${widget.category}/$romanized/sound.mp3",
         });
       }
     }
@@ -62,9 +80,53 @@ class _LessonsPageState extends State<LessonsPage> {
     });
   }
 
-Future<void> playSound(String path) async {
-  await _player.play(AssetSource(path)); 
-}
+  Future<void> playSound(String path) async {
+    await _player.play(AssetSource(path));
+  }
+
+  Widget _buildQuestionBubble(ThemeProvider themeProvider, String displayWord) {
+    final selectedCharacter = themeProvider.selectedCharacter;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(24, 20, 40, 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.black87, width: 3),
+          ),
+          child: Text(
+            'ออกเสียงตามนะว่า "$displayWord"',
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Positioned(
+          right: -14,
+          top: -12,
+          child: Transform.rotate(
+            angle: 0.2,
+            child: Image.asset(
+              themeProvider.getCharacterHeadPath(selectedCharacter),
+              width: 50,
+              height: 50,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                themeProvider.getDefaultCharacterHeadPath(selectedCharacter),
+                width: 50,
+                height: 50,
+                fit: BoxFit.contain,
+                errorBuilder: (context, fallbackError, fallbackStackTrace) {
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
 
   void next() {
@@ -98,6 +160,7 @@ Future<void> playSound(String path) async {
     }
 
     final item = vocabulary[currentIndex];
+    final displayWord = item["displayWord"] ?? item["word"] ?? '';
 
     return Scaffold(
       body: Consumer<ThemeProvider>(
@@ -173,8 +236,10 @@ Future<void> playSound(String path) async {
                             ),
                           ),
                         ),
-                        
-                         const SizedBox(height: 20),
+
+                        const SizedBox(height: 16),
+                        _buildQuestionBubble(themeProvider, displayWord),
+                        const SizedBox(height: 24),
                         Image.asset(
                           item["image"]!,
                           height: 250,
