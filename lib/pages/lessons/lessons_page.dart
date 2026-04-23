@@ -173,6 +173,7 @@ Future<void> playSound(String path) async {
                             ),
                           ),
                         ),
+                        
                          const SizedBox(height: 20),
                         Image.asset(
                           item["image"]!,

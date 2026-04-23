@@ -85,8 +85,13 @@ flutter:
     - assets/common/logo/
     - assets/common/sounds/
     - assets/themes/default/bg/
-    - assets/themes/default/characters/
-    - assets/themes/summer/
+    - assets/themes/default/characters/cat/
+    - assets/themes/default/characters/dino/
+    - assets/themes/default/characters/rabbit/
+    - assets/themes/summer/bg/
+    - assets/themes/summer/characters/cat/
+    - assets/themes/summer/characters/dino/
+    - assets/themes/summer/characters/rabbit/
     - assets/data/vocabulary.json
     - assets/content/vocabulary/ah/ban/
     - assets/content/vocabulary/ah/chan/

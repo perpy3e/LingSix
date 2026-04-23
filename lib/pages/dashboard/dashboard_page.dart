@@ -327,7 +327,6 @@ final sounds = orderedKeys
             children: sounds.map((entry) {
               final sound = entry.key;
               final p = (entry.value['percent'] ?? 0).toDouble();
-              final isGood = p >= 80;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -345,15 +344,15 @@ final sounds = orderedKeys
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isGood ? AppColors.blue100 : AppColors.yellow100,
+                        color: AppColors.blue100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         "${p.toStringAsFixed(1)}%",
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
-                          color: isGood ? AppColors.blue800 : AppColors.yellow800,
+                          color: AppColors.blue800,
                         ),
                       ),
                     ),
@@ -545,7 +544,6 @@ final sounds = orderedKeys
 
         barGroups: filteredScores.asMap().entries.map((e) {
           final accuracy = percent(e.value['correct'], e.value['total']);
-          final isGood = accuracy >= 80;
 
           return BarChartGroupData(
             x: e.key,
@@ -553,7 +551,7 @@ final sounds = orderedKeys
             barRods: [
               BarChartRodData(
                 toY: accuracy,
-                color: isGood ? AppColors.blue600 : AppColors.yellow600,
+                color: AppColors.blue600,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(6),
                   topRight: Radius.circular(6),
@@ -572,15 +570,14 @@ final sounds = orderedKeys
         final index = entry.key + 1;
         final score = entry.value;
         final p = percent(score['correct'], score['total']);
-        final isGood = p >= 80;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isGood ? AppColors.blue10 : AppColors.yellow10,
+            color: AppColors.blue10,
             border: Border(
-              left: BorderSide(color: isGood ? AppColors.blue600 : AppColors.yellow600, width: 4),
+              left: const BorderSide(color: AppColors.blue600, width: 4),
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -717,7 +714,7 @@ final sounds = orderedKeys
 
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),

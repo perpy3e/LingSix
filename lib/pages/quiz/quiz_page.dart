@@ -7,11 +7,10 @@ import 'package:lingsix/providers/theme_provider.dart';
 class QuizPage extends StatelessWidget {
   const QuizPage({super.key});
 
-  static final List<Map<String, dynamic>> quizzes =
-      List.generate(5, (index) {
+  static final List<Map<String, dynamic>> quizzes = List.generate(5, (index) {
     return {
       "quizId": "quiz_${index + 1}",
-      "title": "Quiz ${index + 1}",
+      "title": "แบบทดสอบที่ ${index + 1}",
       "topic": "LingSix Sound",
     };
   });
@@ -19,11 +18,6 @@ class QuizPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ทดสอบ'),
-        backgroundColor: AppColors.yellow600,
-        foregroundColor: Colors.white,
-      ),
       body: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
           return Container(
@@ -33,47 +27,82 @@ class QuizPage extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: quizzes.length,
-              itemBuilder: (context, index) {
-                final quiz = quizzes[index];
-
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => QuizQuestionsPage(
-                          quizId: quiz["quizId"],
-                          title: quiz["title"],
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(230),
-                      borderRadius: BorderRadius.circular(16),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  /// 🔹 HEADER with Back Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.quiz, size: 40),
-                        const SizedBox(width: 16),
-                        Text(
-                          quiz["title"],
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            size: 28,
+                            color: AppColors.blue800,
                           ),
-                        )
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const Spacer(),
+                        Text(
+                          "แบบทดสอบ",
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(color: AppColors.blue800),
+                        ),
+                        const Spacer(),
+                        const SizedBox(width: 48),
                       ],
                     ),
                   ),
-                );
-              },
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: quizzes.length,
+                      itemBuilder: (context, index) {
+                        final quiz = quizzes[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => QuizQuestionsPage(
+                                  quizId: quiz["quizId"],
+                                  title: quiz["title"],
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(230),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.quiz, size: 40),
+                                const SizedBox(width: 16),
+                                Text(
+                                  quiz["title"],
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.blue800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
