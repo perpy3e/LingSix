@@ -101,7 +101,7 @@ class FirestoreService {
       'totalQuestions': totalQuestions,
       'accuracy': accuracy,
       'perSoundAccuracy': perSoundAccuracy,
-      'playedAt': FieldValue.serverTimestamp(),
+      'playedAt': DateTime.now(),
     });
 
     return ref.id;
@@ -154,13 +154,21 @@ class FirestoreService {
   }
 
   // =============================
-  // DASHBOARD SUMMARY
+  // DASHBOARD SUMMARY (getDashboardSummary)
   // =============================
 
   Future<Map<String, dynamic>> getDashboardSummary(String uid) async {
   final attempts = await getQuizAttempts(uid);
 
-  int totalQuizzes = attempts.length;
+  final uniqueAttempts = <String>{};
+
+for (var doc in attempts) {
+  final data = doc.data() as Map<String, dynamic>;
+  final ts = data['playedAt'];
+  uniqueAttempts.add("${data['quizId']}_${ts}");
+}
+
+int totalQuizzes = uniqueAttempts.length;
   int totalCorrect = 0;
   int totalQuestions = 0;
 
@@ -179,14 +187,28 @@ class FirestoreService {
     final Timestamp? ts = data['playedAt'];
     final DateTime? playedDate = ts?.toDate();
 
-    recentScores.add({
-      'correct': score,
-      'total': total,
-      'date': playedDate,
-      'soundResults': data['perSoundAccuracy'] ?? {},
-      'accuracy': data['accuracy'] ?? 0,
-      'quizId': data['quizId'],
-    });
+    final perSoundRaw =
+    Map<String, dynamic>.from(data['perSoundAccuracy'] ?? {});
+
+Map<String, double> perSoundPercent = {};
+
+perSoundRaw.forEach((sound, value) {
+  final correct = (value['correct'] ?? 0) as int;
+  final total = (value['total'] ?? 0) as int;
+
+  final percent = total > 0 ? (correct / total) * 100 : 0.0;
+  perSoundPercent[sound] = percent;
+});
+
+recentScores.add({
+  'correct': score,
+  'total': total,
+  'date': playedDate,
+  'soundResults': perSoundRaw,
+  'soundPercent': perSoundPercent, // add new 
+  'accuracy': data['accuracy'] ?? 0,
+  'quizId': data['quizId'],
+});
 
     final perSound = data['perSoundAccuracy'] as Map<String, dynamic>?;
 
@@ -206,7 +228,9 @@ class FirestoreService {
     }
   }
 
-  // 🔥 FIX (ONLY THIS PART ADDED)
+
+
+  // 🔥 FIX 
   final allSounds = ["ah", "ee", "m", "oo", "s", "sh"];
   for (final sound in allSounds) {
     soundStats.putIfAbsent(sound, () => {'correct': 0, 'total': 0});
@@ -235,7 +259,8 @@ class FirestoreService {
     'totalCorrect': totalCorrect,
     'overallAccuracy': overallAccuracy,
     'perSoundAccuracy': perSoundAccuracy,
-    'recentScores': recentScores.take(5).toList(),
+    //'recentScores': recentScores.take(5).toList(), no limit (5)
+    'recentScores': recentScores,
   };
 }
 }

@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -76,6 +77,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
   List<Map<String, dynamic>> filteredScores = [];
 
+// new add 24/04
+  List<Map<String, dynamic>> aggregatedQuizScores = [];
+//
+
   String selectedMonth = "ทั้งหมด";
 
   final List<String> months = const [
@@ -110,7 +115,23 @@ class _DashboardPageState extends State<DashboardPage> {
 
     final summary = await _firestoreService.getDashboardSummary(user.uid);
 
+// add 23/04‼️‼️
     recentScores = List<Map<String, dynamic>>.from(summary['recentScores'] ?? []);
+recentScores.sort((a, b) {
+  final da = a['date'] as DateTime?;
+  final db = b['date'] as DateTime?;
+  return (db ?? DateTime(0)).compareTo(da ?? DateTime(0));
+});
+
+
+final seen = <String>{};
+recentScores = recentScores.where((e) {
+  final key = "${e['quizId']}_${e['date']}";
+  if (seen.contains(key)) return false;
+  seen.add(key);
+  return true;
+}).toList();
+//end add ‼️‼️‼️
 
     perSoundAccuracy = Map<String, Map<String, dynamic>>.from(summary['perSoundAccuracy'] ?? {});
 
@@ -121,6 +142,9 @@ class _DashboardPageState extends State<DashboardPage> {
     overallAccuracy = (summary['overallAccuracy'] ?? 0).toDouble();
 
     applyMonthFilter();
+
+    //add 24/04 aggregate quiz scores 
+    buildAggregatedQuizScores();
 
     setState(() {
       isLoading = false;
@@ -151,6 +175,39 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return value.clamp(0, 100);
   }
+
+  //‼️‼️‼️add more function 24/04
+  void buildAggregatedQuizScores() {
+  Map<String, List<double>> quizMap = {};
+
+  for (var score in recentScores) {
+    final quizId = score['quizId'];
+    final accuracy = (score['accuracy'] ?? 0).toDouble();
+
+    quizMap.putIfAbsent(quizId, () => []);
+    quizMap[quizId]!.add(accuracy);
+  }
+
+  aggregatedQuizScores = quizMap.entries.map((entry) {
+    final list = entry.value;
+
+    final avg = list.isNotEmpty
+        ? list.reduce((a, b) => a + b) / list.length
+        : 0.0;
+
+    return {
+      'quizId': entry.key,
+      'accuracy': avg,
+    };
+  }).toList();
+
+  //  SORT quiz_1 → quiz_5
+  aggregatedQuizScores.sort((a, b) {
+    return a['quizId'].compareTo(b['quizId']);
+  });
+}
+
+//‼️‼️‼️end add more function 24/04
 
   @override
   Widget build(BuildContext context) {
@@ -513,6 +570,10 @@ final sounds = orderedKeys
       BarChartData(
         minY: 0,
         maxY: 100,
+     barTouchData: BarTouchData(
+  enabled: false,
+  handleBuiltInTouches: false, // doesn't work yet fix later
+),
         gridData: FlGridData(show: true, horizontalInterval: 20, drawVerticalLine: false),
 
         titlesData: FlTitlesData(
@@ -524,7 +585,9 @@ final sounds = orderedKeys
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
 
-                if (index >= filteredScores.length) return const SizedBox();
+                //‼️old code fix24/04: if (index >= filteredScores.length) return const SizedBox();
+                 if (index < 0 || index > 4) return const SizedBox();
+
 
                 return Text(
                   "Q${index + 1}",
@@ -546,12 +609,19 @@ final sounds = orderedKeys
             ),
           ),
         ),
-
-        barGroups: filteredScores.asMap().entries.map((e) {
+/*‼️old code fix 24/04: barGroups: filteredScores.asMap().entries.map((e) {
           final accuracy = percent(e.value['correct'], e.value['total']);
+        */
+        barGroups: aggregatedQuizScores.map((e) {
+  final accuracy = (e['accuracy'] ?? 0).toDouble();
 
-          return BarChartGroupData(
-            x: e.key,
+  final quizId = e['quizId'] ?? '';
+  final quizNumber = int.tryParse(
+    quizId.toString().replaceAll('quiz_', ''),
+  ) ?? 0;
+
+  return BarChartGroupData(
+    x: quizNumber - 1, // ✅ REAL POSITION (0–4)
 
             barRods: [
               BarChartRodData(
@@ -569,87 +639,148 @@ final sounds = orderedKeys
     );
   }
 
+//buildQuizList()
+
   Widget _buildQuizList() {
-    return Column(
-      children: filteredScores.asMap().entries.map((entry) {
-        final index = entry.key + 1;
-        final score = entry.value;
-        final p = percent(score['correct'], score['total']);
+  // sort old-new 
+  final sortedOldestFirst = [...filteredScores]..sort((a, b) {
+    final da = a['date'] as DateTime?;
+    final db = b['date'] as DateTime?;
+    return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
+  });
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.blue10,
-            border: Border(
-              left: const BorderSide(color: AppColors.blue600, width: 4),
-            ),
-            borderRadius: BorderRadius.circular(12),
+  // count attempts
+  Map<String, int> attemptCounter = {};
+  Map<Map<String, dynamic>, int> attemptMap = {};
+
+  for (var score in sortedOldestFirst) {
+    final quizId = score['quizId'] ?? '';
+    attemptCounter[quizId] = (attemptCounter[quizId] ?? 0) + 1;
+    attemptMap[score] = attemptCounter[quizId]!;
+  }
+
+  //show LATEST first 
+  final displayList = [...filteredScores]..sort((a, b) {
+    final da = a['date'] as DateTime?;
+    final db = b['date'] as DateTime?;
+    return (db ?? DateTime(0)).compareTo(da ?? DateTime(0)); // newest first
+  });
+
+  return Column(
+    children: displayList.asMap().entries.map((entry) {
+      final score = entry.value;
+
+      final quizId = score['quizId'] ?? '';
+      final quizNumber = quizId.toString().replaceAll('quiz_', '');
+
+      final attempt = attemptMap[score] ?? 1;
+
+      final p = percent(score['correct'], score['total']);
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.blue10,
+          border: const Border(
+            left: BorderSide(color: AppColors.blue600, width: 4),
           ),
-
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "แบบทดสอบที่ $index",
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.gray700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  
+                  RichText(
+                    text: TextSpan(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.blue100,
-                            borderRadius: BorderRadius.circular(6),
+                        TextSpan(
+                          text: "แบบทดสอบที่ $quizNumber",
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.gray700,
                           ),
-                          child: Text(
-                            "${score['correct']}/${score['total']}",
+                        ),
+
+                        if (attempt > 1)
+                          TextSpan(
+                            text: " (ทำซ้ำครั้งที่ $attempt)",
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
+                              color: Color(0xFFB71C1C),
                               fontWeight: FontWeight.w600,
-                              color: AppColors.blue800,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "ถูกต้อง ${p.toStringAsFixed(1)}% ",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.gray550,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              IconButton(
-                icon: const Icon(Icons.info_outline_rounded, color: AppColors.blue600, size: 22),
-                tooltip: "ดูรายละเอียด",
-                onPressed: () {
-                  _showQuizDetail(score, index);
-                },
+                  const SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.blue100,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "${score['correct']}/${score['total']}",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.blue800,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Text(
+                        "ถูกต้อง ${p.toStringAsFixed(1)}%",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.gray550,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  if (score['date'] != null)
+                    Text(
+                      DateFormat('dd/MM/yyyy HH:mm').format(score['date']),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.gray550,
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
+            ),
+
+            IconButton(
+              icon: const Icon(Icons.info_outline_rounded, color: AppColors.blue600),
+              onPressed: () {
+                final index = entry.key + 1;
+                _showQuizDetail(score, index);
+              },
+            ),
+          ],
+        ),
+      );
+    }).toList(),
+  );
+}
+  // end buildQuizList()
+
 
   Widget _buildMonthDropdown() {
     return Container(

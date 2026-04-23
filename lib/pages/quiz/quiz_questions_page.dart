@@ -11,6 +11,8 @@ import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/services/firestore_service.dart';
 import 'package:lingsix/pages/quiz/quiz_result_page.dart';
 
+
+
 class QuizQuestionsPage extends StatefulWidget {
   final String quizId;
   final String title;
@@ -28,6 +30,10 @@ class QuizQuestionsPage extends StatefulWidget {
 class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   final firestoreService = FirestoreService();
   final user = FirebaseAuth.instance.currentUser;
+
+bool isAnswered = false;   
+  bool isFinishing = false; 
+
   final AudioPlayer _player = AudioPlayer();
 
   static const int questionsPerSet = 12;
@@ -54,10 +60,17 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    loadQuestions();
-  }
+  
+ @override
+void initState() {
+  super.initState();
+
+  isAnswered = false;   // ✅ reset
+  isFinishing = false;  // ✅ reset
+
+  _player.setReleaseMode(ReleaseMode.stop);
+  loadQuestions();
+}
 
   @override
   void dispose() {
@@ -97,7 +110,11 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   }
 
   Future<void> onAnswer({required bool isCheck}) async {
+  if (isAnswered || isFinishing) return; //🔥 block spam tab
+
+  isAnswered = true;
     final question = questions[questionIndex];
+    
     final sound = question["sound"]!;
 
     soundStats.putIfAbsent(sound, () => {"correct": 0, "total": 0});
@@ -108,13 +125,19 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       soundStats[sound]!["correct"] = soundStats[sound]!["correct"]! + 1;
     }
 
-    if (questionIndex < questionsPerSet - 1) {
-      setState(() {
-        questionIndex++;
-      });
-    } else {
-      await finishQuiz();
-    }
+   if (questionIndex < questionsPerSet - 1) {
+  await Future.delayed(const Duration(milliseconds: 200)); //  smooth UX
+
+  if (!mounted) return;
+
+  setState(() {
+    questionIndex++;
+    isAnswered = false; // unlock next question
+  });
+} else {
+  isFinishing = true; 
+  await finishQuiz();
+}
   }
 
   Future<void> finishQuiz() async {
@@ -144,11 +167,28 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       ),
     );
   }
-
+/* fix code 24/04   
   Future<void> playCurrentWord() async {
     final audioPath = questions[questionIndex]["audio"]!;
     await _player.play(AssetSource(audioPath));
+  }*/
+
+//add new
+  Future<void> playCurrentWord() async {
+  try {
+    if (!mounted) return;
+
+    final audioPath = questions[questionIndex]["audio"];
+
+    if (audioPath == null || audioPath.isEmpty) return;
+
+    await _player.stop(); // 👈 prevent overlap crash
+    await _player.play(AssetSource(audioPath));
+  } catch (e) {
+    debugPrint("Audio error: $e");
   }
+}
+// end add new 
 
   Widget _buildQuestionBubble(ThemeProvider themeProvider) {
     final selectedCharacter = themeProvider.selectedCharacter;
@@ -194,28 +234,37 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
     );
   }
 
+//buildAnswerTile 
   Widget _buildAnswerTile({
     required bool isCheck,
     required Color color,
     required IconData icon,
   }) {
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+  child: Material(
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(28),
+      onTap: (isAnswered || isFinishing)
+    ? null
+    : () => onAnswer(isCheck: isCheck),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: color,
           borderRadius: BorderRadius.circular(28),
-          onTap: () => onAnswer(isCheck: isCheck),
-          child: Ink(
-            height: 168,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(28),
-            ),
-            child: Center(child: Icon(icon, color: Colors.white, size: 108)),
-          ),
+        ),
+        child: Center(
+          //fix from Icon(icon, color: Colors.white, size: 108),
+          child: Icon(
+  icon,
+  color: Colors.white,
+  size: MediaQuery.of(context).size.width * 0.12,
+),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   @override
@@ -228,7 +277,8 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
 
     return Scaffold(
       body: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+              builder: (context, themeProvider, _) {
+        
           return Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -280,6 +330,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
+
                     GestureDetector(
                       onTap: () => playCurrentWord(),
                       child: Container(
@@ -296,44 +347,61 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
                     _buildQuestionBubble(themeProvider),
-                    const SizedBox(height: 70),
-                    Image.asset(
-                      question["image"]!,
-                      height: 250,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 250,
-                          color: AppColors.gray75,
-                          child: const Center(child: Text('Image not found')),
-                        );
-                      },
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        _buildAnswerTile(
-                          isCheck: true,
-                          color: AppColors.success,
-                          icon: Icons.check_rounded,
+
+//🔥🔥 new code expanded
+
+                    Flexible(
+                      flex: 3,
+                      child: Center(
+                        child: FractionallySizedBox(
+                          heightFactor: 0.8,
+                          child: Image.asset(
+                            question["image"]!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppColors.gray75,
+                                child: const Center(
+                                  child: Text('Image not found'),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        _buildAnswerTile(
-                          isCheck: false,
-                          color: AppColors.error,
-                          icon: Icons.close_rounded,
-                        ),
-                      ],
+                      ),
+                    ), // 👈 THIS COMMA WAS MISSING
+
+//SizedBox(height: 70),
+
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        children: [
+                          _buildAnswerTile(
+                            isCheck: true,
+                            color: AppColors.success,
+                            icon: Icons.check_rounded,
+                          ),
+                          const SizedBox(width: 12),
+                          _buildAnswerTile(
+                            isCheck: false,
+                            color: AppColors.error,
+                            icon: Icons.close_rounded,
+                          ),
+                        ],
+                      ),
                     ),
+
                   ],
                 ),
               ),
             ),
-          );
+          ); // ✅ closes Container properly
         },
-      ),
+              ),
     );
   }
 }

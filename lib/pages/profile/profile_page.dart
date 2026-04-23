@@ -37,7 +37,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _load() async {
-  final user = FirebaseAuth.instance.currentUser;
+  //old code:fix24/04 -> final user = FirebaseAuth.instance.currentUser;
+  final user = await FirebaseAuth.instance.authStateChanges().first;
 
   // if user is null → go login
   if (user == null) {
@@ -45,6 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
     Navigator.pushReplacementNamed(context, '/login');
     return;
   }
+  print("AUTH UID: ${user.uid}");
 
   final doc = await _firestore.getUserByUid(user.uid);
 
@@ -77,8 +79,21 @@ class _ProfilePageState extends State<ProfilePage> {
       y--;
       m += 12;
     }
-    return "$y years $m months";
+    return "$y ปี $m เดือน";
   }
+
+  String displayGender(String? gender) {
+  switch (gender) {
+    case 'Male':
+      return 'ชาย';
+    case 'Female':
+      return 'หญิง';
+    case 'Other':
+      return 'อื่น ๆ';
+    default:
+      return '-';
+  }
+}
 
   Future<void> _saveProfile() async {
     if (_birthday == null) return;
@@ -248,7 +263,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          _gender ?? 'Unknown',
+                         // _gender ?? 'Unknown',
+                          displayGender(_gender),
+
                           style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.blue700,
@@ -403,69 +420,85 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildGenderDropdown() {
-    if (!_edit) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          children: [
-            const Icon(Icons.wc_outlined, color: AppColors.blue400, size: 22),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "เพศ",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.gray550,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _gender ?? '-',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.gray700,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
+Widget _buildGenderDropdown() {
+  // 
+  final genderMap = {
+    'Male': 'ชาย',
+    'Female': 'หญิง',
+    'Other': 'อื่น ๆ',
+  };
 
+  // 🔹 VIEW MODE
+  if (!_edit) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
-        initialValue: ['Male', 'Female', 'Other'].contains(_gender) ? _gender : null,
-        items: ['Male', 'Female', 'Other']
-            .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-            .toList(),
-        onChanged: (val) => setState(() => _gender = val),
-        style: const TextStyle(color: AppColors.gray700, fontSize: 16),
-        dropdownColor: Colors.white,
-        decoration: InputDecoration(
-          labelText: "เพศ",
-          labelStyle: const TextStyle(color: AppColors.gray550),
-          prefixIcon: const Icon(Icons.wc_outlined, color: AppColors.blue400),
-          filled: true,
-          fillColor: AppColors.gray25,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          const Icon(Icons.wc_outlined, color: AppColors.blue400, size: 22),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "เพศ",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.gray550,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                displayGender(_gender), // ✅ show Thai
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.gray700,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.blue400, width: 2),
-          ),
-        ),
+        ],
       ),
     );
   }
+
+  // 🔹 EDIT MODE
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: DropdownButtonFormField<String>(
+      value: ['Male', 'Female', 'Other'].contains(_gender) ? _gender : null,
+
+      items: genderMap.entries.map((entry) {
+        return DropdownMenuItem(
+          value: entry.key,        // English → DB
+          child: Text(entry.value), // Thai → UI
+        );
+      }).toList(),
+
+      onChanged: (val) => setState(() => _gender = val),
+
+      style: const TextStyle(color: AppColors.gray700, fontSize: 16),
+      dropdownColor: Colors.white,
+
+      decoration: InputDecoration(
+        labelText: "เพศ",
+        labelStyle: const TextStyle(color: AppColors.gray550),
+        prefixIcon: const Icon(Icons.wc_outlined, color: AppColors.blue400),
+        filled: true,
+        fillColor: AppColors.gray25,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.blue400, width: 2),
+        ),
+      ),
+    ),
+  );
+}
 
   Widget _buildBirthdayPicker() {
     if (!_edit) {
