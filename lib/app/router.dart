@@ -11,6 +11,7 @@ import 'package:lingsix/pages/auth/verify_success_page.dart';
 // Main Pages
 import 'package:lingsix/pages/home/start_page.dart';
 import 'package:lingsix/pages/home/home_page.dart';
+import 'package:lingsix/pages/home/avatar_selected_page.dart';
 import 'package:lingsix/pages/profile/profile_page.dart';
 import 'package:lingsix/pages/settings/sound_settings_page.dart';
 
@@ -29,6 +30,7 @@ class AppRouter {
   static const String infodata = '/infodata';
   
   static const String startPage = '/start-page';
+  static const String avatarSelected = '/avatar-selected';
   static const String homePage = '/home-page';
   static const String profile = '/profile';
   static const String soundSettings = '/sound-settings';
@@ -47,6 +49,7 @@ class AppRouter {
     infodata: (_) => InfoDataPage(),
     
     startPage: (_) => const StartPage(),
+    avatarSelected: (_) => const AvatarSelectedPage(),
     homePage: (_) => const HomePage(),
     profile: (_) => ProfilePage(),
     soundSettings: (_) => const SoundSettingsPage(),

@@ -5,15 +5,24 @@ import 'package:lingsix/services/firestore_service.dart';
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'selected_theme';
   static const String _lastTestCountKey = 'last_synced_test_count';
+  static const String _selectedCharacterKey = 'selected_character';
   static const String _defaultTheme = 'default';
+  static const String _defaultCharacter = 'dino';
   static const List<String> _themeRotation = ['default', 'summer', 'winter'];
+  static const List<String> _availableCharacters = ['dino', 'rabbit', 'cat'];
+  static const Map<String, Map<String, String>> _themeBackgroundAliases = {
+    'summer': {'home': 'home'},
+  };
   
   String _currentTheme = _defaultTheme;
   int _lastSyncedTestCount = 0;
+  String _selectedCharacter = _defaultCharacter;
   final FirestoreService _firestoreService = FirestoreService();
   late SharedPreferences _prefs;
   
   String get currentTheme => _currentTheme;
+  String get selectedCharacter => _selectedCharacter;
+  List<String> get availableCharacters => _availableCharacters;
 
   ThemeProvider() {
     _initPrefs();
@@ -23,12 +32,38 @@ class ThemeProvider extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
     _currentTheme = _prefs.getString(_themeKey) ?? _defaultTheme;
     _lastSyncedTestCount = _prefs.getInt(_lastTestCountKey) ?? 0;
+    _selectedCharacter = _prefs.getString(_selectedCharacterKey) ?? _defaultCharacter;
     notifyListeners();
   }
 
   /// Get wallpaper path for a given page and theme
   String getWallpaperPath(String pageType) {
-    return 'assets/themes/$_currentTheme/bg/$pageType.png';
+    final mappedPageType =
+        _themeBackgroundAliases[_currentTheme]?[pageType] ?? pageType;
+    return 'assets/themes/$_currentTheme/bg/$mappedPageType.png';
+  }
+
+  String getCharacterHeadPath(String character) {
+    return 'assets/themes/$_currentTheme/characters/$character/head.png';
+  }
+
+  String getCharacterBodyPath(String character) {
+    return 'assets/themes/$_currentTheme/characters/$character/body.png';
+  }
+
+  String getDefaultCharacterHeadPath(String character) {
+    return 'assets/themes/default/characters/$character/head.png';
+  }
+
+  String getDefaultCharacterBodyPath(String character) {
+    return 'assets/themes/default/characters/$character/body.png';
+  }
+
+  Future<void> setSelectedCharacter(String character) async {
+    if (!_availableCharacters.contains(character)) return;
+    _selectedCharacter = character;
+    await _prefs.setString(_selectedCharacterKey, character);
+    notifyListeners();
   }
 
   /// Auto-rotate to next theme when 10 tests completed

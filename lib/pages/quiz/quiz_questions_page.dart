@@ -121,6 +121,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
       );
     }
 
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -128,6 +129,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
           score: score,
           total: questionsPerSet,
           accuracy: accuracy,
+          perSoundAccuracy: soundStats,
         ),
       ),
     );
@@ -136,6 +138,74 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   Future<void> playCurrentWord() async {
     final audioPath = questions[questionIndex]["audio"]!;
     await _player.play(AssetSource(audioPath));
+  }
+
+  Widget _buildQuestionBubble(ThemeProvider themeProvider) {
+    final selectedCharacter = themeProvider.selectedCharacter;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(24, 20, 40, 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.black87, width: 3),
+          ),
+          child: const Text(
+            "ออกเสียงถูกไหม ?",
+            style: TextStyle(fontSize: 38, fontWeight: FontWeight.w700),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Positioned(
+          right: -14,
+          top: -12,
+          child: Transform.rotate(
+            angle: 0.2,
+            child: Image.asset(
+              themeProvider.getCharacterHeadPath(selectedCharacter),
+              width: 50,
+              height: 50,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                themeProvider.getDefaultCharacterHeadPath(selectedCharacter),
+                width: 50,
+                height: 50,
+                fit: BoxFit.contain,
+                errorBuilder: (context, fallbackError, fallbackStackTrace) {
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnswerTile({
+    required bool isCheck,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () => onAnswer(isCheck: isCheck),
+          child: Ink(
+            height: 168,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Center(child: Icon(icon, color: Colors.white, size: 108)),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -216,16 +286,9 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "ออกเสียงถูกหรือไม่",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 16),
+                    _buildQuestionBubble(themeProvider),
+                    const SizedBox(height: 70),
                     Image.asset(
                       question["image"]!,
                       height: 250,
@@ -233,7 +296,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           height: 250,
-                          color: Colors.grey[300],
+                          color: AppColors.gray75,
                           child: const Center(child: Text('Image not found')),
                         );
                       },
@@ -241,45 +304,16 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                     const Spacer(),
                     Row(
                       children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => onAnswer(isCheck: true),
-                            icon: const Icon(
-                              Icons.check_circle_outline,
-                              size: 28,
-                            ),
-                            label: const Text(
-                              "Check",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(64),
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
+                        _buildAnswerTile(
+                          isCheck: true,
+                          color: AppColors.success,
+                          icon: Icons.check_rounded,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => onAnswer(isCheck: false),
-                            icon: const Icon(Icons.cancel_outlined, size: 28),
-                            label: const Text(
-                              "Uncheck",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(64),
-                              backgroundColor: AppColors.error,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
+                        _buildAnswerTile(
+                          isCheck: false,
+                          color: AppColors.error,
+                          icon: Icons.close_rounded,
                         ),
                       ],
                     ),
