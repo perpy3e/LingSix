@@ -15,7 +15,6 @@ import 'dart:math';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:flutter/services.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -245,6 +244,8 @@ Future<void> exportPDF() async {
   if (recentScores.isEmpty) return;
 
   final pdf = pw.Document();
+  final regularFont = await PdfGoogleFonts.notoSansThaiLoopedRegular();
+  final boldFont = await PdfGoogleFonts.notoSansThaiLoopedBold();
 
   /// SORT DATA
   final sorted = [...recentScores]..sort((a, b) {
@@ -341,6 +342,7 @@ Future<void> exportPDF() async {
   pdf.addPage(
     pw.MultiPage(
       margin: const pw.EdgeInsets.all(24),
+      theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
       build: (context) => [
         /// =========================
         /// HEADER
