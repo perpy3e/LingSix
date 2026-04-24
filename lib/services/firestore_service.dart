@@ -165,7 +165,7 @@ class FirestoreService {
 for (var doc in attempts) {
   final data = doc.data() as Map<String, dynamic>;
   final ts = data['playedAt'];
-  uniqueAttempts.add("${data['quizId']}_${ts}");
+  uniqueAttempts.add("${data['quizId']}_$ts");
 }
 
 int totalQuizzes = uniqueAttempts.length;
