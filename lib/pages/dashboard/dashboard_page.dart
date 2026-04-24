@@ -11,6 +11,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:lingsix/providers/theme_provider.dart';
+import 'dart:math';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:flutter/services.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -22,47 +27,520 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   //ADD CSV -------------------------
   Future<void> exportCSV() async {
-    if (recentScores.isEmpty) return;
+  if (recentScores.isEmpty) return;
 
-    List<List<dynamic>> rows = [];
+  List<List<dynamic>> rows = [];
 
-    rows.add(["แบบทดสอบ", "ตอบถูก", "ทั้งหมด", "ความถูกต้อง (%)", "วันที่"]);
+  final sorted = [...recentScores]..sort((a, b) {
+    final da = a['date'] as DateTime?;
+    final db = b['date'] as DateTime?;
+    return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
+  });
 
-    for (int i = 0; i < recentScores.length; i++) {
-      final score = recentScores[i];
+  final first = sorted.first;
+  final last = sorted.last;
 
-      final correct = score['correct'] ?? 0;
-      final total = score['total'] ?? 0;
-      final date = score['date'];
+  final firstAcc = percent(first['correct'], first['total']);
+  final lastAcc = percent(last['correct'], last['total']);
 
-      rows.add([
-        "แบบทดสอบที่ ${i + 1}",
-        correct,
-        total,
-        percent(correct, total).toStringAsFixed(1),
-        date?.toString() ?? "",
-      ]);
+  final improvementRate = calculateImprovementRate(firstAcc, lastAcc);
+
+  final accuracies = sorted.map((e) {
+    return percent(e['correct'], e['total']);
+  }).toList();
+
+  final variance = calculateVariance(accuracies);
+  final stdDev = calculateStdDev(accuracies);
+
+  final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
+  /// =========================
+  /// REPORT HEADER
+  /// =========================
+  rows.add(["Listening Skill Analytical Report"]);
+  rows.add(["Generated At", now]);
+  rows.add([]);
+
+  /// =========================
+  /// EXECUTIVE SUMMARY
+  /// =========================
+  rows.add(["=== Executive Summary ==="]);
+
+  String performanceLevel = overallAccuracy >= 80
+      ? "Excellent"
+      : overallAccuracy >= 60
+          ? "Moderate"
+          : "Needs Improvement";
+
+  rows.add(["Performance Level", performanceLevel]);
+  rows.add(["Total Quiz Attempts", totalQuizzes]);
+  rows.add(["Average Accuracy (%)", overallAccuracy.toStringAsFixed(2)]);
+  rows.add([]);
+
+  rows.add([
+    "Description",
+    "Accuracy reflects the overall listening and phoneme discrimination ability. Higher values indicate better performance."
+  ]);
+  rows.add([]);
+
+  /// =========================
+  /// PROGRESS ANALYSIS
+  /// =========================
+  rows.add(["=== Progress Analysis ==="]);
+
+  rows.add(["Initial Accuracy (%)", firstAcc.toStringAsFixed(2)]);
+  rows.add(["Latest Accuracy (%)", lastAcc.toStringAsFixed(2)]);
+  rows.add(["Absolute Change (%)", (lastAcc - firstAcc).toStringAsFixed(2)]);
+  rows.add(["Improvement Rate (%)", improvementRate.toStringAsFixed(2)]);
+
+  String progressInterpretation;
+  if (improvementRate > 20) {
+    progressInterpretation = "Rapid improvement observed";
+  } else if (improvementRate > 5) {
+    progressInterpretation = "Steady improvement";
+  } else if (improvementRate >= 0) {
+    progressInterpretation = "Minimal or stable progress";
+  } else {
+    progressInterpretation = "Performance decline observed";
+  }
+
+  rows.add(["Interpretation", progressInterpretation]);
+  rows.add([]);
+
+  /// =========================
+  /// CONSISTENCY ANALYSIS
+  /// =========================
+  rows.add(["=== Consistency Analysis ==="]);
+
+  rows.add(["Variance", variance.toStringAsFixed(2)]);
+  rows.add(["Standard Deviation", stdDev.toStringAsFixed(2)]);
+
+  String consistencyLevel;
+  if (stdDev < 10) {
+    consistencyLevel = "Highly consistent performance";
+  } else if (stdDev < 20) {
+    consistencyLevel = "Moderate variability";
+  } else {
+    consistencyLevel = "High variability (inconsistent performance)";
+  }
+
+  rows.add(["Consistency Level", consistencyLevel]);
+  rows.add([
+    "Explanation",
+    "Higher standard deviation indicates unstable performance across attempts."
+  ]);
+  rows.add([]);
+
+  /// =========================
+  /// SOUND ANALYSIS
+  /// =========================
+  rows.add(["=== Phoneme-Level Analysis ==="]);
+  rows.add(["Phoneme", "Accuracy (%)", "Difficulty (%)", "Level"]);
+
+  List<String> weakSounds = [];
+
+  perSoundAccuracy.forEach((sound, data) {
+    final p = (data['percent'] ?? 0).toDouble();
+    final difficulty = 100 - p;
+
+    String level;
+    if (p >= 80) {
+      level = "Strong";
+    } else if (p >= 60) {
+      level = "Moderate";
+    } else {
+      level = "Weak";
+      weakSounds.add(sound);
     }
 
-    String csv = const CsvEncoder().convert(rows);
+    rows.add([
+      sound,
+      p.toStringAsFixed(2),
+      difficulty.toStringAsFixed(2),
+      level
+    ]);
+  });
 
-    final dir = await getTemporaryDirectory();
+  rows.add([]);
+  rows.add(["Phonemes Requiring Improvement", weakSounds.join(", ")]);
+  rows.add([]);
 
-    final path = "${dir.path}/quiz_results.csv";
+  /// =========================
+  /// TREND ANALYSIS
+  /// =========================
+  rows.add(["=== Trend Analysis ==="]);
+  rows.add(["Date", "Accuracy (%)"]);
 
-    final file = File(path);
+  for (var score in sorted) {
+    final date = score['date'] as DateTime?;
+    final acc = percent(score['correct'], score['total']);
 
-    await file.writeAsString(csv);
+    rows.add([
+      DateFormat('yyyy-MM-dd').format(date ?? DateTime.now()),
+      acc.toStringAsFixed(2),
+    ]);
+  }
 
-    //  iOS
-    final box = context.findRenderObject() as RenderBox?;
+  rows.add([]);
 
-    await Share.shareXFiles(
-      [XFile(path)],
-      text: "Quiz Results CSV",
-      sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+  /// =========================
+  /// INSIGHTS
+  /// =========================
+  rows.add(["=== Key Insights ==="]);
+
+  if (overallAccuracy >= 80) {
+    rows.add(["User demonstrates high listening proficiency"]);
+  } else if (overallAccuracy >= 60) {
+    rows.add(["User has a solid foundation but can improve further"]);
+  } else {
+    rows.add(["User requires additional foundational training"]);
+  }
+
+  if (weakSounds.isNotEmpty) {
+    rows.add(["Main weaknesses identified in phonemes: ${weakSounds.join(", ")}"]);
+  }
+
+  if (stdDev > 15) {
+    rows.add(["Performance inconsistency detected; repetition is recommended"]);
+  }
+
+  rows.add([]);
+
+ 
+
+  rows.add([]);
+
+  rows.add([
+    "Note",
+    "This report is generated automatically to support learning analytics and performance evaluation."
+  ]);
+
+  /// SAVE
+  final csv = const CsvEncoder().convert(rows);
+
+  final dir = await getTemporaryDirectory();
+  final path = "${dir.path}/listening_report.csv";
+
+  final file = File(path);
+  await file.writeAsString(csv);
+
+  await Share.shareXFiles([XFile(path)]);
+}
+// end CSV
+pw.Widget _row(String label, String value) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.symmetric(vertical: 2),
+    child: pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(label),
+        pw.Text(value),
+      ],
+    ),
+  );
+}
+
+//🔥🔥🔥🔥🔥function pdf
+Future<void> exportPDF() async {
+  if (recentScores.isEmpty) return;
+
+  final pdf = pw.Document();
+
+  /// SORT DATA
+  final sorted = [...recentScores]..sort((a, b) {
+    final da = a['date'] as DateTime?;
+    final db = b['date'] as DateTime?;
+    return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
+  });
+
+  final firstAcc = percent(sorted.first['correct'], sorted.first['total']);
+  final lastAcc = percent(sorted.last['correct'], sorted.last['total']);
+
+  final improvementRate = calculateImprovementRate(firstAcc, lastAcc);
+
+  final accuracies =
+      sorted.map((e) => percent(e['correct'], e['total'])).toList();
+
+  final variance = calculateVariance(accuracies);
+  final stdDev = calculateStdDev(accuracies);
+
+  final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
+  /// 🔮 Forecast
+  double slope = (lastAcc - firstAcc) / sorted.length;
+  double predicted = (lastAcc + slope).clamp(0, 100);
+
+  /// 🔁 Retake analysis
+  Map<String, List<double>> quizMap = {};
+  for (var s in recentScores) {
+    final id = s['quizId'];
+    final acc = percent(s['correct'], s['total']);
+
+    quizMap.putIfAbsent(id, () => []);
+    quizMap[id]!.add(acc);
+  }
+
+  List<String> improved = [];
+  List<String> stagnant = [];
+
+  quizMap.forEach((q, scores) {
+    if (scores.length > 1) {
+      if (scores.last > scores.first) {
+        improved.add(q);
+      } else {
+        stagnant.add(q);
+      }
+    }
+  });
+
+  /// 🔍 Weak sounds
+  List<String> weak = [];
+  perSoundAccuracy.forEach((k, v) {
+    final p = (v['percent'] ?? 0).toDouble();
+    if (p < 60) weak.add(k);
+  });
+
+  /// 📊 SAFE BAR CHART (NO CANVAS)
+  pw.Widget buildChart(List<double> data) {
+    return pw.Container(
+      height: 180,
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.end,
+        children: data.asMap().entries.map((entry) {
+          final index = entry.key;
+          final value = entry.value;
+
+          return pw.Expanded(
+            child: pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 3),
+              child: pw.Column(
+                mainAxisAlignment: pw.MainAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    value.toStringAsFixed(0),
+                    style: const pw.TextStyle(fontSize: 8),
+                  ),
+                  pw.Container(
+                    height: (value / 100) * 140,
+                    color: PdfColors.blue,
+                  ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    "T${index + 1}",
+                    style: const pw.TextStyle(fontSize: 8),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
+
+  pdf.addPage(
+    pw.MultiPage(
+      margin: const pw.EdgeInsets.all(24),
+      build: (context) => [
+        /// =========================
+        /// HEADER
+        /// =========================
+        pw.Text(
+          "Listening Performance Report",
+          style: pw.TextStyle(
+              fontSize: 22, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.Text("Generated: $now"),
+        pw.Divider(),
+
+        /// =========================
+        /// OVERVIEW
+        /// =========================
+        pw.Text("Overview",
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+
+        pw.SizedBox(height: 8),
+
+        _row("Total Attempts", totalQuizzes.toString()),
+        _row("Total Correct", totalCorrect.toString()),
+        _row("Average Accuracy",
+            "${overallAccuracy.toStringAsFixed(1)}%"),
+
+        pw.SizedBox(height: 16),
+
+        /// =========================
+        /// PROGRESS
+        /// =========================
+        pw.Text("Progress Analysis",
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+
+        pw.SizedBox(height: 10),
+
+        buildChart(accuracies),
+
+        pw.SizedBox(height: 10),
+
+        _row("Initial Accuracy", "${firstAcc.toStringAsFixed(1)}%"),
+        _row("Latest Accuracy", "${lastAcc.toStringAsFixed(1)}%"),
+        _row("Improvement Rate",
+            "${improvementRate.toStringAsFixed(1)}%"),
+
+        pw.SizedBox(height: 16),
+
+        /// =========================
+        /// CONSISTENCY
+        /// =========================
+        pw.Text("Consistency",
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+
+        pw.SizedBox(height: 8),
+
+        _row("Variance", variance.toStringAsFixed(2)),
+        _row("Std Deviation", stdDev.toStringAsFixed(2)),
+
+        pw.Text(
+          stdDev < 10
+              ? "Performance is stable"
+              : stdDev < 20
+                  ? "Moderate variability detected"
+                  : "High inconsistency detected",
+        ),
+
+        pw.SizedBox(height: 16),
+
+        /// =========================
+        /// FORECAST
+        /// =========================
+        pw.Text("Prediction",
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+
+        pw.Container(
+          padding: const pw.EdgeInsets.all(12),
+          color: PdfColors.blue50,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("Expected Next Accuracy"),
+              pw.Text(
+                "${predicted.toStringAsFixed(1)}%",
+                style: pw.TextStyle(
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+
+        pw.SizedBox(height: 16),
+
+        /// =========================
+        /// RETAKE
+        /// =========================
+        pw.Text("Repetition Analysis",
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+
+        pw.Text("Improved: ${improved.join(", ")}"),
+        pw.Text("No improvement: ${stagnant.join(", ")}"),
+
+        pw.SizedBox(height: 16),
+
+        /// =========================
+        /// SOUND ANALYSIS
+        /// =========================
+        pw.Text("Phoneme Accuracy",
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+
+        pw.SizedBox(height: 10),
+
+        ...perSoundAccuracy.entries.map((e) {
+          final p = (e.value['percent'] ?? 0).toDouble();
+
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("${e.key}: ${p.toStringAsFixed(1)}%"),
+              pw.Container(
+                height: 6,
+                width: p * 2,
+                color: p > 80
+                    ? PdfColors.green
+                    : p > 60
+                        ? PdfColors.orange
+                        : PdfColors.red,
+              ),
+              pw.SizedBox(height: 6),
+            ],
+          );
+        }).toList(),
+
+        pw.SizedBox(height: 10),
+
+        pw.Text(
+          weak.isNotEmpty
+              ? "Low accuracy phonemes: ${weak.join(", ")}"
+              : "No significant phoneme weakness detected",
+          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+        ),
+      ],
+    ),
+  );
+
+  await Printing.layoutPdf(
+    onLayout: (format) async => pdf.save(),
+  );
+}
+//🔥🔥🔥end function pdf
+
+
+pw.Widget _sectionTitle(String text, pw.Font font) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.only(bottom: 6),
+    child: pw.Text(
+      text,
+      style: pw.TextStyle(
+        font: font,
+        fontSize: 14,
+        fontWeight: pw.FontWeight.bold,
+      ),
+    ),
+  );
+}
+
+
+
+String _performanceLevel(double acc) {
+  if (acc >= 80) return "Excellent";
+  if (acc >= 60) return "Moderate";
+  return "Needs Improvement";
+}
+
+String _insightText(double acc, List<String> weak, double stdDev) {
+  String text = "";
+
+  if (acc >= 80) {
+    text += "User demonstrates strong listening ability.\n";
+  } else if (acc >= 60) {
+    text += "User has moderate performance.\n";
+  } else {
+    text += "User needs improvement.\n";
+  }
+
+  if (weak.isNotEmpty) {
+    text += "Weak phonemes: ${weak.join(", ")}\n";
+  }
+
+  if (stdDev > 15) {
+    text += "Performance is inconsistent.\n";
+  }
+
+  return text;
+}
   //--------------------------------------------------------------------------------
 
   final FirestoreService _firestoreService = FirestoreService();
@@ -156,22 +634,21 @@ recentScores = recentScores.where((e) {
     });
   }
 
-  void applyMonthFilter() {
-    if (selectedMonth == "ทั้งหมด") {
-      filteredScores = recentScores;
-      return;
-    }
-
-    final monthIndex = months.indexOf(selectedMonth);
-
-    filteredScores = recentScores.where((score) {
-      if (score['date'] == null) return false;
-
-      final date = score['date'] as DateTime;
-
-      return date.month == monthIndex;
-    }).toList();
+void applyMonthFilter() {
+  if (selectedMonth == "ทั้งหมด") {
+    filteredScores = recentScores;
+    return;
   }
+
+  final monthIndex = months.indexOf(selectedMonth);
+
+  filteredScores = recentScores.where((score) {
+    if (score['date'] == null) return false;
+
+    final date = score['date'] as DateTime;
+    return date.month == monthIndex;
+  }).toList();
+}
 
   double percent(int correct, int total) {
     if (total == 0) return 0;
@@ -180,6 +657,37 @@ recentScores = recentScores.where((e) {
 
     return value.clamp(0, 100);
   }
+
+  // =========================
+// IMPROVEMENT RATE
+// =========================
+double calculateImprovementRate(double first, double last) {
+  if (first == 0) return 0;
+  return ((last - first) / first) * 100;
+}
+
+// =========================
+// VARIANCE
+// =========================
+double calculateVariance(List<double> values) {
+  if (values.isEmpty) return 0;
+
+  final mean = values.reduce((a, b) => a + b) / values.length;
+
+  final variance = values
+      .map((v) => (v - mean) * (v - mean))
+      .reduce((a, b) => a + b) /
+      values.length;
+
+  return variance;
+}
+
+// =========================
+// STD DEV
+// =========================
+double calculateStdDev(List<double> values) {
+  return sqrt(calculateVariance(values));
+}
 
   //‼️‼️‼️add more function 24/04
   void buildAggregatedQuizScores() {
@@ -287,60 +795,68 @@ recentScores = recentScores.where((e) {
     );
   }
 
+//build summary card
   Widget _buildSummaryCard() {
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "ภาพรวม",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.blue800,
-                ),
+  return _card(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "ภาพรวม",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.blue800,
               ),
+            ),
 
-              FilledButton.icon(
-                onPressed: exportCSV,
-
-                icon: const Icon(Icons.download, size: 18),
-
-                label: const Text(
-                  "ดาวน์โหลดข้อมูล",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.yellow400,
-                  foregroundColor: AppColors.gray700,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          _stat("จำนวนแบบทดสอบ", totalQuizzes.toString()),
-
-          const SizedBox(height: 12),
-
-          _stat("จำนวนข้อที่ตอบถูก", totalCorrect.toString()),
-
-          const SizedBox(height: 12),
-
-          _stat("ความถูกต้อง (%)", "${overallAccuracy.toStringAsFixed(1)}%"),
-        ],
+            Row(
+  children: [
+    FilledButton.icon(
+      onPressed: exportCSV,
+      icon: const Icon(Icons.download, size: 18),
+      label: const Text("CSV"),
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.yellow400,
+        foregroundColor: AppColors.gray700,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-    );
-  }
+    ),
+
+    const SizedBox(width: 8),
+
+    FilledButton.icon(
+      onPressed: exportPDF,
+      icon: const Icon(Icons.picture_as_pdf, size: 18),
+      label: const Text("PDF"),
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+    ),
+  ],
+)
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        _stat("จำนวนแบบทดสอบ", totalQuizzes.toString()),
+        const SizedBox(height: 12),
+
+        _stat("จำนวนข้อที่ตอบถูก", totalCorrect.toString()),
+        const SizedBox(height: 12),
+
+        _stat("ความถูกต้อง (%)", "${overallAccuracy.toStringAsFixed(1)}%"),
+      ],
+    ),
+  );
+}
+  //end build summary card
 
 // ah ee ........
   Widget _buildPerSoundCard() {
@@ -590,8 +1106,10 @@ final sounds = orderedKeys
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
 
-                //‼️old code fix24/04: if (index >= filteredScores.length) return const SizedBox();
-                 if (index < 0 || index > 4) return const SizedBox();
+                //‼️oif (index < 0 || index > 4) return const SizedBox();
+                 if (index < 0 || index >= aggregatedQuizScores.length) {
+  return const SizedBox();
+}
 
 
                 return Text(

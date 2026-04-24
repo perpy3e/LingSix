@@ -43,14 +43,22 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _synced = false;
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Splash/loading
+        // Loading
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -59,14 +67,13 @@ class AuthGate extends StatelessWidget {
 
         final user = snapshot.data;
 
+        // Not logged in
         if (user == null) {
-          // Not logged in
           return const LoginPage();
         }
 
-        // User logged in but not verified
+        // Not verified
         if (!user.emailVerified) {
-          // Redirect to verify pending page
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pushReplacementNamed(
               context,
@@ -74,12 +81,23 @@ class AuthGate extends StatelessWidget {
               arguments: user.email,
             );
           });
+
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // Verified user → main app
+        // sync theme 
+        if (!_synced) {
+          _synced = true;
+
+          Future.microtask(() {
+            context.read<ThemeProvider>()
+                .syncThemeStatusFromFirestore(user.uid);
+          });
+        }
+
+        // Go to app
         return const StartPage();
       },
     );

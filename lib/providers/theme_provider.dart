@@ -35,8 +35,8 @@ static const Map<String, Map<String, String>> _themeBackgroundAliases = {
 
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
-    //_currentTheme = _prefs.getString(_themeKey) ?? _defaultTheme;
-    _currentTheme = _defaultTheme;
+   
+    _currentTheme = _prefs.getString(_themeKey) ?? _defaultTheme;
     _lastSyncedTestCount = _prefs.getInt(_lastTestCountKey) ?? 0;
     _selectedCharacter = _prefs.getString(_selectedCharacterKey) ?? _defaultCharacter;
     notifyListeners();
