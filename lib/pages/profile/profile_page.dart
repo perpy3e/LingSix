@@ -466,8 +466,7 @@ Widget _buildGenderDropdown() {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: DropdownButtonFormField<String>(
-      initialValue: ['Male', 'Female', 'Other'].contains(_gender) ? _gender : null,
-
+      value: ['Male', 'Female', 'Other'].contains(_gender) ? _gender : null,
       items: genderMap.entries.map((entry) {
         return DropdownMenuItem(
           value: entry.key,        // English → DB
