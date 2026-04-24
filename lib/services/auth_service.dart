@@ -13,19 +13,19 @@ class AuthService {
   String _handleAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'email-already-in-use':
-        return 'This email is already in use.';
+        return 'อีเมลนี้ถูกใช้งานแล้ว';
       case 'invalid-email':
-        return 'Invalid email address.';
+        return 'รูปแบบอีเมลไม่ถูกต้อง';
       case 'weak-password':
-        return 'Password is too weak.';
+        return 'รหัสผ่านไม่ปลอดภัย';
       case 'user-not-found':
-        return 'No user found.';
+        return 'ไม่พบบัญชีผู้ใช้นี้';
       case 'wrong-password':
-        return 'Incorrect password.';
+        return 'รหัสผ่านไม่ถูกต้อง';
       case 'network-request-failed':
-        return 'No internet connection.';
+        return 'ไม่สามารถเชื่อมต่ออินเทอร์เน็ตได้';
       default:
-        return e.message ?? 'Unknown error.';
+        return e.message ?? 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
     }
   }
 
