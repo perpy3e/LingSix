@@ -9,6 +9,8 @@ import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:lingsix/providers/theme_provider.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -114,6 +116,9 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     final summary = await _firestoreService.getDashboardSummary(user.uid);
+    //add theme
+    final themeProvider = context.read<ThemeProvider>();
+  await themeProvider.syncThemeStatusFromFirestore(user.uid);
 
 // add 23/04‼️‼️
     recentScores = List<Map<String, dynamic>>.from(summary['recentScores'] ?? []);
@@ -215,15 +220,18 @@ recentScores = recentScores.where((e) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
+   return Scaffold(
+  body: Consumer<ThemeProvider>(
+    builder: (context, themeProvider, _) {
+      return Container(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/common/bg/dashboard.png'),
+            image: AssetImage(
+              themeProvider.getWallpaperPath('home'),
+            ),
             fit: BoxFit.cover,
           ),
         ),
-
         child: SafeArea(
           child: Column(
             children: [
@@ -232,17 +240,12 @@ recentScores = recentScores.where((e) {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
-
                   child: Column(
                     children: [
                       _buildSummaryCard(),
-
                       const SizedBox(height: 20),
-
                       _buildPerSoundCard(),
-
                       const SizedBox(height: 20),
-
                       _buildQuizCard(),
                     ],
                   ),
@@ -251,8 +254,10 @@ recentScores = recentScores.where((e) {
             ],
           ),
         ),
-      ),
-    );
+      ); //  Container
+    },
+  ), // Consumer
+);
   }
 
   Widget _buildHeader() {

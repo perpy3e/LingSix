@@ -43,8 +43,8 @@ class _AvatarSelectedPageState extends State<AvatarSelectedPage> {
 										child: Row(
 											mainAxisAlignment: MainAxisAlignment.spaceBetween,
 											children: themeProvider.availableCharacters
-													.map(
-														(character) => Expanded(
+    .map<Widget>(
+      (String character) => Expanded(
 															child: Padding(
 																padding: const EdgeInsets.symmetric(
 																	horizontal: 6,

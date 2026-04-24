@@ -37,24 +37,23 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _load() async {
-  //old code:fix24/04 -> final user = FirebaseAuth.instance.currentUser;
-  final user = await FirebaseAuth.instance.authStateChanges().first;
+  final user = FirebaseAuth.instance.currentUser;
 
-  // if user is null → go login
+  // immediately redirect 
   if (user == null) {
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, '/login');
     return;
   }
+
   print("AUTH UID: ${user.uid}");
 
   final doc = await _firestore.getUserByUid(user.uid);
 
-  // 
   if (doc == null || doc.data() == null) {
     if (!mounted) return;
     setState(() {
-      userData = {}; // stop loading spinner
+      userData = {};
     });
     return;
   }

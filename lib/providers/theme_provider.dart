@@ -10,9 +10,14 @@ class ThemeProvider extends ChangeNotifier {
   static const String _defaultCharacter = 'dino';
   static const List<String> _themeRotation = ['default', 'summer', 'winter'];
   static const List<String> _availableCharacters = ['dino', 'rabbit', 'cat'];
-  static const Map<String, Map<String, String>> _themeBackgroundAliases = {
-    'summer': {'home': 'home'},
-  };
+  //change mapping
+static const Map<String, Map<String, String>> _themeBackgroundAliases = {
+  'summer': {
+    'home': 'home',
+    'lesson': 'quiz',
+    'quiz': 'quiz',
+  },
+};
   
   String _currentTheme = _defaultTheme;
   int _lastSyncedTestCount = 0;
@@ -30,7 +35,8 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
-    _currentTheme = _prefs.getString(_themeKey) ?? _defaultTheme;
+    //_currentTheme = _prefs.getString(_themeKey) ?? _defaultTheme;
+    _currentTheme = _defaultTheme;
     _lastSyncedTestCount = _prefs.getInt(_lastTestCountKey) ?? 0;
     _selectedCharacter = _prefs.getString(_selectedCharacterKey) ?? _defaultCharacter;
     notifyListeners();
@@ -66,21 +72,35 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Auto-rotate to next theme when 10 tests completed
+  // Change theme count 
   Future<void> syncThemeStatusFromFirestore(String uid) async {
     try {
       final userDoc = await _firestoreService.getUserByUid(uid);
       if (userDoc == null) return;
 
       final summary = await _firestoreService.getDashboardSummary(uid);
-      final testCount = summary['totalQuestions'] as int? ?? 0;
+      //final testCount = summary['totalQuestions'] as int? ?? 0;
+      final testCount = summary['totalQuizzes'] as int? ?? 0; //totalquizzes from dashboard 
+       if (testCount == 0) {
+  _currentTheme = _defaultTheme;
+  _lastSyncedTestCount = 0;
+
+  await _prefs.setString(_themeKey, _currentTheme);
+  await _prefs.setInt(_lastTestCountKey, 0);
+
+  notifyListeners();
+  return;
+}
       
-      // Check if test count increased by 10 (rotation milestone)
-      if (testCount > _lastSyncedTestCount && testCount % 10 == 0) {
-        _rotateTheme();
-      }
+      if (
+  testCount >= 10 &&
+  testCount % 10 == 0 &&
+  testCount != _lastSyncedTestCount
+) {
+  _rotateTheme();
+}
       
-      // Update last synced count
+      
       _lastSyncedTestCount = testCount;
       await _prefs.setInt(_lastTestCountKey, testCount);
 
@@ -88,6 +108,7 @@ class ThemeProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error syncing theme status: $e');
     }
+   
   }
 
   /// Rotate to next theme in the sequence

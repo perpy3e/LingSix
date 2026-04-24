@@ -10,6 +10,8 @@ import '../../services/firestore_service.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
 import '../../utils/snackbar_helper.dart';
+import 'package:provider/provider.dart';
+import 'package:lingsix/providers/theme_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -83,6 +85,8 @@ class _LoginPageState extends State<LoginPage> {
         );
         return;
       }
+      await context.read<ThemeProvider>()
+    .syncThemeStatusFromFirestore(user.uid);
 
       Navigator.pushReplacementNamed(context, AppRouter.startPage);
     } catch (e) {
@@ -142,7 +146,8 @@ Future<void> _googleLogin() async {
         user.displayName ?? '',
         isGoogleSignIn: true,
       );
-
+await context.read<ThemeProvider>()
+      .syncThemeStatusFromFirestore(user.uid);
       Navigator.pushReplacementNamed(context, AppRouter.infodata);
       return;
     }
@@ -153,6 +158,10 @@ Future<void> _googleLogin() async {
       Navigator.pushReplacementNamed(context, AppRouter.infodata);
       return;
     }
+
+    await context.read<ThemeProvider>()
+    .syncThemeStatusFromFirestore(user.uid);
+
 
     Navigator.pushReplacementNamed(context, AppRouter.startPage);
 

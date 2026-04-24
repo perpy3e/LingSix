@@ -110,7 +110,7 @@ void initState() {
   }
 
   Future<void> onAnswer({required bool isCheck}) async {
-  if (isAnswered || isFinishing) return; //🔥 block spam tab
+  if (isAnswered || isFinishing) return; //block spam tab
 
   isAnswered = true;
     final question = questions[questionIndex];
@@ -140,33 +140,55 @@ void initState() {
 }
   }
 
-  Future<void> finishQuiz() async {
-    final accuracy = (score / questionsPerSet) * 100;
+ Future<void> finishQuiz() async {
+  final accuracy = (score / questionsPerSet) * 100;
 
-    if (user != null) {
-      await firestoreService.saveQuizAttempt(
-        uid: user!.uid,
-        quizId: widget.quizId,
-        score: score,
-        totalQuestions: questionsPerSet,
-        accuracy: accuracy,
-        perSoundAccuracy: soundStats,
-      );
-    }
+  final currentUser = user;
+if (currentUser == null) return;
 
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => QuizResultPage(
-          score: score,
-          total: questionsPerSet,
-          accuracy: accuracy,
-          perSoundAccuracy: soundStats,
-        ),
-      ),
-    );
-  }
+//
+final themeProvider = context.read<ThemeProvider>();
+
+// ✅ 1. save quiz 
+await firestoreService.saveQuizAttempt(
+  uid: currentUser.uid,
+  quizId: widget.quizId,
+  score: score,
+  totalQuestions: questionsPerSet,
+  accuracy: accuracy,
+  perSoundAccuracy: soundStats,
+   
+);
+
+// ✅ 2.  from DB
+final summary = await firestoreService.getDashboardSummary(currentUser.uid);
+final testCount = summary['totalQuizzes'] ?? 0;
+
+// ✅ 3. sync theme 
+await themeProvider.syncThemeStatusFromFirestore(currentUser.uid);
+
+// ✅ 4. show popup 
+
+final shouldShowPopup = (testCount % 10 == 0 && testCount != 0);
+
+
+
+if (!mounted) return;
+
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (_) => QuizResultPage(
+      score: score,
+      total: questionsPerSet,
+      accuracy: accuracy,
+      perSoundAccuracy: soundStats,
+      showUnlockPopup: shouldShowPopup 
+    ),
+  ),
+);
+}
+
 /* fix code 24/04   
   Future<void> playCurrentWord() async {
     final audioPath = questions[questionIndex]["audio"]!;
@@ -182,7 +204,7 @@ void initState() {
 
     if (audioPath == null || audioPath.isEmpty) return;
 
-    await _player.stop(); // 👈 prevent overlap crash
+    await _player.stop(); // prevent overlap crash
     await _player.play(AssetSource(audioPath));
   } catch (e) {
     debugPrint("Audio error: $e");
@@ -404,4 +426,108 @@ void initState() {
               ),
     );
   }
+}
+
+void _showThemeUnlockedPopup(BuildContext context) {
+  final themeProvider = context.read<ThemeProvider>();
+
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              /// ❌ CLOSE
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(6),
+                    child: const Icon(Icons.close, size: 18),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              /// 🎉 TITLE
+              const Text(
+                "ปลดล็อกธีมใหม่!",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.blue800,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              /// 🐻 AVATAR
+              Image.asset(
+                themeProvider.getCharacterHeadPath(
+                  themeProvider.selectedCharacter,
+                ),
+                height: 80,
+              ),
+
+              const SizedBox(height: 16),
+
+              /// 💬 MESSAGE
+              const Text(
+                "เก่งมาก! ☀️🌊\nคุณทำแบบทดสอบครบ 10 ครั้งแล้ว\nปลดล็อกธีมใหม่แล้วนะ\nไปเที่ยวทะเลกันต่อเลย!",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.gray700,
+                  height: 1.5,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// BUTTON
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.blue600,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    "ไปต่อเลย!",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

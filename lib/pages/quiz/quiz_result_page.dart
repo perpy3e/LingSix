@@ -4,11 +4,12 @@ import 'package:lingsix/app/router.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 
-class QuizResultPage extends StatelessWidget {
+class QuizResultPage extends StatefulWidget {
   final int score;
   final int total;
   final double accuracy;
   final Map<String, Map<String, int>> perSoundAccuracy;
+  final bool showUnlockPopup;
 
   const QuizResultPage({
     super.key,
@@ -16,10 +17,28 @@ class QuizResultPage extends StatelessWidget {
     required this.total,
     required this.accuracy,
     required this.perSoundAccuracy,
+    required this.showUnlockPopup,
   });
 
+  @override
+  State<QuizResultPage> createState() => _QuizResultPageState();
+}
+
+class _QuizResultPageState extends State<QuizResultPage> {
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.showUnlockPopup) {
+      Future.microtask(() {
+        _showThemeUnlockedPopup(context);
+      });
+    }
+  }
+
   double _soundPercent(String sound) {
-    final stat = perSoundAccuracy[sound];
+    final stat = widget.perSoundAccuracy[sound];
     if (stat == null) return 0;
 
     final totalCount = stat['total'] ?? 0;
@@ -30,10 +49,10 @@ class QuizResultPage extends StatelessWidget {
   }
 
   String _feedbackText() {
-    if (score >= 11) return "เก่งมากเลย !";
-    if (score >= 9) return "ดีมาก !";
-    if (score >= 7) return "ทำได้ดีนะ !";
-    if (score >= 5) return "พยายามอีกนิด !";
+    if (widget.score >= 11) return "เก่งมากเลย !";
+    if (widget.score >= 9) return "ดีมาก !";
+    if (widget.score >= 7) return "ทำได้ดีนะ !";
+    if (widget.score >= 5) return "พยายามอีกนิด !";
     return "ลองใหม่นะ!";
   }
 
@@ -89,6 +108,7 @@ class QuizResultPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+
                     Expanded(
                       child: Center(
                         child: Container(
@@ -96,17 +116,11 @@ class QuizResultPage extends StatelessWidget {
                           constraints: const BoxConstraints(maxWidth: 480),
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Colors.white, Colors.white],
-                            ),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.blue700.withValues(
-                                  alpha: 0.18,
-                                ),
+                                color: AppColors.blue700.withValues(alpha: 0.18),
                                 blurRadius: 18,
                                 offset: const Offset(0, 10),
                               ),
@@ -114,13 +128,13 @@ class QuizResultPage extends StatelessWidget {
                           ),
                           child: SingleChildScrollView(
                             child: Column(
-                              mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Center(
                                   child: _buildFeedbackBubble(themeProvider),
                                 ),
                                 const SizedBox(height: 8),
+
                                 Center(
                                   child: Image.asset(
                                     'assets/themes/${themeProvider.currentTheme}/characters/rabbit/body.png',
@@ -135,9 +149,11 @@ class QuizResultPage extends StatelessWidget {
                                     },
                                   ),
                                 ),
+
                                 const SizedBox(height: 10),
+
                                 Text(
-                                  "คะแนน $score/$total",
+                                  "คะแนน ${widget.score}/${widget.total}",
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     fontSize: 34,
@@ -145,9 +161,11 @@ class QuizResultPage extends StatelessWidget {
                                     color: AppColors.blue800,
                                   ),
                                 ),
+
                                 const SizedBox(height: 8),
+
                                 Text(
-                                  "ความถูกต้อง ${accuracy.toStringAsFixed(1)}%",
+                                  "ความถูกต้อง ${widget.accuracy.toStringAsFixed(1)}%",
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     fontSize: 18,
@@ -155,9 +173,9 @@ class QuizResultPage extends StatelessWidget {
                                     color: AppColors.gray700,
                                   ),
                                 ),
+
                                 const SizedBox(height: 14),
 
-                                const SizedBox(height: 8),
                                 ...orderedSounds.map((sound) {
                                   final percent = _soundPercent(sound);
                                   return Padding(
@@ -202,7 +220,9 @@ class QuizResultPage extends StatelessWidget {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
+
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -217,25 +237,20 @@ class QuizResultPage extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.yellow200,
                           foregroundColor: AppColors.yellow700,
-                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
-                            side: const BorderSide(
-                              color: Colors.white,
-                              width: 2,
-                            ),
+                            side: const BorderSide(color: Colors.white, width: 2),
                           ),
                         ),
                         child: const Text(
                           "ภาพรวม",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 12),
+
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -257,10 +272,7 @@ class QuizResultPage extends StatelessWidget {
                         ),
                         child: const Text(
                           "กลับสู่หน้าหลัก",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -273,4 +285,103 @@ class QuizResultPage extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showThemeUnlockedPopup(BuildContext context) {
+  final themeProvider = context.read<ThemeProvider>();
+
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(6),
+                    child: const Icon(Icons.close, size: 18),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                "ปลดล็อกธีมใหม่!",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.blue800,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Image.asset(
+                themeProvider.getCharacterHeadPath(
+                  themeProvider.selectedCharacter,
+                ),
+                height: 80,
+              ),
+
+              const SizedBox(height: 16),
+
+              const Text(
+                "เก่งมาก! ☀️🌊\nคุณทำแบบทดสอบครบ 10 ครั้งแล้ว\nปลดล็อกธีมใหม่แล้วนะ\nไปเที่ยวทะเลกันต่อเลย!",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.gray700,
+                  height: 1.5,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.blue600,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    "ไปต่อเลย!",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
