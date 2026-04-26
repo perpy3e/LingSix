@@ -15,6 +15,8 @@ import 'dart:math';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:flutter/services.dart';
+
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -36,143 +38,116 @@ class _DashboardPageState extends State<DashboardPage> {
     return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
   });
 
-  final first = sorted.first;
-  final last = sorted.last;
+  double safePercent(num? c, num? t) {
+    if (c == null || t == null || t == 0) return 0;
+    return ((c / t) * 100).clamp(0, 100).toDouble();
+  }
 
-  final firstAcc = percent(first['correct'], first['total']);
-  final lastAcc = percent(last['correct'], last['total']);
+  final firstAcc = safePercent(sorted.first['correct'], sorted.first['total']);
+  final lastAcc = safePercent(sorted.last['correct'], sorted.last['total']);
+  final improvementRate = lastAcc - firstAcc;
 
-  final improvementRate = calculateImprovementRate(firstAcc, lastAcc);
-
-  final accuracies = sorted.map((e) {
-    return percent(e['correct'], e['total']);
-  }).toList();
+  final accuracies =
+      sorted.map((e) => safePercent(e['correct'], e['total'])).toList();
 
   final variance = calculateVariance(accuracies);
   final stdDev = calculateStdDev(accuracies);
 
   final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
 
-  /// =========================
-  /// REPORT HEADER
-  /// =========================
-  rows.add(["Listening Skill Analytical Report"]);
+  /// ================= HEADER =================
+  rows.add(["Listening Assessment Report"]);
   rows.add(["Generated At", now]);
   rows.add([]);
 
-  /// =========================
-  /// EXECUTIVE SUMMARY
-  /// =========================
-  rows.add(["=== Executive Summary ==="]);
-
-  String performanceLevel = overallAccuracy >= 80
-      ? "Excellent"
-      : overallAccuracy >= 60
-          ? "Moderate"
-          : "Needs Improvement";
-
-  rows.add(["Performance Level", performanceLevel]);
-  rows.add(["Total Quiz Attempts", totalQuizzes]);
+  /// ================= OVERVIEW =================
+  rows.add(["=== Overview ==="]);
+  rows.add(["Total Attempts", totalQuizzes]);
+  rows.add(["Total Correct", totalCorrect]);
   rows.add(["Average Accuracy (%)", overallAccuracy.toStringAsFixed(2)]);
   rows.add([]);
 
-  rows.add([
-    "Description",
-    "Accuracy reflects the overall listening and phoneme discrimination ability. Higher values indicate better performance."
-  ]);
-  rows.add([]);
-
-  /// =========================
-  /// PROGRESS ANALYSIS
-  /// =========================
+  /// ================= PROGRESS =================
   rows.add(["=== Progress Analysis ==="]);
-
-  rows.add(["Initial Accuracy (%)", firstAcc.toStringAsFixed(2)]);
-  rows.add(["Latest Accuracy (%)", lastAcc.toStringAsFixed(2)]);
-  rows.add(["Absolute Change (%)", (lastAcc - firstAcc).toStringAsFixed(2)]);
-  rows.add(["Improvement Rate (%)", improvementRate.toStringAsFixed(2)]);
-
-  String progressInterpretation;
-  if (improvementRate > 20) {
-    progressInterpretation = "Rapid improvement observed";
-  } else if (improvementRate > 5) {
-    progressInterpretation = "Steady improvement";
-  } else if (improvementRate >= 0) {
-    progressInterpretation = "Minimal or stable progress";
-  } else {
-    progressInterpretation = "Performance decline observed";
-  }
-
-  rows.add(["Interpretation", progressInterpretation]);
+  rows.add(["Initial Score (%)", firstAcc.toStringAsFixed(2)]);
+  rows.add(["Latest Score (%)", lastAcc.toStringAsFixed(2)]);
+  rows.add(["Score Change (%)", improvementRate.toStringAsFixed(2)]);
   rows.add([]);
 
-  /// =========================
-  /// CONSISTENCY ANALYSIS
-  /// =========================
+  /// ================= CONSISTENCY =================
   rows.add(["=== Consistency Analysis ==="]);
-
   rows.add(["Variance", variance.toStringAsFixed(2)]);
   rows.add(["Standard Deviation", stdDev.toStringAsFixed(2)]);
 
   String consistencyLevel;
   if (stdDev < 10) {
-    consistencyLevel = "Highly consistent performance";
+    consistencyLevel = "High consistency (stable performance)";
   } else if (stdDev < 20) {
-    consistencyLevel = "Moderate variability";
+    consistencyLevel = "Moderate variation (minor fluctuations)";
   } else {
-    consistencyLevel = "High variability (inconsistent performance)";
+    consistencyLevel = "High variation (inconsistent performance)";
   }
 
-  rows.add(["Consistency Level", consistencyLevel]);
+  rows.add(["Consistency Summary", consistencyLevel]);
+  rows.add([]);
+
   rows.add([
     "Explanation",
-    "Higher standard deviation indicates unstable performance across attempts."
+    "Consistency is calculated from accuracy scores across all attempts. "
+        "Lower values indicate stable and consistent performance, while higher values indicate variability."
   ]);
   rows.add([]);
 
-  /// =========================
-  /// SOUND ANALYSIS
-  /// =========================
-  rows.add(["=== Phoneme-Level Analysis ==="]);
-  rows.add(["Phoneme", "Accuracy (%)", "Difficulty (%)", "Level"]);
+  /// ================= PHONEME =================
+  rows.add(["=== Phoneme Analysis ==="]);
+  rows.add(["Phoneme", "Accuracy (%)", "Level"]);
 
-  List<String> weakSounds = [];
+  List<Map<String, dynamic>> soundList = [];
 
-  perSoundAccuracy.forEach((sound, data) {
-    final p = (data['percent'] ?? 0).toDouble();
-    final difficulty = 100 - p;
+  perSoundAccuracy.forEach((k, v) {
+    final p = (v['percent'] ?? 0).toDouble().clamp(0, 100);
+    soundList.add({"sound": k, "percent": p});
+  });
+
+  soundList.sort((a, b) => b["percent"].compareTo(a["percent"]));
+
+  List<String> weak = [];
+
+  for (var e in soundList) {
+    final p = e["percent"];
 
     String level;
     if (p >= 80) {
-      level = "Strong";
+      level = "High";
     } else if (p >= 60) {
       level = "Moderate";
     } else {
-      level = "Weak";
-      weakSounds.add(sound);
+      level = "Low";
+      weak.add(e["sound"]);
     }
 
     rows.add([
-      sound,
+      e["sound"],
       p.toStringAsFixed(2),
-      difficulty.toStringAsFixed(2),
-      level
+      level,
     ]);
-  });
+  }
 
   rows.add([]);
-  rows.add(["Phonemes Requiring Improvement", weakSounds.join(", ")]);
+
+  final best = soundList.take(2).map((e) => e["sound"]).join(", ");
+
+  rows.add(["Strong Phonemes", best]);
+  rows.add(["Weak Phonemes", weak.isEmpty ? "-" : weak.join(", ")]);
   rows.add([]);
 
-  /// =========================
-  /// TREND ANALYSIS
-  /// =========================
-  rows.add(["=== Trend Analysis ==="]);
+  /// ================= TREND =================
+  rows.add(["=== Trend Data ==="]);
   rows.add(["Date", "Accuracy (%)"]);
 
   for (var score in sorted) {
     final date = score['date'] as DateTime?;
-    final acc = percent(score['correct'], score['total']);
+    final acc = safePercent(score['correct'], score['total']);
 
     rows.add([
       DateFormat('yyyy-MM-dd').format(date ?? DateTime.now()),
@@ -182,36 +157,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
   rows.add([]);
 
-  /// =========================
-  /// INSIGHTS
-  /// =========================
-  rows.add(["=== Key Insights ==="]);
-
-  if (overallAccuracy >= 80) {
-    rows.add(["User demonstrates high listening proficiency"]);
-  } else if (overallAccuracy >= 60) {
-    rows.add(["User has a solid foundation but can improve further"]);
-  } else {
-    rows.add(["User requires additional foundational training"]);
-  }
-
-  if (weakSounds.isNotEmpty) {
-    rows.add(["Main weaknesses identified in phonemes: ${weakSounds.join(", ")}"]);
-  }
-
-  if (stdDev > 15) {
-    rows.add(["Performance inconsistency detected; repetition is recommended"]);
-  }
-
-  rows.add([]);
-
- 
-
-  rows.add([]);
-
+  /// ================= NOTE =================
   rows.add([
     "Note",
-    "This report is generated automatically to support learning analytics and performance evaluation."
+    "This report is automatically generated for performance monitoring and analysis."
   ]);
 
   /// SAVE
@@ -239,309 +188,399 @@ pw.Widget _row(String label, String value) {
   );
 }
 
-//🔥🔥🔥🔥🔥function pdf
+//🔥🔥🔥🔥🔥PDF -------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------
 Future<void> exportPDF() async {
   if (recentScores.isEmpty) return;
 
   final pdf = pw.Document();
-  final regularFont = await PdfGoogleFonts.notoSansThaiLoopedRegular();
-  final boldFont = await PdfGoogleFonts.notoSansThaiLoopedBold();
 
-  /// SORT DATA
+  final regularFont = pw.Font.ttf(
+    await rootBundle.load("assets/fonts/Sarabun-Regular.ttf"),
+  );
+
+  final boldFont = pw.Font.ttf(
+    await rootBundle.load("assets/fonts/Sarabun-Bold.ttf"),
+  );
+
   final sorted = [...recentScores]..sort((a, b) {
     final da = a['date'] as DateTime?;
     final db = b['date'] as DateTime?;
     return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
   });
 
-  final firstAcc = percent(sorted.first['correct'], sorted.first['total']);
-  final lastAcc = percent(sorted.last['correct'], sorted.last['total']);
+  double safePercent(num? c, num? t) {
+    if (c == null || t == null || t == 0) return 0;
+    return ((c / t) * 100).clamp(0, 100).toDouble();
+  }
 
-  final improvementRate = calculateImprovementRate(firstAcc, lastAcc);
+  final firstAcc = safePercent(sorted.first['correct'], sorted.first['total']);
+  final lastAcc = safePercent(sorted.last['correct'], sorted.last['total']);
+
+  final improvementRate = lastAcc - firstAcc;
 
   final accuracies =
-      sorted.map((e) => percent(e['correct'], e['total'])).toList();
+      sorted.map((e) => safePercent(e['correct'], e['total'])).toList();
 
   final variance = calculateVariance(accuracies);
   final stdDev = calculateStdDev(accuracies);
 
   final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
 
-  /// 🔮 Forecast
-  double slope = (lastAcc - firstAcc) / sorted.length;
-  double predicted = (lastAcc + slope).clamp(0, 100);
+  /// ================= CHART =================
+  pw.Widget buildTrendChart() {
+    return pw.Column(
+      children: [
+       
+        pw.SizedBox(height: 4),
+       pw.Container(
+  height: 140,
+  child: pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.end,
+    children: accuracies.asMap().entries.map((entry) {
+      final index = entry.key;
+      final value = entry.value;
 
-  /// 🔁 Retake analysis
-  Map<String, List<double>> quizMap = {};
-  for (var s in recentScores) {
-    final id = s['quizId'];
-    final acc = percent(s['correct'], s['total']);
-
-    quizMap.putIfAbsent(id, () => []);
-    quizMap[id]!.add(acc);
-  }
-
-  List<String> improved = [];
-  List<String> stagnant = [];
-
-  quizMap.forEach((q, scores) {
-    if (scores.length > 1) {
-      if (scores.last > scores.first) {
-        improved.add(q);
-      } else {
-        stagnant.add(q);
-      }
-    }
-  });
-
-  /// 🔍 Weak sounds
-  List<String> weak = [];
-  perSoundAccuracy.forEach((k, v) {
-    final p = (v['percent'] ?? 0).toDouble();
-    if (p < 60) weak.add(k);
-  });
-
-  /// 📊 SAFE BAR CHART (NO CANVAS)
-  pw.Widget buildChart(List<double> data) {
-    return pw.Container(
-      height: 180,
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.end,
-        children: data.asMap().entries.map((entry) {
-          final index = entry.key;
-          final value = entry.value;
-
-          return pw.Expanded(
-            child: pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 3),
-              child: pw.Column(
-                mainAxisAlignment: pw.MainAxisAlignment.end,
-                children: [
-                  pw.Text(
-                    value.toStringAsFixed(0),
-                    style: const pw.TextStyle(fontSize: 8),
-                  ),
-                  pw.Container(
-                    height: (value / 100) * 140,
-                    color: PdfColors.blue,
-                  ),
-                  pw.SizedBox(height: 4),
-                  pw.Text(
-                    "T${index + 1}",
-                    style: const pw.TextStyle(fontSize: 8),
-                  ),
-                ],
-              ),
+      return pw.Expanded(
+        child: pw.Column(
+          mainAxisAlignment: pw.MainAxisAlignment.end,
+          children: [
+            pw.Text( 
+              "${value.toStringAsFixed(0)}%",
+              style: pw.TextStyle(fontSize: 8),
             ),
-          );
-        }).toList(),
-      ),
+            pw.SizedBox(height: 2),
+
+            pw.Container(
+              height: (value / 100) * 100,
+              margin: const pw.EdgeInsets.symmetric(horizontal: 3),
+              color: PdfColors.blue,
+            ),
+
+            pw.SizedBox(height: 4),
+            pw.Text(
+              "Test ${index + 1}",
+              style: pw.TextStyle(fontSize: 8),
+            ),
+          ],
+        ),
+      );
+    }).toList(),
+  ),
+),
+      ],
     );
   }
 
+  /// ================= PAGE 1 =================
   pdf.addPage(
     pw.MultiPage(
-      margin: const pw.EdgeInsets.all(24),
       theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
       build: (context) => [
-        /// =========================
-        /// HEADER
-        /// =========================
         pw.Text(
-          "Listening Performance Report",
-          style: pw.TextStyle(
-              fontSize: 22, fontWeight: pw.FontWeight.bold),
+          "Listening Report (รายงานการประเมินทักษะการฟัง)",
+          style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
         ),
         pw.Text("Generated: $now"),
         pw.Divider(),
 
-        /// =========================
         /// OVERVIEW
-        /// =========================
-        pw.Text("Overview",
-            style: pw.TextStyle(
-                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+        pw.Text("Overview (ภาพรวม)",
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
 
-        pw.SizedBox(height: 8),
+        pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Total Attempts (จำนวนแบบทดสอบ):"),
+    pw.Text("$totalQuizzes"),
+  ],
+),
+      pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Total Correct (จำนวนข้อที่ถูก):"),
+    pw.Text("$totalCorrect"),
+  ],
+),
 
-        _row("Total Attempts", totalQuizzes.toString()),
-        _row("Total Correct", totalCorrect.toString()),
-        _row("Average Accuracy",
-            "${overallAccuracy.toStringAsFixed(1)}%"),
-
-        pw.SizedBox(height: 16),
-
-        /// =========================
-        /// PROGRESS
-        /// =========================
-        pw.Text("Progress Analysis",
-            style: pw.TextStyle(
-                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Average Accuracy (ความแม่นยำเฉลี่ย):"),
+    pw.Text("${overallAccuracy.toStringAsFixed(1)}%"),
+  ],
+),
 
         pw.SizedBox(height: 10),
 
-        buildChart(accuracies),
-
-        pw.SizedBox(height: 10),
-
-        _row("Initial Accuracy", "${firstAcc.toStringAsFixed(1)}%"),
-        _row("Latest Accuracy", "${lastAcc.toStringAsFixed(1)}%"),
-        _row("Improvement Rate",
-            "${improvementRate.toStringAsFixed(1)}%"),
+       
 
         pw.SizedBox(height: 16),
 
-        /// =========================
+        /// TREND
+        pw.Text("Progress (พัฒนาการ)",
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+
+        pw.SizedBox(height: 2),
+        buildTrendChart(),
+
+        pw.SizedBox(height: 10),
+
+       pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Initial Test (ครั้งเริ่มต้น):"),
+    pw.Text("${firstAcc.toStringAsFixed(1)}%"),
+  ],
+),
+
+pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Latest Test (ครั้งล่าสุด):"),
+    pw.Text("${lastAcc.toStringAsFixed(1)}%"),
+  ],
+),
+
+pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Score Change (ความเปลี่ยนแปลง):"),
+    pw.Text("${improvementRate.toStringAsFixed(1)}%"),
+  ],
+),
+
+        pw.SizedBox(height: 16),
+
         /// CONSISTENCY
-        /// =========================
-        pw.Text("Consistency",
-            style: pw.TextStyle(
-                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+pw.Text("Consistency Analysis (ความสม่ำเสมอ)",
+    style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
 
-        pw.SizedBox(height: 8),
+pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Variance (ความแปรปรวน):"),
+    pw.Text("${variance.toStringAsFixed(2)}"),
+  ],
+),
 
-        _row("Variance", variance.toStringAsFixed(2)),
-        _row("Std Deviation", stdDev.toStringAsFixed(2)),
+pw.Row(
+  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  children: [
+    pw.Text("Standard Deviation (ส่วนเบี่ยงเบนมาตรฐาน):"),
+    pw.Text("${stdDev.toStringAsFixed(2)}"),
+  ],
+),
 
-        pw.Text(
-          stdDev < 10
-              ? "Performance is stable"
-              : stdDev < 20
-                  ? "Moderate variability detected"
-                  : "High inconsistency detected",
-        ),
+pw.SizedBox(height: 10),
 
-        pw.SizedBox(height: 16),
+/// 
+pw.Text(
+  "คำอธิบาย:\n"
+  "ค่าความสม่ำเสมอนี้คำนวณจากคะแนนความแม่นยำ (%) ของแต่ละครั้ง เพื่อประเมินว่าผลลัพธ์มีความคงที่มากน้อยเพียงใด\n"
 
-        /// =========================
-        /// FORECAST
-        /// =========================
-        pw.Text("Prediction",
-            style: pw.TextStyle(
-                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+  "Variance (ความแปรปรวน) แสดงระดับการกระจายของคะแนนเมื่อเทียบกับค่าเฉลี่ย\n"
+  "Standard Deviation (ส่วนเบี่ยงเบนมาตรฐาน) เป็นค่าที่ใช้บอกระดับความแปรปรวนในหน่วยเดียวกับคะแนน ทำให้สามารถตีความได้ชัดเจนมากขึ้น\n\n"
 
-        pw.Container(
-          padding: const pw.EdgeInsets.all(12),
-          color: PdfColors.blue50,
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text("Expected Next Accuracy"),
-              pw.Text(
-                "${predicted.toStringAsFixed(1)}%",
-                style: pw.TextStyle(
-                    fontSize: 20,
-                    fontWeight: pw.FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
+  "การแปลผล:\n"
+  "ค่าต่ำ หมายถึง คะแนนมีความใกล้เคียงกันในแต่ละครั้ง แสดงถึงความสม่ำเสมอของผลลัพธ์\n"
+  "ค่าสูง หมายถึง คะแนนมีความแตกต่างกันมากในแต่ละครั้ง แสดงถึงความไม่สม่ำเสมอของผลลัพธ์\n\n"
 
-        pw.SizedBox(height: 16),
+  "ตัวอย่าง:\n"
+  "Standard Deviation ต่ำกว่า 10 แสดงถึงความสม่ำเสมอสูง\n"
+  "ค่าระหว่าง 10 - 20 แสดงถึงความแปรปรวนเล็กน้อย\n"
+  "ค่ามากกว่า 20 แสดงถึงความแปรปรวนสูง",
+  style: pw.TextStyle(fontSize: 9),
+),
 
-        /// =========================
-        /// RETAKE
-        /// =========================
-        pw.Text("Repetition Analysis",
-            style: pw.TextStyle(
-                fontSize: 16, fontWeight: pw.FontWeight.bold)),
+pw.SizedBox(height: 10),
 
-        pw.Text("Improved: ${improved.join(", ")}"),
-        pw.Text("No improvement: ${stagnant.join(", ")}"),
+/// SUMMARY 
+pw.Container(
+  width: double.infinity,
+  padding: const pw.EdgeInsets.all(12),
+  color: stdDev < 10
+      ? PdfColors.green100
+      : stdDev < 20
+          ? PdfColors.orange100
+          : PdfColors.red100,
+  child: pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Text(
+        "สรุปความสม่ำเสมอ",
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+      ),
 
-        pw.SizedBox(height: 16),
+      pw.SizedBox(height: 6),
 
-        /// =========================
-        /// SOUND ANALYSIS
-        /// =========================
-        pw.Text("Phoneme Accuracy",
-            style: pw.TextStyle(
-                fontSize: 16, fontWeight: pw.FontWeight.bold)),
-
-        pw.SizedBox(height: 10),
-
-        ...perSoundAccuracy.entries.map((e) {
-          final p = (e.value['percent'] ?? 0).toDouble();
-
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text("${e.key}: ${p.toStringAsFixed(1)}%"),
-              pw.Container(
-                height: 6,
-                width: p * 2,
-                color: p > 80
-                    ? PdfColors.green
-                    : p > 60
-                        ? PdfColors.orange
-                        : PdfColors.red,
-              ),
-              pw.SizedBox(height: 6),
-            ],
-          );
-        }).toList(),
-
-        pw.SizedBox(height: 10),
-
-        pw.Text(
-          weak.isNotEmpty
-              ? "Low accuracy phonemes: ${weak.join(", ")}"
-              : "No significant phoneme weakness detected",
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-        ),
+      pw.Text(
+        stdDev < 10
+            ? "คะแนนมีความเสถียรสูง (ทำได้ใกล้เคียงกันทุกครั้ง)"
+            : stdDev < 20
+                ? "คะแนนมีความแปรปรวนเล็กน้อย (มีขึ้นลงบ้าง)"
+                : "คะแนนมีความแปรปรวนสูง (ผลลัพธ์ไม่นิ่ง)",
+        style: pw.TextStyle(fontSize: 10),
+      ),
+    ],
+  ),
+),
       ],
     ),
   );
 
-  await Printing.layoutPdf(
-    onLayout: (format) async => pdf.save(),
-  );
-}
-//🔥🔥🔥end function pdf
+  List<Map<String, dynamic>> soundList = [];
 
+perSoundAccuracy.forEach((k, v) {
+  final p = (v['percent'] ?? 0).toDouble().clamp(0, 100);
+  soundList.add({"sound": k, "percent": p});
+});
 
-pw.Widget _sectionTitle(String text, pw.Font font) {
-  return pw.Padding(
-    padding: const pw.EdgeInsets.only(bottom: 6),
-    child: pw.Text(
-      text,
-      style: pw.TextStyle(
-        font: font,
-        fontSize: 14,
-        fontWeight: pw.FontWeight.bold,
+// sort มาก → น้อย
+soundList.sort((a, b) => b["percent"].compareTo(a["percent"]));
+
+// best = top 2
+final best = soundList.take(2).map((e) => e["sound"]).join(", ");
+
+// weak = < 60
+final weak = soundList
+    .where((e) => e["percent"] < 60)
+    .map((e) => e["sound"])
+    .join(", ");
+
+  /// ================= PAGE 2 =================
+ pdf.addPage(
+  pw.MultiPage(
+    theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
+    build: (context) => [
+      pw.Text("Phoneme Analysis (การวิเคราะห์หน่วยเสียง)",
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+
+      pw.SizedBox(height: 12),
+
+      
+
+      pw.SizedBox(height: 12),
+
+      /// BAR (FIXED 100%)
+      pw.Column(
+        children: soundList.map((e) {
+          final p = (e["percent"] as double).round().clamp(0, 100);
+
+          PdfColor color =
+              p >= 80 ? PdfColors.green : p >= 60 ? PdfColors.orange : PdfColors.red;
+
+          return pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 10),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text("${e["sound"]} ($p%)"),
+
+                pw.Row(
+                  children: [
+                    pw.Expanded(
+                      flex: p == 0 ? 1 : p,
+                      child: pw.Container(height: 10, color: color),
+                    ),
+                    pw.Expanded(
+                      flex: (100 - p) == 0 ? 1 : (100 - p),
+                      child:
+                          pw.Container(height: 10, color: PdfColors.grey300),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
-    ),
-  );
+
+      pw.SizedBox(height: 20),
+
+      /// ANALYSIS (UPGRADED + BILINGUAL + EXPLAIN WHY)
+      pw.Text("Detailed Analysis (การวิเคราะห์เชิงลึก)",
+          style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+
+      pw.SizedBox(height: 10),
+
+      ...soundList.map((e) {
+        final p = e["percent"] as double;
+
+        String analysis;
+
+        if (p >= 80) {
+  analysis =
+      "High accuracy (ระดับสูง): ผู้ใช้สามารถแยกแยะเสียงนี้ได้อย่างแม่นยำและสม่ำเสมอ";
+} else if (p >= 60) {
+  analysis =
+      "Moderate accuracy (ระดับปานกลาง): ทำได้ถูกในหลายครั้ง แต่ยังมีความคลาดเคลื่อน";
+} else {
+  analysis =
+      "Low accuracy (ระดับต่ำ): มีความผิดพลาดบ่อย";
 }
 
+        return pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 10),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                "${e["sound"]} : ${p.toStringAsFixed(1)}%",
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              ),
+              pw.Text(analysis, style: pw.TextStyle(fontSize: 11)),
+            ],
+          ),
+        );
+      }),
 
+      pw.SizedBox(height: 20),
 
-String _performanceLevel(double acc) {
-  if (acc >= 80) return "Excellent";
-  if (acc >= 60) return "Moderate";
-  return "Needs Improvement";
-}
+      /// SUMMARY 
+      pw.Container(
+        width: double.infinity,
+        padding: const pw.EdgeInsets.all(16),
+        color: PdfColors.green100,
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              "Summary (สรุปผล)",
+              style: pw.TextStyle(
+                fontSize: 15,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+            pw.SizedBox(height: 10),
 
-String _insightText(double acc, List<String> weak, double stdDev) {
-  String text = "";
+            pw.Text(
+              "Strong Phonemes - เสียงที่ทำได้ดี: $best",
+              style: pw.TextStyle(fontSize: 12),
+            ),
 
-  if (acc >= 80) {
-    text += "User demonstrates strong listening ability.\n";
-  } else if (acc >= 60) {
-    text += "User has moderate performance.\n";
-  } else {
-    text += "User needs improvement.\n";
-  }
+            pw.Text(
+              "Weak Phonemes - เสียงที่ควรฝึกเพิ่ม: ${weak.isEmpty ? "-" : weak}",
+              style: pw.TextStyle(fontSize: 12),
+            ),
 
-  if (weak.isNotEmpty) {
-    text += "Weak phonemes: ${weak.join(", ")}\n";
-  }
+            pw.SizedBox(height: 8),
 
-  if (stdDev > 15) {
-    text += "Performance is inconsistent.\n";
-  }
+           
+          ],
+        ),
+      ),
+    ],
+  ),
+);
 
-  return text;
+ final fileName =
+    "Report_${DateFormat('ddMMMyyyy').format(DateTime.now())}";
+
+await Printing.layoutPdf(
+  name: fileName,
+  onLayout: (format) async => pdf.save(),
+);
 }
   //--------------------------------------------------------------------------------
 

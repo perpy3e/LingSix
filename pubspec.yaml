@@ -157,6 +157,8 @@ flutter:
     - assets/content/vocabulary/oo/phukhao/
     - assets/content/vocabulary/oo/pu/
     - assets/content/vocabulary/oo/tu/
+    - assets/fonts/Sarabun-Regular.ttf
+    - assets/fonts/Sarabun-Bold.ttf
   
 
   # An image asset can refer to one or more resolution-specific "variants", see
