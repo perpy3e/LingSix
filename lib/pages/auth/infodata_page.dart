@@ -138,7 +138,7 @@ class _InfoDataPageState extends State<InfoDataPage> {
 
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/img/bgLogin.png'),
+            image: AssetImage('assets/common/bg/login.png'),
             fit: BoxFit.cover,
           ),
         ),
