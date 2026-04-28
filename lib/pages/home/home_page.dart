@@ -239,122 +239,183 @@ class HomePage extends StatelessWidget {
   void _showGuideDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierColor: Colors.black.withAlpha(102),
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
         ),
+        elevation: 8,
         child: Container(
-          padding: const EdgeInsets.all(24),
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.blue100,
-                      borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header - Icon and Title
+                Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(9),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppColors.blue600.withAlpha(26), AppColors.blue500.withAlpha(13)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.info_outline,
+                            color: AppColors.blue600,
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'คู่มือการใช้งาน',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.blue800,
+                          ),
+                        ),
+                      ],
                     ),
-                    child: const Icon(
-                      Icons.help_outline,
-                      color: AppColors.blue600,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'คู่มือการใช้งาน',
+                    const SizedBox(height: 12),
+                    Text(
+                      'เรียนรู้วิธีการใช้งานแอปพลิเคชัน',
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blue800,
+                        fontSize: 12,
+                        color: AppColors.gray550,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Guide Items as Cards
+                _buildGuideCard(
+                  imagePath: 'assets/common/illustrations/home/learn.png',
+                  title: 'บทเรียน',
+                  description: 'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
+                  accentColor: AppColors.blue600,
+                ),
+                const SizedBox(height: 10),
+                _buildGuideCard(
+                  imagePath: 'assets/common/illustrations/home/quiz.png',
+                  title: 'แบบทดสอบ',
+                  description: 'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
+                  accentColor: AppColors.yellow600,
+                ),
+                const SizedBox(height: 10),
+                _buildGuideCard(
+                  imagePath: 'assets/common/illustrations/home/result.png',
+                  title: 'ผลการทดสอบ',
+                  description: 'ดูสถิติและความก้าวหน้าของคุณ',
+                  accentColor: AppColors.blue500,
+                ),
+                const SizedBox(height: 10),
+                _buildGuideCard(
+                  icon: Icons.settings,
+                  title: 'การตั้งค่า',
+                  description: 'ปรับและล็อคระดับเสียงตามความต้องการ',
+                  accentColor: AppColors.yellow500,
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Close Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.blue600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: const Text(
+                      'เข้าใจแล้ว',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 20),
-              const Divider(),
-              const SizedBox(height: 16),
-              
-              // Guide Items
-              _buildGuideItem(
-                icon: Icons.menu_book,
-                title: 'บทเรียน',
-                description: 'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
-              ),
-              _buildGuideItem(
-                icon: Icons.quiz,
-                title: 'แบบทดสอบ',
-                description: 'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
-              ),
-              _buildGuideItem(
-                icon: Icons.bar_chart,
-                title: 'ผลการทดสอบ',
-                description: 'ดูสถิติและความก้าวหน้าของคุณ',
-              ),
-              _buildGuideItem(
-                icon: Icons.settings,
-                title: 'การตั้งค่า',
-                description: 'ปรับและล็อคระดับเสียงตามความต้องการ',
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Close Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.blue600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'เข้าใจแล้ว',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildGuideItem({
-    required IconData icon,
+  Widget _buildGuideCard({
+    String? imagePath,
+    IconData? icon,
     required String title,
     required String description,
+    required Color accentColor,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            accentColor.withAlpha(20),
+            accentColor.withAlpha(8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: accentColor.withAlpha(38),
+          width: 1,
+        ),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 50,
+            height: 50,
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.blue100,
-              borderRadius: BorderRadius.circular(8),
+              color: imagePath != null ? Colors.white : accentColor,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withAlpha(51),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Icon(icon, color: AppColors.blue600, size: 20),
+            child: imagePath != null
+                ? Image.asset(
+                    imagePath,
+                    fit: BoxFit.contain,
+                  )
+                : Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 24,
+                  ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,8 +423,8 @@ class HomePage extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
                     color: AppColors.blue800,
                   ),
                 ),
@@ -371,9 +432,13 @@ class HomePage extends StatelessWidget {
                 Text(
                   description,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: AppColors.gray550,
+                    fontWeight: FontWeight.w400,
+                    height: 1.3,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

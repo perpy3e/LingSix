@@ -17,7 +17,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:flutter/services.dart';
 
-
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -28,560 +27,557 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   //ADD CSV -------------------------
   Future<void> exportCSV() async {
-  if (recentScores.isEmpty) return;
+    if (recentScores.isEmpty) return;
 
-  List<List<dynamic>> rows = [];
+    List<List<dynamic>> rows = [];
 
-  final sorted = [...recentScores]..sort((a, b) {
-    final da = a['date'] as DateTime?;
-    final db = b['date'] as DateTime?;
-    return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
-  });
+    final sorted = [...recentScores]
+      ..sort((a, b) {
+        final da = a['date'] as DateTime?;
+        final db = b['date'] as DateTime?;
+        return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
+      });
 
-  double safePercent(num? c, num? t) {
-    if (c == null || t == null || t == 0) return 0;
-    return ((c / t) * 100).clamp(0, 100).toDouble();
-  }
-
-  final firstAcc = safePercent(sorted.first['correct'], sorted.first['total']);
-  final lastAcc = safePercent(sorted.last['correct'], sorted.last['total']);
-  final improvementRate = lastAcc - firstAcc;
-
-  final accuracies =
-      sorted.map((e) => safePercent(e['correct'], e['total'])).toList();
-
-  final variance = calculateVariance(accuracies);
-  final stdDev = calculateStdDev(accuracies);
-
-  final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
-
-  /// ================= HEADER =================
-  rows.add(["Listening Assessment Report"]);
-  rows.add(["Generated At", now]);
-  rows.add([]);
-
-  /// ================= OVERVIEW =================
-  rows.add(["=== Overview ==="]);
-  rows.add(["Total Attempts", totalQuizzes]);
-  rows.add(["Total Correct", totalCorrect]);
-  rows.add(["Average Accuracy (%)", overallAccuracy.toStringAsFixed(2)]);
-  rows.add([]);
-
-  /// ================= PROGRESS =================
-  rows.add(["=== Progress Analysis ==="]);
-  rows.add(["Initial Score (%)", firstAcc.toStringAsFixed(2)]);
-  rows.add(["Latest Score (%)", lastAcc.toStringAsFixed(2)]);
-  rows.add(["Score Change (%)", improvementRate.toStringAsFixed(2)]);
-  rows.add([]);
-
-  /// ================= CONSISTENCY =================
-  rows.add(["=== Consistency Analysis ==="]);
-  rows.add(["Variance", variance.toStringAsFixed(2)]);
-  rows.add(["Standard Deviation", stdDev.toStringAsFixed(2)]);
-
-  String consistencyLevel;
-  if (stdDev < 10) {
-    consistencyLevel = "High consistency (stable performance)";
-  } else if (stdDev < 20) {
-    consistencyLevel = "Moderate variation (minor fluctuations)";
-  } else {
-    consistencyLevel = "High variation (inconsistent performance)";
-  }
-
-  rows.add(["Consistency Summary", consistencyLevel]);
-  rows.add([]);
-
-  rows.add([
-    "Explanation",
-    "Consistency is calculated from accuracy scores across all attempts. "
-        "Lower values indicate stable and consistent performance, while higher values indicate variability."
-  ]);
-  rows.add([]);
-
-  /// ================= PHONEME =================
-  rows.add(["=== Phoneme Analysis ==="]);
-  rows.add(["Phoneme", "Accuracy (%)", "Level"]);
-
-  List<Map<String, dynamic>> soundList = [];
-
-  perSoundAccuracy.forEach((k, v) {
-    final p = (v['percent'] ?? 0).toDouble().clamp(0, 100);
-    soundList.add({"sound": k, "percent": p});
-  });
-
-  soundList.sort((a, b) => b["percent"].compareTo(a["percent"]));
-
-  List<String> weak = [];
-
-  for (var e in soundList) {
-    final p = e["percent"];
-
-    String level;
-    if (p >= 80) {
-      level = "High";
-    } else if (p >= 60) {
-      level = "Moderate";
-    } else {
-      level = "Low";
-      weak.add(e["sound"]);
+    double safePercent(num? c, num? t) {
+      if (c == null || t == null || t == 0) return 0;
+      return ((c / t) * 100).clamp(0, 100).toDouble();
     }
 
-    rows.add([
-      e["sound"],
-      p.toStringAsFixed(2),
-      level,
-    ]);
-  }
-
-  rows.add([]);
-
-  final best = soundList.take(2).map((e) => e["sound"]).join(", ");
-
-  rows.add(["Strong Phonemes", best]);
-  rows.add(["Weak Phonemes", weak.isEmpty ? "-" : weak.join(", ")]);
-  rows.add([]);
-
-  /// ================= TREND =================
-  rows.add(["=== Trend Data ==="]);
-  rows.add(["Date", "Accuracy (%)"]);
-
-  for (var score in sorted) {
-    final date = score['date'] as DateTime?;
-    final acc = safePercent(score['correct'], score['total']);
-
-    rows.add([
-      DateFormat('yyyy-MM-dd').format(date ?? DateTime.now()),
-      acc.toStringAsFixed(2),
-    ]);
-  }
-
-  rows.add([]);
-
-  /// ================= NOTE =================
-  rows.add([
-    "Note",
-    "This report is automatically generated for performance monitoring and analysis."
-  ]);
-
-  /// SAVE
-  final csv = const CsvEncoder().convert(rows);
-
-  final dir = await getTemporaryDirectory();
-  final path = "${dir.path}/listening_report.csv";
-
-  final file = File(path);
-  await file.writeAsString(csv);
-
-  await Share.shareXFiles([XFile(path)]);
-}
-// end CSV
-pw.Widget _row(String label, String value) {
-  return pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(vertical: 2),
-    child: pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-      children: [
-        pw.Text(label),
-        pw.Text(value),
-      ],
-    ),
-  );
-}
-
-//🔥🔥🔥🔥🔥PDF -------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------
-Future<void> exportPDF() async {
-  if (recentScores.isEmpty) return;
-
-  final pdf = pw.Document();
-
-  final regularFont = pw.Font.ttf(
-    await rootBundle.load("assets/fonts/Sarabun-Regular.ttf"),
-  );
-
-  final boldFont = pw.Font.ttf(
-    await rootBundle.load("assets/fonts/Sarabun-Bold.ttf"),
-  );
-
-  final sorted = [...recentScores]..sort((a, b) {
-    final da = a['date'] as DateTime?;
-    final db = b['date'] as DateTime?;
-    return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
-  });
-
-  double safePercent(num? c, num? t) {
-    if (c == null || t == null || t == 0) return 0;
-    return ((c / t) * 100).clamp(0, 100).toDouble();
-  }
-
-  final firstAcc = safePercent(sorted.first['correct'], sorted.first['total']);
-  final lastAcc = safePercent(sorted.last['correct'], sorted.last['total']);
-
-  final improvementRate = lastAcc - firstAcc;
-
-  final accuracies =
-      sorted.map((e) => safePercent(e['correct'], e['total'])).toList();
-
-  final variance = calculateVariance(accuracies);
-  final stdDev = calculateStdDev(accuracies);
-
-  final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
-
-  /// ================= CHART =================
-  pw.Widget buildTrendChart() {
-    return pw.Column(
-      children: [
-       
-        pw.SizedBox(height: 4),
-       pw.Container(
-  height: 140,
-  child: pw.Row(
-    crossAxisAlignment: pw.CrossAxisAlignment.end,
-    children: accuracies.asMap().entries.map((entry) {
-      final index = entry.key;
-      final value = entry.value;
-
-      return pw.Expanded(
-        child: pw.Column(
-          mainAxisAlignment: pw.MainAxisAlignment.end,
-          children: [
-            pw.Text( 
-              "${value.toStringAsFixed(0)}%",
-              style: pw.TextStyle(fontSize: 8),
-            ),
-            pw.SizedBox(height: 2),
-
-            pw.Container(
-              height: (value / 100) * 100,
-              margin: const pw.EdgeInsets.symmetric(horizontal: 3),
-              color: PdfColors.blue,
-            ),
-
-            pw.SizedBox(height: 4),
-            pw.Text(
-              "Test ${index + 1}",
-              style: pw.TextStyle(fontSize: 8),
-            ),
-          ],
-        ),
-      );
-    }).toList(),
-  ),
-),
-      ],
+    final firstAcc = safePercent(
+      sorted.first['correct'],
+      sorted.first['total'],
     );
+    final lastAcc = safePercent(sorted.last['correct'], sorted.last['total']);
+    final improvementRate = lastAcc - firstAcc;
+
+    final accuracies = sorted
+        .map((e) => safePercent(e['correct'], e['total']))
+        .toList();
+
+    final variance = calculateVariance(accuracies);
+    final stdDev = calculateStdDev(accuracies);
+
+    final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
+    /// ================= HEADER =================
+    rows.add(["Listening Assessment Report"]);
+    rows.add(["Generated At", now]);
+    rows.add([]);
+
+    /// ================= OVERVIEW =================
+    rows.add(["=== Overview ==="]);
+    rows.add(["Total Attempts", totalQuizzes]);
+    rows.add(["Total Correct", totalCorrect]);
+    rows.add(["Average Accuracy (%)", overallAccuracy.toStringAsFixed(2)]);
+    rows.add([]);
+
+    /// ================= PROGRESS =================
+    rows.add(["=== Progress Analysis ==="]);
+    rows.add(["Initial Score (%)", firstAcc.toStringAsFixed(2)]);
+    rows.add(["Latest Score (%)", lastAcc.toStringAsFixed(2)]);
+    rows.add(["Score Change (%)", improvementRate.toStringAsFixed(2)]);
+    rows.add([]);
+
+    /// ================= CONSISTENCY =================
+    rows.add(["=== Consistency Analysis ==="]);
+    rows.add(["Variance", variance.toStringAsFixed(2)]);
+    rows.add(["Standard Deviation", stdDev.toStringAsFixed(2)]);
+
+    String consistencyLevel;
+    if (stdDev < 10) {
+      consistencyLevel = "High consistency (stable performance)";
+    } else if (stdDev < 20) {
+      consistencyLevel = "Moderate variation (minor fluctuations)";
+    } else {
+      consistencyLevel = "High variation (inconsistent performance)";
+    }
+
+    rows.add(["Consistency Summary", consistencyLevel]);
+    rows.add([]);
+
+    rows.add([
+      "Explanation",
+      "Consistency is calculated from accuracy scores across all attempts. "
+          "Lower values indicate stable and consistent performance, while higher values indicate variability.",
+    ]);
+    rows.add([]);
+
+    /// ================= PHONEME =================
+    rows.add(["=== Phoneme Analysis ==="]);
+    rows.add(["Phoneme", "Accuracy (%)", "Level"]);
+
+    List<Map<String, dynamic>> soundList = [];
+
+    perSoundAccuracy.forEach((k, v) {
+      final p = (v['percent'] ?? 0).toDouble().clamp(0, 100);
+      soundList.add({"sound": k, "percent": p});
+    });
+
+    soundList.sort((a, b) => b["percent"].compareTo(a["percent"]));
+
+    List<String> weak = [];
+
+    for (var e in soundList) {
+      final p = e["percent"];
+
+      String level;
+      if (p >= 80) {
+        level = "High";
+      } else if (p >= 60) {
+        level = "Moderate";
+      } else {
+        level = "Low";
+        weak.add(e["sound"]);
+      }
+
+      rows.add([e["sound"], p.toStringAsFixed(2), level]);
+    }
+
+    rows.add([]);
+
+    final best = soundList.take(2).map((e) => e["sound"]).join(", ");
+
+    rows.add(["Strong Phonemes", best]);
+    rows.add(["Weak Phonemes", weak.isEmpty ? "-" : weak.join(", ")]);
+    rows.add([]);
+
+    /// ================= TREND =================
+    rows.add(["=== Trend Data ==="]);
+    rows.add(["Date", "Accuracy (%)"]);
+
+    for (var score in sorted) {
+      final date = score['date'] as DateTime?;
+      final acc = safePercent(score['correct'], score['total']);
+
+      rows.add([
+        DateFormat('yyyy-MM-dd').format(date ?? DateTime.now()),
+        acc.toStringAsFixed(2),
+      ]);
+    }
+
+    rows.add([]);
+
+    /// ================= NOTE =================
+    rows.add([
+      "Note",
+      "This report is automatically generated for performance monitoring and analysis.",
+    ]);
+
+    /// SAVE
+    final csv = const CsvEncoder().convert(rows);
+
+    final dir = await getTemporaryDirectory();
+    final path = "${dir.path}/listening_report.csv";
+
+    final file = File(path);
+    await file.writeAsString(csv);
+
+    await SharePlus.instance.share(ShareParams(files: [XFile(path)]));
   }
+  // end CSV
 
-  /// ================= PAGE 1 =================
-  pdf.addPage(
-    pw.MultiPage(
-      theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
-      build: (context) => [
-        pw.Text(
-          "Listening Report (รายงานการประเมินทักษะการฟัง)",
-          style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
-        ),
-        pw.Text("Generated: $now"),
-        pw.Divider(),
+  //🔥🔥🔥🔥🔥PDF -------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------
+  Future<void> exportPDF() async {
+    if (recentScores.isEmpty) return;
 
-        /// OVERVIEW
-        pw.Text("Overview (ภาพรวม)",
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+    final pdf = pw.Document();
 
-        pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Total Attempts (จำนวนแบบทดสอบ):"),
-    pw.Text("$totalQuizzes"),
-  ],
-),
-      pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Total Correct (จำนวนข้อที่ถูก):"),
-    pw.Text("$totalCorrect"),
-  ],
-),
+    final regularFont = pw.Font.ttf(
+      await rootBundle.load("assets/fonts/Sarabun-Regular.ttf"),
+    );
 
-pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Average Accuracy (ความแม่นยำเฉลี่ย):"),
-    pw.Text("${overallAccuracy.toStringAsFixed(1)}%"),
-  ],
-),
+    final boldFont = pw.Font.ttf(
+      await rootBundle.load("assets/fonts/Sarabun-Bold.ttf"),
+    );
 
-        pw.SizedBox(height: 10),
+    final sorted = [...recentScores]
+      ..sort((a, b) {
+        final da = a['date'] as DateTime?;
+        final db = b['date'] as DateTime?;
+        return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
+      });
 
-       
+    double safePercent(num? c, num? t) {
+      if (c == null || t == null || t == 0) return 0;
+      return ((c / t) * 100).clamp(0, 100).toDouble();
+    }
 
-        pw.SizedBox(height: 16),
+    final firstAcc = safePercent(
+      sorted.first['correct'],
+      sorted.first['total'],
+    );
+    final lastAcc = safePercent(sorted.last['correct'], sorted.last['total']);
 
-        /// TREND
-        pw.Text("Progress (พัฒนาการ)",
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+    final improvementRate = lastAcc - firstAcc;
 
-        pw.SizedBox(height: 2),
-        buildTrendChart(),
+    final accuracies = sorted
+        .map((e) => safePercent(e['correct'], e['total']))
+        .toList();
 
-        pw.SizedBox(height: 10),
+    final variance = calculateVariance(accuracies);
+    final stdDev = calculateStdDev(accuracies);
 
-       pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Initial Test (ครั้งเริ่มต้น):"),
-    pw.Text("${firstAcc.toStringAsFixed(1)}%"),
-  ],
-),
+    final now = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
 
-pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Latest Test (ครั้งล่าสุด):"),
-    pw.Text("${lastAcc.toStringAsFixed(1)}%"),
-  ],
-),
+    /// ================= CHART =================
+    pw.Widget buildTrendChart() {
+      return pw.Column(
+        children: [
+          pw.SizedBox(height: 4),
+          pw.Container(
+            height: 140,
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
+              children: accuracies.asMap().entries.map((entry) {
+                final index = entry.key;
+                final value = entry.value;
 
-pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Score Change (ความเปลี่ยนแปลง):"),
-    pw.Text("${improvementRate.toStringAsFixed(1)}%"),
-  ],
-),
+                return pw.Expanded(
+                  child: pw.Column(
+                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        "${value.toStringAsFixed(0)}%",
+                        style: pw.TextStyle(fontSize: 8),
+                      ),
+                      pw.SizedBox(height: 2),
 
-        pw.SizedBox(height: 16),
+                      pw.Container(
+                        height: (value / 100) * 100,
+                        margin: const pw.EdgeInsets.symmetric(horizontal: 3),
+                        color: PdfColors.blue,
+                      ),
 
-        /// CONSISTENCY
-pw.Text("Consistency Analysis (ความสม่ำเสมอ)",
-    style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        "Test ${index + 1}",
+                        style: pw.TextStyle(fontSize: 8),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      );
+    }
 
-pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Variance (ความแปรปรวน):"),
-    pw.Text("${variance.toStringAsFixed(2)}"),
-  ],
-),
+    /// ================= PAGE 1 =================
+    pdf.addPage(
+      pw.MultiPage(
+        theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
+        build: (context) => [
+          pw.Text(
+            "Listening Report (รายงานการประเมินทักษะการฟัง)",
+            style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.Text("Generated: $now"),
+          pw.Divider(),
 
-pw.Row(
-  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-  children: [
-    pw.Text("Standard Deviation (ส่วนเบี่ยงเบนมาตรฐาน):"),
-    pw.Text("${stdDev.toStringAsFixed(2)}"),
-  ],
-),
+          /// OVERVIEW
+          pw.Text(
+            "Overview (ภาพรวม)",
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
 
-pw.SizedBox(height: 10),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Total Attempts (จำนวนแบบทดสอบ):"),
+              pw.Text("$totalQuizzes"),
+            ],
+          ),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Total Correct (จำนวนข้อที่ถูก):"),
+              pw.Text("$totalCorrect"),
+            ],
+          ),
 
-/// 
-pw.Text(
-  "คำอธิบาย:\n"
-  "ค่าความสม่ำเสมอนี้คำนวณจากคะแนนความแม่นยำ (%) ของแต่ละครั้ง เพื่อประเมินว่าผลลัพธ์มีความคงที่มากน้อยเพียงใด\n"
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Average Accuracy (ความแม่นยำเฉลี่ย):"),
+              pw.Text("${overallAccuracy.toStringAsFixed(1)}%"),
+            ],
+          ),
 
-  "Variance (ความแปรปรวน) แสดงระดับการกระจายของคะแนนเมื่อเทียบกับค่าเฉลี่ย\n"
-  "Standard Deviation (ส่วนเบี่ยงเบนมาตรฐาน) เป็นค่าที่ใช้บอกระดับความแปรปรวนในหน่วยเดียวกับคะแนน ทำให้สามารถตีความได้ชัดเจนมากขึ้น\n\n"
+          pw.SizedBox(height: 10),
 
-  "การแปลผล:\n"
-  "ค่าต่ำ หมายถึง คะแนนมีความใกล้เคียงกันในแต่ละครั้ง แสดงถึงความสม่ำเสมอของผลลัพธ์\n"
-  "ค่าสูง หมายถึง คะแนนมีความแตกต่างกันมากในแต่ละครั้ง แสดงถึงความไม่สม่ำเสมอของผลลัพธ์\n\n"
+          pw.SizedBox(height: 16),
 
-  "ตัวอย่าง:\n"
-  "Standard Deviation ต่ำกว่า 10 แสดงถึงความสม่ำเสมอสูง\n"
-  "ค่าระหว่าง 10 - 20 แสดงถึงความแปรปรวนเล็กน้อย\n"
-  "ค่ามากกว่า 20 แสดงถึงความแปรปรวนสูง",
-  style: pw.TextStyle(fontSize: 9),
-),
+          /// TREND
+          pw.Text(
+            "Progress (พัฒนาการ)",
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
 
-pw.SizedBox(height: 10),
+          pw.SizedBox(height: 2),
+          buildTrendChart(),
 
-/// SUMMARY 
-pw.Container(
-  width: double.infinity,
-  padding: const pw.EdgeInsets.all(12),
-  color: stdDev < 10
-      ? PdfColors.green100
-      : stdDev < 20
-          ? PdfColors.orange100
-          : PdfColors.red100,
-  child: pw.Column(
-    crossAxisAlignment: pw.CrossAxisAlignment.start,
-    children: [
-      pw.Text(
-        "สรุปความสม่ำเสมอ",
-        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-      ),
+          pw.SizedBox(height: 10),
 
-      pw.SizedBox(height: 6),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Initial Test (ครั้งเริ่มต้น):"),
+              pw.Text("${firstAcc.toStringAsFixed(1)}%"),
+            ],
+          ),
 
-      pw.Text(
-        stdDev < 10
-            ? "คะแนนมีความเสถียรสูง (ทำได้ใกล้เคียงกันทุกครั้ง)"
-            : stdDev < 20
-                ? "คะแนนมีความแปรปรวนเล็กน้อย (มีขึ้นลงบ้าง)"
-                : "คะแนนมีความแปรปรวนสูง (ผลลัพธ์ไม่นิ่ง)",
-        style: pw.TextStyle(fontSize: 10),
-      ),
-    ],
-  ),
-),
-      ],
-    ),
-  );
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Latest Test (ครั้งล่าสุด):"),
+              pw.Text("${lastAcc.toStringAsFixed(1)}%"),
+            ],
+          ),
 
-  List<Map<String, dynamic>> soundList = [];
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Score Change (ความเปลี่ยนแปลง):"),
+              pw.Text("${improvementRate.toStringAsFixed(1)}%"),
+            ],
+          ),
 
-perSoundAccuracy.forEach((k, v) {
-  final p = (v['percent'] ?? 0).toDouble().clamp(0, 100);
-  soundList.add({"sound": k, "percent": p});
-});
+          pw.SizedBox(height: 16),
 
-// sort มาก → น้อย
-soundList.sort((a, b) => b["percent"].compareTo(a["percent"]));
+          /// CONSISTENCY
+          pw.Text(
+            "Consistency Analysis (ความสม่ำเสมอ)",
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
 
-// best = top 2
-final best = soundList.take(2).map((e) => e["sound"]).join(", ");
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Variance (ความแปรปรวน):"),
+              pw.Text(variance.toStringAsFixed(2)),
+            ],
+          ),
 
-// weak = < 60
-final weak = soundList
-    .where((e) => e["percent"] < 60)
-    .map((e) => e["sound"])
-    .join(", ");
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text("Standard Deviation (ส่วนเบี่ยงเบนมาตรฐาน):"),
+              pw.Text(stdDev.toStringAsFixed(2)),
+            ],
+          ),
 
-  /// ================= PAGE 2 =================
- pdf.addPage(
-  pw.MultiPage(
-    theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
-    build: (context) => [
-      pw.Text("Phoneme Analysis (การวิเคราะห์หน่วยเสียง)",
-          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 10),
 
-      pw.SizedBox(height: 12),
+          ///
+          pw.Text(
+            "คำอธิบาย:\n"
+            "ค่าความสม่ำเสมอนี้คำนวณจากคะแนนความแม่นยำ (%) ของแต่ละครั้ง เพื่อประเมินว่าผลลัพธ์มีความคงที่มากน้อยเพียงใด\n"
+            "Variance (ความแปรปรวน) แสดงระดับการกระจายของคะแนนเมื่อเทียบกับค่าเฉลี่ย\n"
+            "Standard Deviation (ส่วนเบี่ยงเบนมาตรฐาน) เป็นค่าที่ใช้บอกระดับความแปรปรวนในหน่วยเดียวกับคะแนน ทำให้สามารถตีความได้ชัดเจนมากขึ้น\n\n"
+            "การแปลผล:\n"
+            "ค่าต่ำ หมายถึง คะแนนมีความใกล้เคียงกันในแต่ละครั้ง แสดงถึงความสม่ำเสมอของผลลัพธ์\n"
+            "ค่าสูง หมายถึง คะแนนมีความแตกต่างกันมากในแต่ละครั้ง แสดงถึงความไม่สม่ำเสมอของผลลัพธ์\n\n"
+            "ตัวอย่าง:\n"
+            "Standard Deviation ต่ำกว่า 10 แสดงถึงความสม่ำเสมอสูง\n"
+            "ค่าระหว่าง 10 - 20 แสดงถึงความแปรปรวนเล็กน้อย\n"
+            "ค่ามากกว่า 20 แสดงถึงความแปรปรวนสูง",
+            style: pw.TextStyle(fontSize: 9),
+          ),
 
-      
+          pw.SizedBox(height: 10),
 
-      pw.SizedBox(height: 12),
-
-      /// BAR (FIXED 100%)
-      pw.Column(
-        children: soundList.map((e) {
-          final p = (e["percent"] as double).round().clamp(0, 100);
-
-          PdfColor color =
-              p >= 80 ? PdfColors.green : p >= 60 ? PdfColors.orange : PdfColors.red;
-
-          return pw.Padding(
-            padding: const pw.EdgeInsets.only(bottom: 10),
+          /// SUMMARY
+          pw.Container(
+            width: double.infinity,
+            padding: const pw.EdgeInsets.all(12),
+            color: stdDev < 10
+                ? PdfColors.green100
+                : stdDev < 20
+                ? PdfColors.orange100
+                : PdfColors.red100,
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text("${e["sound"]} ($p%)"),
+                pw.Text(
+                  "สรุปความสม่ำเสมอ",
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
 
-                pw.Row(
-                  children: [
-                    pw.Expanded(
-                      flex: p == 0 ? 1 : p,
-                      child: pw.Container(height: 10, color: color),
-                    ),
-                    pw.Expanded(
-                      flex: (100 - p) == 0 ? 1 : (100 - p),
-                      child:
-                          pw.Container(height: 10, color: PdfColors.grey300),
-                    ),
-                  ],
+                pw.SizedBox(height: 6),
+
+                pw.Text(
+                  stdDev < 10
+                      ? "คะแนนมีความเสถียรสูง (ทำได้ใกล้เคียงกันทุกครั้ง)"
+                      : stdDev < 20
+                      ? "คะแนนมีความแปรปรวนเล็กน้อย (มีขึ้นลงบ้าง)"
+                      : "คะแนนมีความแปรปรวนสูง (ผลลัพธ์ไม่นิ่ง)",
+                  style: pw.TextStyle(fontSize: 10),
                 ),
               ],
             ),
-          );
-        }).toList(),
-      ),
-
-      pw.SizedBox(height: 20),
-
-      /// ANALYSIS (UPGRADED + BILINGUAL + EXPLAIN WHY)
-      pw.Text("Detailed Analysis (การวิเคราะห์เชิงลึก)",
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-
-      pw.SizedBox(height: 10),
-
-      ...soundList.map((e) {
-        final p = e["percent"] as double;
-
-        String analysis;
-
-        if (p >= 80) {
-  analysis =
-      "High accuracy (ระดับสูง): ผู้ใช้สามารถแยกแยะเสียงนี้ได้อย่างแม่นยำและสม่ำเสมอ";
-} else if (p >= 60) {
-  analysis =
-      "Moderate accuracy (ระดับปานกลาง): ทำได้ถูกในหลายครั้ง แต่ยังมีความคลาดเคลื่อน";
-} else {
-  analysis =
-      "Low accuracy (ระดับต่ำ): มีความผิดพลาดบ่อย";
-}
-
-        return pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 10),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                "${e["sound"]} : ${p.toStringAsFixed(1)}%",
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              ),
-              pw.Text(analysis, style: pw.TextStyle(fontSize: 11)),
-            ],
           ),
-        );
-      }),
-
-      pw.SizedBox(height: 20),
-
-      /// SUMMARY 
-      pw.Container(
-        width: double.infinity,
-        padding: const pw.EdgeInsets.all(16),
-        color: PdfColors.green100,
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              "Summary (สรุปผล)",
-              style: pw.TextStyle(
-                fontSize: 15,
-                fontWeight: pw.FontWeight.bold,
-              ),
-            ),
-            pw.SizedBox(height: 10),
-
-            pw.Text(
-              "Strong Phonemes - เสียงที่ทำได้ดี: $best",
-              style: pw.TextStyle(fontSize: 12),
-            ),
-
-            pw.Text(
-              "Weak Phonemes - เสียงที่ควรฝึกเพิ่ม: ${weak.isEmpty ? "-" : weak}",
-              style: pw.TextStyle(fontSize: 12),
-            ),
-
-            pw.SizedBox(height: 8),
-
-           
-          ],
-        ),
+        ],
       ),
-    ],
-  ),
-);
+    );
 
- final fileName =
-    "Report_${DateFormat('ddMMMyyyy').format(DateTime.now())}";
+    List<Map<String, dynamic>> soundList = [];
 
-await Printing.layoutPdf(
-  name: fileName,
-  onLayout: (format) async => pdf.save(),
-);
-}
+    perSoundAccuracy.forEach((k, v) {
+      final p = (v['percent'] ?? 0).toDouble().clamp(0, 100);
+      soundList.add({"sound": k, "percent": p});
+    });
+
+    // sort มาก → น้อย
+    soundList.sort((a, b) => b["percent"].compareTo(a["percent"]));
+
+    // best = top 2
+    final best = soundList.take(2).map((e) => e["sound"]).join(", ");
+
+    // weak = < 60
+    final weak = soundList
+        .where((e) => e["percent"] < 60)
+        .map((e) => e["sound"])
+        .join(", ");
+
+    /// ================= PAGE 2 =================
+    pdf.addPage(
+      pw.MultiPage(
+        theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
+        build: (context) => [
+          pw.Text(
+            "Phoneme Analysis (การวิเคราะห์หน่วยเสียง)",
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+          ),
+
+          pw.SizedBox(height: 12),
+
+          pw.SizedBox(height: 12),
+
+          /// BAR (FIXED 100%)
+          pw.Column(
+            children: soundList.map((e) {
+              final p = (e["percent"] as double).round().clamp(0, 100);
+
+              PdfColor color = p >= 80
+                  ? PdfColors.green
+                  : p >= 60
+                  ? PdfColors.orange
+                  : PdfColors.red;
+
+              return pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 10),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text("${e["sound"]} ($p%)"),
+
+                    pw.Row(
+                      children: [
+                        pw.Expanded(
+                          flex: p == 0 ? 1 : p,
+                          child: pw.Container(height: 10, color: color),
+                        ),
+                        pw.Expanded(
+                          flex: (100 - p) == 0 ? 1 : (100 - p),
+                          child: pw.Container(
+                            height: 10,
+                            color: PdfColors.grey300,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+
+          pw.SizedBox(height: 20),
+
+          /// ANALYSIS (UPGRADED + BILINGUAL + EXPLAIN WHY)
+          pw.Text(
+            "Detailed Analysis (การวิเคราะห์เชิงลึก)",
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          ...soundList.map((e) {
+            final p = e["percent"] as double;
+
+            String analysis;
+
+            if (p >= 80) {
+              analysis =
+                  "High accuracy (ระดับสูง): ผู้ใช้สามารถแยกแยะเสียงนี้ได้อย่างแม่นยำและสม่ำเสมอ";
+            } else if (p >= 60) {
+              analysis =
+                  "Moderate accuracy (ระดับปานกลาง): ทำได้ถูกในหลายครั้ง แต่ยังมีความคลาดเคลื่อน";
+            } else {
+              analysis = "Low accuracy (ระดับต่ำ): มีความผิดพลาดบ่อย";
+            }
+
+            return pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 10),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    "${e["sound"]} : ${p.toStringAsFixed(1)}%",
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text(analysis, style: pw.TextStyle(fontSize: 11)),
+                ],
+              ),
+            );
+          }),
+
+          pw.SizedBox(height: 20),
+
+          /// SUMMARY
+          pw.Container(
+            width: double.infinity,
+            padding: const pw.EdgeInsets.all(16),
+            color: PdfColors.green100,
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  "Summary (สรุปผล)",
+                  style: pw.TextStyle(
+                    fontSize: 15,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 10),
+
+                pw.Text(
+                  "Strong Phonemes - เสียงที่ทำได้ดี: $best",
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+
+                pw.Text(
+                  "Weak Phonemes - เสียงที่ควรฝึกเพิ่ม: ${weak.isEmpty ? "-" : weak}",
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+
+                pw.SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final fileName = "Report_${DateFormat('ddMMMyyyy').format(DateTime.now())}";
+
+    await Printing.layoutPdf(
+      name: fileName,
+      onLayout: (format) async => pdf.save(),
+    );
+  }
   //--------------------------------------------------------------------------------
 
   final FirestoreService _firestoreService = FirestoreService();
@@ -598,9 +594,9 @@ await Printing.layoutPdf(
 
   List<Map<String, dynamic>> filteredScores = [];
 
-// new add 24/04
+  // new add 24/04
   List<Map<String, dynamic>> aggregatedQuizScores = [];
-//
+  //
 
   String selectedMonth = "ทั้งหมด";
 
@@ -631,33 +627,38 @@ await Printing.layoutPdf(
 
     if (user == null) {
       setState(() => isLoading = false);
-      return;      
+      return;
     }
 
     final summary = await _firestoreService.getDashboardSummary(user.uid);
+    if (!mounted) return;
+
     //add theme
     final themeProvider = context.read<ThemeProvider>();
-  await themeProvider.syncThemeStatusFromFirestore(user.uid);
+    await themeProvider.syncThemeStatusFromFirestore(user.uid);
 
-// add 23/04‼️‼️
-    recentScores = List<Map<String, dynamic>>.from(summary['recentScores'] ?? []);
-recentScores.sort((a, b) {
-  final da = a['date'] as DateTime?;
-  final db = b['date'] as DateTime?;
-  return (db ?? DateTime(0)).compareTo(da ?? DateTime(0));
-});
+    // add 23/04‼️‼️
+    recentScores = List<Map<String, dynamic>>.from(
+      summary['recentScores'] ?? [],
+    );
+    recentScores.sort((a, b) {
+      final da = a['date'] as DateTime?;
+      final db = b['date'] as DateTime?;
+      return (db ?? DateTime(0)).compareTo(da ?? DateTime(0));
+    });
 
+    final seen = <String>{};
+    recentScores = recentScores.where((e) {
+      final key = "${e['quizId']}_${e['date']}";
+      if (seen.contains(key)) return false;
+      seen.add(key);
+      return true;
+    }).toList();
+    //end add ‼️‼️‼️
 
-final seen = <String>{};
-recentScores = recentScores.where((e) {
-  final key = "${e['quizId']}_${e['date']}";
-  if (seen.contains(key)) return false;
-  seen.add(key);
-  return true;
-}).toList();
-//end add ‼️‼️‼️
-
-    perSoundAccuracy = Map<String, Map<String, dynamic>>.from(summary['perSoundAccuracy'] ?? {});
+    perSoundAccuracy = Map<String, Map<String, dynamic>>.from(
+      summary['perSoundAccuracy'] ?? {},
+    );
 
     totalQuizzes = summary['totalQuizzes'] ?? 0;
 
@@ -667,7 +668,7 @@ recentScores = recentScores.where((e) {
 
     applyMonthFilter();
 
-    //add 24/04 aggregate quiz scores 
+    //add 24/04 aggregate quiz scores
     buildAggregatedQuizScores();
 
     setState(() {
@@ -675,21 +676,21 @@ recentScores = recentScores.where((e) {
     });
   }
 
-void applyMonthFilter() {
-  if (selectedMonth == "ทั้งหมด") {
-    filteredScores = recentScores;
-    return;
+  void applyMonthFilter() {
+    if (selectedMonth == "ทั้งหมด") {
+      filteredScores = recentScores;
+      return;
+    }
+
+    final monthIndex = months.indexOf(selectedMonth);
+
+    filteredScores = recentScores.where((score) {
+      if (score['date'] == null) return false;
+
+      final date = score['date'] as DateTime;
+      return date.month == monthIndex;
+    }).toList();
   }
-
-  final monthIndex = months.indexOf(selectedMonth);
-
-  filteredScores = recentScores.where((score) {
-    if (score['date'] == null) return false;
-
-    final date = score['date'] as DateTime;
-    return date.month == monthIndex;
-  }).toList();
-}
 
   double percent(int correct, int total) {
     if (total == 0) return 0;
@@ -700,68 +701,64 @@ void applyMonthFilter() {
   }
 
   // =========================
-// IMPROVEMENT RATE
-// =========================
-double calculateImprovementRate(double first, double last) {
-  if (first == 0) return 0;
-  return ((last - first) / first) * 100;
-}
+  // IMPROVEMENT RATE
+  // =========================
+  double calculateImprovementRate(double first, double last) {
+    if (first == 0) return 0;
+    return ((last - first) / first) * 100;
+  }
 
-// =========================
-// VARIANCE
-// =========================
-double calculateVariance(List<double> values) {
-  if (values.isEmpty) return 0;
+  // =========================
+  // VARIANCE
+  // =========================
+  double calculateVariance(List<double> values) {
+    if (values.isEmpty) return 0;
 
-  final mean = values.reduce((a, b) => a + b) / values.length;
+    final mean = values.reduce((a, b) => a + b) / values.length;
 
-  final variance = values
-      .map((v) => (v - mean) * (v - mean))
-      .reduce((a, b) => a + b) /
-      values.length;
+    final variance =
+        values.map((v) => (v - mean) * (v - mean)).reduce((a, b) => a + b) /
+        values.length;
 
-  return variance;
-}
+    return variance;
+  }
 
-// =========================
-// STD DEV
-// =========================
-double calculateStdDev(List<double> values) {
-  return sqrt(calculateVariance(values));
-}
+  // =========================
+  // STD DEV
+  // =========================
+  double calculateStdDev(List<double> values) {
+    return sqrt(calculateVariance(values));
+  }
 
   //‼️‼️‼️add more function 24/04
   void buildAggregatedQuizScores() {
-  Map<String, List<double>> quizMap = {};
+    Map<String, List<double>> quizMap = {};
 
-  for (var score in recentScores) {
-    final quizId = score['quizId'];
-    final accuracy = (score['accuracy'] ?? 0).toDouble();
+    for (var score in recentScores) {
+      final quizId = score['quizId'];
+      final accuracy = (score['accuracy'] ?? 0).toDouble();
 
-    quizMap.putIfAbsent(quizId, () => []);
-    quizMap[quizId]!.add(accuracy);
+      quizMap.putIfAbsent(quizId, () => []);
+      quizMap[quizId]!.add(accuracy);
+    }
+
+    aggregatedQuizScores = quizMap.entries.map((entry) {
+      final list = entry.value;
+
+      final avg = list.isNotEmpty
+          ? list.reduce((a, b) => a + b) / list.length
+          : 0.0;
+
+      return {'quizId': entry.key, 'accuracy': avg};
+    }).toList();
+
+    //  SORT quiz_1 → quiz_5
+    aggregatedQuizScores.sort((a, b) {
+      return a['quizId'].compareTo(b['quizId']);
+    });
   }
 
-  aggregatedQuizScores = quizMap.entries.map((entry) {
-    final list = entry.value;
-
-    final avg = list.isNotEmpty
-        ? list.reduce((a, b) => a + b) / list.length
-        : 0.0;
-
-    return {
-      'quizId': entry.key,
-      'accuracy': avg,
-    };
-  }).toList();
-
-  //  SORT quiz_1 → quiz_5
-  aggregatedQuizScores.sort((a, b) {
-    return a['quizId'].compareTo(b['quizId']);
-  });
-}
-
-//‼️‼️‼️end add more function 24/04
+  //‼️‼️‼️end add more function 24/04
 
   @override
   Widget build(BuildContext context) {
@@ -769,44 +766,42 @@ double calculateStdDev(List<double> values) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-   return Scaffold(
-  body: Consumer<ThemeProvider>(
-    builder: (context, themeProvider, _) {
-      return Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-              themeProvider.getWallpaperPath('home'),
-            ),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      _buildSummaryCard(),
-                      const SizedBox(height: 20),
-                      _buildPerSoundCard(),
-                      const SizedBox(height: 20),
-                      _buildQuizCard(),
-                    ],
-                  ),
-                ),
+    return Scaffold(
+      body: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(themeProvider.getWallpaperPath('home')),
+                fit: BoxFit.cover,
               ),
-            ],
-          ),
-        ),
-      ); //  Container
-    },
-  ), // Consumer
-);
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          _buildSummaryCard(),
+                          const SizedBox(height: 20),
+                          _buildPerSoundCard(),
+                          const SizedBox(height: 20),
+                          _buildQuizCard(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ); //  Container
+        },
+      ), // Consumer
+    );
   }
 
   Widget _buildHeader() {
@@ -816,18 +811,24 @@ double calculateStdDev(List<double> values) {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, size: 28, color: AppColors.blue800),
+            icon: const Icon(
+              Icons.arrow_back,
+              size: 28,
+              color: AppColors.blue800,
+            ),
             onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => HomePage()),
-              );
+              Navigator.of(
+                context,
+              ).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
             },
           ),
           const Spacer(),
 
           Text(
             "ผลการทดสอบ",
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.blue800),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppColors.blue800),
           ),
           const Spacer(),
           const SizedBox(width: 48),
@@ -836,77 +837,83 @@ double calculateStdDev(List<double> values) {
     );
   }
 
-//build summary card
+  //build summary card
   Widget _buildSummaryCard() {
-  return _card(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "ภาพรวม",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.blue800,
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "ภาพรวม",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.blue800,
+                ),
               ),
-            ),
 
-            Row(
-  children: [
-    FilledButton.icon(
-      onPressed: exportCSV,
-      icon: const Icon(Icons.download, size: 18),
-      label: const Text("CSV"),
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.yellow400,
-        foregroundColor: AppColors.gray700,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: exportCSV,
+                    icon: const Icon(Icons.download, size: 18),
+                    label: const Text("CSV"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.yellow400,
+                      foregroundColor: AppColors.gray700,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  FilledButton.icon(
+                    onPressed: exportPDF,
+                    icon: const Icon(Icons.picture_as_pdf, size: 18),
+                    label: const Text("PDF"),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          _stat("จำนวนแบบทดสอบ", totalQuizzes.toString()),
+          const SizedBox(height: 12),
+
+          _stat("จำนวนข้อที่ตอบถูก", totalCorrect.toString()),
+          const SizedBox(height: 12),
+
+          _stat("ความถูกต้อง (%)", "${overallAccuracy.toStringAsFixed(1)}%"),
+        ],
       ),
-    ),
-
-    const SizedBox(width: 8),
-
-    FilledButton.icon(
-      onPressed: exportPDF,
-      icon: const Icon(Icons.picture_as_pdf, size: 18),
-      label: const Text("PDF"),
-      style: FilledButton.styleFrom(
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-    ),
-  ],
-)
-          ],
-        ),
-
-        const SizedBox(height: 24),
-
-        _stat("จำนวนแบบทดสอบ", totalQuizzes.toString()),
-        const SizedBox(height: 12),
-
-        _stat("จำนวนข้อที่ตอบถูก", totalCorrect.toString()),
-        const SizedBox(height: 12),
-
-        _stat("ความถูกต้อง (%)", "${overallAccuracy.toStringAsFixed(1)}%"),
-      ],
-    ),
-  );
-}
+    );
+  }
   //end build summary card
 
-// ah ee ........
+  // ah ee ........
   Widget _buildPerSoundCard() {
     final orderedKeys = ["ah", "ee", "m", "oo", "s", "sh"];
 
-final sounds = orderedKeys
-    .where((key) => perSoundAccuracy.containsKey(key))
-    .map((key) => MapEntry(key, perSoundAccuracy[key]!))
-    .toList();
+    final sounds = orderedKeys
+        .where((key) => perSoundAccuracy.containsKey(key))
+        .map((key) => MapEntry(key, perSoundAccuracy[key]!))
+        .toList();
 
     if (sounds.isEmpty) {
       return _card(
@@ -914,7 +921,11 @@ final sounds = orderedKeys
           padding: const EdgeInsets.symmetric(vertical: 40),
           child: Column(
             children: [
-              Icon(Icons.info_outline_rounded, size: 48, color: AppColors.blue300),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 48,
+                color: AppColors.blue300,
+              ),
               const SizedBox(height: 12),
               const Text(
                 "ยังไม่มีผลการทดสอบ",
@@ -942,7 +953,11 @@ final sounds = orderedKeys
         children: [
           const Text(
             "ความถูกต้องของการออกเสียง (%)",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.blue800),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.blue800,
+            ),
           ),
 
           const SizedBox(height: 20),
@@ -966,7 +981,10 @@ final sounds = orderedKeys
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.blue100,
                         borderRadius: BorderRadius.circular(8),
@@ -995,7 +1013,11 @@ final sounds = orderedKeys
               LineChartData(
                 minY: 0,
                 maxY: 100,
-                gridData: FlGridData(show: true, horizontalInterval: 20, drawVerticalLine: false),
+                gridData: FlGridData(
+                  show: true,
+                  horizontalInterval: 20,
+                  drawVerticalLine: false,
+                ),
 
                 lineBarsData: [
                   LineChartBarData(
@@ -1036,7 +1058,10 @@ final sounds = orderedKeys
 
                         return Text(
                           sounds[value.toInt()].key,
-                          style: const TextStyle(fontSize: 12, color: AppColors.gray550),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.gray550,
+                          ),
                         );
                       },
                     ),
@@ -1048,7 +1073,10 @@ final sounds = orderedKeys
                       getTitlesWidget: (value, meta) {
                         return Text(
                           '${value.toInt()}%',
-                          style: const TextStyle(fontSize: 11, color: AppColors.gray550),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.gray550,
+                          ),
                         );
                       },
                     ),
@@ -1085,7 +1113,8 @@ final sounds = orderedKeys
 
           const SizedBox(height: 24),
 
-          if (filteredScores.isNotEmpty) SizedBox(height: 220, child: _buildQuizBarChart()),
+          if (filteredScores.isNotEmpty)
+            SizedBox(height: 220, child: _buildQuizBarChart()),
 
           if (filteredScores.isEmpty)
             Padding(
@@ -1093,7 +1122,11 @@ final sounds = orderedKeys
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.bar_chart_outlined, size: 48, color: AppColors.blue300),
+                    Icon(
+                      Icons.bar_chart_outlined,
+                      size: 48,
+                      color: AppColors.blue300,
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       "ไม่มีข้อมูล",
@@ -1117,7 +1150,11 @@ final sounds = orderedKeys
             const SizedBox(height: 24),
             const Text(
               "รายละเอียด",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.blue800),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.blue800,
+              ),
             ),
             const SizedBox(height: 12),
             _buildQuizList(),
@@ -1132,11 +1169,15 @@ final sounds = orderedKeys
       BarChartData(
         minY: 0,
         maxY: 100,
-     barTouchData: BarTouchData(
-  enabled: false,
-  handleBuiltInTouches: false, // doesn't work yet fix later
-),
-        gridData: FlGridData(show: true, horizontalInterval: 20, drawVerticalLine: false),
+        barTouchData: BarTouchData(
+          enabled: false,
+          handleBuiltInTouches: false, // doesn't work yet fix later
+        ),
+        gridData: FlGridData(
+          show: true,
+          horizontalInterval: 20,
+          drawVerticalLine: false,
+        ),
 
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
@@ -1148,14 +1189,16 @@ final sounds = orderedKeys
                 final index = value.toInt();
 
                 //‼️oif (index < 0 || index > 4) return const SizedBox();
-                 if (index < 0 || index >= aggregatedQuizScores.length) {
-  return const SizedBox();
-}
-
+                if (index < 0 || index >= aggregatedQuizScores.length) {
+                  return const SizedBox();
+                }
 
                 return Text(
                   "Q${index + 1}",
-                  style: const TextStyle(fontSize: 12, color: AppColors.gray550),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.gray550,
+                  ),
                 );
               },
             ),
@@ -1167,25 +1210,27 @@ final sounds = orderedKeys
               getTitlesWidget: (value, meta) {
                 return Text(
                   '${value.toInt()}%',
-                  style: const TextStyle(fontSize: 11, color: AppColors.gray550),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.gray550,
+                  ),
                 );
               },
             ),
           ),
         ),
-/*‼️old code fix 24/04: barGroups: filteredScores.asMap().entries.map((e) {
+        /*‼️old code fix 24/04: barGroups: filteredScores.asMap().entries.map((e) {
           final accuracy = percent(e.value['correct'], e.value['total']);
         */
         barGroups: aggregatedQuizScores.map((e) {
-  final accuracy = (e['accuracy'] ?? 0).toDouble();
+          final accuracy = (e['accuracy'] ?? 0).toDouble();
 
-  final quizId = e['quizId'] ?? '';
-  final quizNumber = int.tryParse(
-    quizId.toString().replaceAll('quiz_', ''),
-  ) ?? 0;
+          final quizId = e['quizId'] ?? '';
+          final quizNumber =
+              int.tryParse(quizId.toString().replaceAll('quiz_', '')) ?? 0;
 
-  return BarChartGroupData(
-    x: quizNumber - 1, // ✅ REAL POSITION (0–4)
+          return BarChartGroupData(
+            x: quizNumber - 1, // ✅ REAL POSITION (0–4)
 
             barRods: [
               BarChartRodData(
@@ -1203,148 +1248,154 @@ final sounds = orderedKeys
     );
   }
 
-//buildQuizList()
+  //buildQuizList()
 
   Widget _buildQuizList() {
-  // sort old-new 
-  final sortedOldestFirst = [...filteredScores]..sort((a, b) {
-    final da = a['date'] as DateTime?;
-    final db = b['date'] as DateTime?;
-    return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
-  });
+    // sort old-new
+    final sortedOldestFirst = [...filteredScores]
+      ..sort((a, b) {
+        final da = a['date'] as DateTime?;
+        final db = b['date'] as DateTime?;
+        return (da ?? DateTime(0)).compareTo(db ?? DateTime(0));
+      });
 
-  // count attempts
-  Map<String, int> attemptCounter = {};
-  Map<Map<String, dynamic>, int> attemptMap = {};
+    // count attempts
+    Map<String, int> attemptCounter = {};
+    Map<Map<String, dynamic>, int> attemptMap = {};
 
-  for (var score in sortedOldestFirst) {
-    final quizId = score['quizId'] ?? '';
-    attemptCounter[quizId] = (attemptCounter[quizId] ?? 0) + 1;
-    attemptMap[score] = attemptCounter[quizId]!;
-  }
-
-  //show LATEST first 
-  final displayList = [...filteredScores]..sort((a, b) {
-    final da = a['date'] as DateTime?;
-    final db = b['date'] as DateTime?;
-    return (db ?? DateTime(0)).compareTo(da ?? DateTime(0)); // newest first
-  });
-
-  return Column(
-    children: displayList.asMap().entries.map((entry) {
-      final score = entry.value;
-
+    for (var score in sortedOldestFirst) {
       final quizId = score['quizId'] ?? '';
-      final quizNumber = quizId.toString().replaceAll('quiz_', '');
+      attemptCounter[quizId] = (attemptCounter[quizId] ?? 0) + 1;
+      attemptMap[score] = attemptCounter[quizId]!;
+    }
 
-      final attempt = attemptMap[score] ?? 1;
+    //show LATEST first
+    final displayList = [...filteredScores]
+      ..sort((a, b) {
+        final da = a['date'] as DateTime?;
+        final db = b['date'] as DateTime?;
+        return (db ?? DateTime(0)).compareTo(da ?? DateTime(0)); // newest first
+      });
 
-      final p = percent(score['correct'], score['total']);
+    return Column(
+      children: displayList.asMap().entries.map((entry) {
+        final score = entry.value;
 
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.blue10,
-          border: const Border(
-            left: BorderSide(color: AppColors.blue600, width: 4),
+        final quizId = score['quizId'] ?? '';
+        final quizNumber = quizId.toString().replaceAll('quiz_', '');
+
+        final attempt = attemptMap[score] ?? 1;
+
+        final p = percent(score['correct'], score['total']);
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.blue10,
+            border: const Border(
+              left: BorderSide(color: AppColors.blue600, width: 4),
+            ),
+            borderRadius: BorderRadius.circular(12),
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: "แบบทดสอบที่ $quizNumber",
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.gray700,
-                          ),
-                        ),
-
-                        if (attempt > 1)
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        children: [
                           TextSpan(
-                            text: " (ทำซ้ำครั้งที่ $attempt)",
+                            text: "แบบทดสอบที่ $quizNumber",
                             style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFFB71C1C),
-                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.gray700,
                             ),
                           ),
-                      ],
+
+                          if (attempt > 1)
+                            TextSpan(
+                              text: " (ทำซ้ำครั้งที่ $attempt)",
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFFB71C1C),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 6),
+                    const SizedBox(height: 6),
 
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.blue100,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "${score['correct']}/${score['total']}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.blue800,
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.blue100,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "${score['correct']}/${score['total']}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.blue800,
+                            ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(width: 10),
+                        const SizedBox(width: 10),
 
+                        Text(
+                          "ถูกต้อง ${p.toStringAsFixed(1)}%",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.gray550,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    if (score['date'] != null)
                       Text(
-                        "ถูกต้อง ${p.toStringAsFixed(1)}%",
+                        DateFormat('dd/MM/yyyy HH:mm').format(score['date']),
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: AppColors.gray550,
                         ),
                       ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  if (score['date'] != null)
-                    Text(
-                      DateFormat('dd/MM/yyyy HH:mm').format(score['date']),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.gray550,
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            IconButton(
-              icon: const Icon(Icons.info_outline_rounded, color: AppColors.blue600),
-              onPressed: () {
-                final index = entry.key + 1;
-                _showQuizDetail(score, index);
-              },
-            ),
-          ],
-        ),
-      );
-    }).toList(),
-  );
-}
+              IconButton(
+                icon: const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.blue600,
+                ),
+                onPressed: () {
+                  final index = entry.key + 1;
+                  _showQuizDetail(score, index);
+                },
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
   // end buildQuizList()
-
 
   Widget _buildMonthDropdown() {
     return Container(
@@ -1365,7 +1416,11 @@ final sounds = orderedKeys
           elevation: 4,
           menuMaxHeight: 250,
 
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 22, color: AppColors.blue600),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 22,
+            color: AppColors.blue600,
+          ),
 
           style: const TextStyle(
             fontSize: 13,
@@ -1396,123 +1451,246 @@ final sounds = orderedKeys
   // quiz detail
   void _showQuizDetail(Map<String, dynamic> quiz, int index) {
     final soundResults = Map<String, dynamic>.from(quiz['soundResults'] ?? {});
+    final correct = quiz['correct'] ?? 0;
+    final total = quiz['total'] ?? 0;
+    final accuracy = percent(correct, total);
 
     showDialog(
       context: context,
-
+      barrierColor: Colors.black.withAlpha(102),
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           child: Container(
             padding: const EdgeInsets.all(20),
-
             decoration: BoxDecoration(
-              color: Colors.white,
-
-              borderRadius: BorderRadius.circular(24),
-
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.blue100),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: AppColors.blue900.withAlpha(26),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
-
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                /// HEADER
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "รายละเอียดแบบทดสอบที่ $index",
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.blue100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.analytics_outlined,
+                          color: AppColors.blue700,
+                          size: 20,
+                        ),
                       ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          "รายละเอียดแบบทดสอบที่ $index",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.blue800,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.gray50,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(6),
+                          child: const Icon(
+                            Icons.close,
+                            size: 18,
+                            color: AppColors.gray700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.blue10,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.blue100),
                     ),
-
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _detailMetric(
+                            label: "คะแนน",
+                            value: "$correct/$total",
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 36,
+                          color: AppColors.blue100,
+                        ),
+                        Expanded(
+                          child: _detailMetric(
+                            label: "ความถูกต้อง",
+                            value: "${accuracy.toStringAsFixed(1)}%",
+                            alignEnd: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "ความถูกต้องของการออกเสียง",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.blue800,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (soundResults.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 14,
+                      ),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-
-                          shape: BoxShape.circle,
-                        ),
-
-                        padding: const EdgeInsets.all(6),
-
-                        child: const Icon(Icons.close, size: 18),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                Text("คะแนน: ${quiz['correct']}/${quiz['total']}"),
-
-                Text("ความถูกต้อง: ${percent(quiz['correct'], quiz['total']).toStringAsFixed(1)}%"),
-
-                const SizedBox(height: 16),
-
-                const Text("ความถูกต้องของการออกเสียง", style: TextStyle(fontWeight: FontWeight.bold)),
-
-                const SizedBox(height: 10),
-
-                if (soundResults.isEmpty) const Text("ยังไม่มีข้อมูลการออกเสียง"),
-
-                if (soundResults.isNotEmpty)
-                  Column(
-                    children: soundResults.entries.map((entry) {
-                      final sound = entry.key;
-
-                      final data = Map<String, dynamic>.from(entry.value);
-
-                      final correct = data['correct'] ?? 0;
-
-                      final total = data['total'] ?? 0;
-
-                      final p = percent(correct, total);
-
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-
+                          color: AppColors.gray25,
                           borderRadius: BorderRadius.circular(12),
                         ),
-
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                          children: [
-                            Text(sound),
-
-                            Text(
-                              "${p.toStringAsFixed(1)}%",
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 14,
                         ),
-                      );
-                    }).toList(),
-                  ),
-              ],
+                        child: const Text(
+                          "ยังไม่มีข้อมูลการออกเสียง",
+                          style: TextStyle(color: AppColors.gray550),
+                        ),
+                      ),
+                    ),
+                  if (soundResults.isNotEmpty)
+                    Column(
+                      children: soundResults.entries.map((entry) {
+                        final sound = entry.key;
+                        final data = Map<String, dynamic>.from(entry.value);
+                        final soundCorrect = data['correct'] ?? 0;
+                        final soundTotal = data['total'] ?? 0;
+                        final p = percent(soundCorrect, soundTotal);
+
+                        Color percentColor = AppColors.error;
+                        if (p >= 80) {
+                          percentColor = AppColors.success;
+                        } else if (p >= 60) {
+                          percentColor = AppColors.yellow700;
+                        }
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.gray25,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.gray100),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    sound,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.gray700,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${p.toStringAsFixed(1)}%",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: percentColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: LinearProgressIndicator(
+                                  value: (p / 100).clamp(0, 1),
+                                  minHeight: 6,
+                                  backgroundColor: AppColors.gray100,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    percentColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _detailMetric({
+    required String label,
+    required String value,
+    bool alignEnd = false,
+  }) {
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.gray550,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.blue800,
+          ),
+        ),
+      ],
     );
   }
 

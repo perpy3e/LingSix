@@ -45,9 +45,6 @@ class _ProfilePageState extends State<ProfilePage> {
     Navigator.pushReplacementNamed(context, '/login');
     return;
   }
-
-  print("AUTH UID: ${user.uid}");
-
   final doc = await _firestore.getUserByUid(user.uid);
 
   if (doc == null || doc.data() == null) {
