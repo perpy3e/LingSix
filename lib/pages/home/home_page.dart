@@ -290,12 +290,12 @@ class HomePage extends StatelessWidget {
               _buildGuideItem(
                 icon: Icons.menu_book,
                 title: 'บทเรียน',
-                description: 'เรียนรู้ทฤษฎีดนตรีและหลักการต่างๆ',
+                description: 'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
               ),
               _buildGuideItem(
                 icon: Icons.quiz,
-                title: 'ทดสอบ',
-                description: 'ทดสอบความรู้ด้วยแบบทดสอบที่หลากหลาย',
+                title: 'แบบทดสอบ',
+                description: 'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
               ),
               _buildGuideItem(
                 icon: Icons.bar_chart,
@@ -305,7 +305,7 @@ class HomePage extends StatelessWidget {
               _buildGuideItem(
                 icon: Icons.settings,
                 title: 'การตั้งค่า',
-                description: 'ปรับแต่งเสียงและการแสดงผล',
+                description: 'ปรับและล็อคระดับเสียงตามความต้องการ',
               ),
               
               const SizedBox(height: 20),
