@@ -772,7 +772,7 @@ class _DashboardPageState extends State<DashboardPage> {
           return Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(themeProvider.getWallpaperPath('home')),
+                image: AssetImage(themeProvider.getWallpaperPath('dashboard')),
                 fit: BoxFit.cover,
               ),
             ),

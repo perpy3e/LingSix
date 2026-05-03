@@ -29,7 +29,7 @@ class _AvatarSelectedPageState extends State<AvatarSelectedPage> {
 					return Container(
 						decoration: BoxDecoration(
 							image: DecorationImage(
-								image: AssetImage(themeProvider.getWallpaperPath('home')),
+								image: AssetImage(themeProvider.getWallpaperPath('avatar')),
 								fit: BoxFit.cover,
 								onError: (error, stackTrace) {},
 							),
