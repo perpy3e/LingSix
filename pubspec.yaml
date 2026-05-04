@@ -73,6 +73,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
+  remove_alpha_ios: true
   image_path: "assets/common/logo/app_logo.png"
 
 # For information on the generic Dart part of this file, see the
@@ -96,6 +97,10 @@ flutter:
     - assets/themes/summer/characters/cat/
     - assets/themes/summer/characters/dino/
     - assets/themes/summer/characters/rabbit/
+    - assets/themes/winter/bg/
+    - assets/themes/winter/characters/cat/
+    - assets/themes/winter/characters/dino/
+    - assets/themes/winter/characters/rabbit/
     - assets/data/vocabulary.json
     - assets/content/vocabulary/ah/ban/
     - assets/content/vocabulary/ah/chan/
