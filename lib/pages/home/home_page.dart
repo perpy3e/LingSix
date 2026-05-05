@@ -717,7 +717,7 @@ class _ReminderPopup extends StatelessWidget {
             AnimatedBuilder(
               animation: controller,
               builder: (context, _) {
-                final secondsLeft = (7 * (1 - controller.value)).ceil();
+                final secondsLeft = (5 * (1 - controller.value)).ceil();
                 return Text(
                   "ปิดอัตโนมัติใน $secondsLeft วินาที",
                   style: TextStyle(
