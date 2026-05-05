@@ -23,16 +23,17 @@ class _LessonsPageState extends State<LessonsPage> {
   List<Map<String, String>> vocabulary = [];
   int currentIndex = 0;
   bool isLoading = true;
+  bool _hasAutoplayedFirst = false;
 
   @override
   void initState() {
     super.initState();
     loadVocabulary();
   }
-  
+
   @override
   void dispose() {
-    _player.dispose(); 
+    _player.dispose();
     super.dispose();
   }
 
@@ -55,8 +56,7 @@ class _LessonsPageState extends State<LessonsPage> {
           "displayWord": displayWord,
           "image":
               "assets/content/vocabulary/${widget.category}/$word/image.png",
-          "sound":
-              "content/vocabulary/${widget.category}/$word/sound.mp3",
+          "sound": "content/vocabulary/${widget.category}/$word/sound.mp3",
         });
       }
     } else if (categoryData is List) {
@@ -68,8 +68,7 @@ class _LessonsPageState extends State<LessonsPage> {
           "displayWord": romanized,
           "image":
               "assets/content/vocabulary/${widget.category}/$romanized/image.png",
-          "sound":
-              "content/vocabulary/${widget.category}/$romanized/sound.mp3",
+          "sound": "content/vocabulary/${widget.category}/$romanized/sound.mp3",
         });
       }
     }
@@ -78,6 +77,13 @@ class _LessonsPageState extends State<LessonsPage> {
       vocabulary = list;
       isLoading = false;
     });
+
+    if (mounted && !_hasAutoplayedFirst && list.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        playSound(list[0]["sound"]!);
+        _hasAutoplayedFirst = true;
+      });
+    }
   }
 
   Future<void> playSound(String path) async {
@@ -128,34 +134,54 @@ class _LessonsPageState extends State<LessonsPage> {
     );
   }
 
-
   void next() {
     if (currentIndex < vocabulary.length - 1) {
       setState(() => currentIndex++);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        playSound(vocabulary[currentIndex]["sound"]!);
+      });
     }
   }
 
   void back() {
     if (currentIndex > 0) {
       setState(() => currentIndex--);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        playSound(vocabulary[currentIndex]["sound"]!);
+      });
     }
   }
 
   void resetToStart() {
     setState(() => currentIndex = 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      playSound(vocabulary[0]["sound"]!);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(themeProvider.getWallpaperPath('lesson')),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          },
+        ),
+      );
     }
 
     if (vocabulary.isEmpty) {
       return Scaffold(
-        body: Center(
-          child: Text('No vocabulary found for ${widget.category}'),
-        ),
+        body: Center(child: Text('No vocabulary found for ${widget.category}')),
       );
     }
 
@@ -224,10 +250,7 @@ class _LessonsPageState extends State<LessonsPage> {
                             decoration: BoxDecoration(
                               color: AppColors.yellow200,
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2,
-                              ),
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
                             child: const Icon(
                               Icons.volume_up,
@@ -264,14 +287,26 @@ class _LessonsPageState extends State<LessonsPage> {
                       vertical: 20,
                     ),
                     child: currentIndex == vocabulary.length - 1
-                        ? Center(
-                            child: SizedBox(
-                              width: 200,
-                              child: CustomButton(
-                                text: 'เริ่มใหม่อีกครั้ง',
-                                onPressed: resetToStart,
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Flexible(
+                                flex: 1,
+                                child: CustomButton(
+                                  text: 'ย้อนกลับ',
+                                  backgroundColor: Colors.white,
+                                  onPressed: back,
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              Flexible(
+                                flex: 1,
+                                child: CustomButton(
+                                  text: 'เริ่มใหม่',
+                                  onPressed: resetToStart,
+                                ),
+                              ),
+                            ],
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -279,13 +314,19 @@ class _LessonsPageState extends State<LessonsPage> {
                               Flexible(
                                 flex: 1,
                                 child: currentIndex > 0
-                                    ? CustomButton(text: 'ย้อนกลับ', onPressed: back)
+                                    ? CustomButton(
+                                        text: 'ย้อนกลับ',
+                                        onPressed: back,
+                                      )
                                     : const SizedBox(width: 80),
                               ),
                               const SizedBox(width: 16),
                               Flexible(
                                 flex: 1,
-                                child: CustomButton(text: 'ถัดไป', onPressed: next),
+                                child: CustomButton(
+                                  text: 'ถัดไป',
+                                  onPressed: next,
+                                ),
                               ),
                             ],
                           ),

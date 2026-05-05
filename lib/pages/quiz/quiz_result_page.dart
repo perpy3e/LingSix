@@ -25,7 +25,6 @@ class QuizResultPage extends StatefulWidget {
 }
 
 class _QuizResultPageState extends State<QuizResultPage> {
-
   @override
   void initState() {
     super.initState();
@@ -70,21 +69,26 @@ class _QuizResultPageState extends State<QuizResultPage> {
     return "ลองใหม่นะ!";
   }
 
-  Widget _buildFeedbackBubble() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 24, 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black87, width: 2.5),
-      ),
-      child: Text(
-        _feedbackText(),
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: AppColors.blue800,
+  Widget _buildFeedbackBubble(ThemeProvider themeProvider) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black87, width: 2.5),
+          ),
+          child: Text(
+            _feedbackText(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.blue800,
+            ),
+          ),
         ),
       ),
     );
@@ -132,7 +136,9 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.blue700.withValues(alpha: 0.18),
+                                color: AppColors.blue700.withValues(
+                                  alpha: 0.18,
+                                ),
                                 blurRadius: 18,
                                 offset: const Offset(0, 10),
                               ),
@@ -246,6 +252,20 @@ class _QuizResultPageState extends State<QuizResultPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.yellow200,
                           foregroundColor: AppColors.yellow700,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: const Text(
+                          "ภาพรวม",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         child: const Text("ภาพรวม"),
                       ),
@@ -265,7 +285,21 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             (route) => false,
                           );
                         },
-                        child: const Text("กลับสู่หน้าหลัก"),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.yellow700,
+                          side: const BorderSide(color: Colors.white, width: 2),
+                          backgroundColor: AppColors.yellow200,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          "กลับสู่หน้าหลัก",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -349,8 +383,8 @@ class _QuizResultPageState extends State<QuizResultPage> {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
 }

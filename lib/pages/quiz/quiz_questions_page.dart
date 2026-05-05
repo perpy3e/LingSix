@@ -11,8 +11,6 @@ import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/services/firestore_service.dart';
 import 'package:lingsix/pages/quiz/quiz_result_page.dart';
 
-
-
 class QuizQuestionsPage extends StatefulWidget {
   final String quizId;
   final String title;
@@ -31,8 +29,9 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   final firestoreService = FirestoreService();
   final user = FirebaseAuth.instance.currentUser;
 
-bool isAnswered = false;   
-  bool isFinishing = false; 
+  bool isAnswered = false;
+  bool isFinishing = false;
+  bool _hasAutoplayedFirst = false;
 
   final AudioPlayer _player = AudioPlayer();
 
@@ -60,17 +59,16 @@ bool isAnswered = false;
   }
 
   @override
-  
- @override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  isAnswered = false;   // ✅ reset
-  isFinishing = false;  // ✅ reset
+    isAnswered = false; // ✅ reset
+    isFinishing = false; // ✅ reset
 
-  _player.setReleaseMode(ReleaseMode.stop);
-  loadQuestions();
-}
+    _player.setReleaseMode(ReleaseMode.stop);
+    loadQuestions();
+  }
 
   @override
   void dispose() {
@@ -107,14 +105,21 @@ void initState() {
       questions = generated;
       isLoading = false;
     });
+
+    if (mounted && !_hasAutoplayedFirst && generated.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        playCurrentWord();
+        _hasAutoplayedFirst = true;
+      });
+    }
   }
 
   Future<void> onAnswer({required bool isCheck}) async {
-  if (isAnswered || isFinishing) return; //block spam tab
+    if (isAnswered || isFinishing) return; //block spam tab
 
-  isAnswered = true;
+    isAnswered = true;
     final question = questions[questionIndex];
-    
+
     final sound = question["sound"]!;
 
     soundStats.putIfAbsent(sound, () => {"correct": 0, "total": 0});
@@ -125,92 +130,99 @@ void initState() {
       soundStats[sound]!["correct"] = soundStats[sound]!["correct"]! + 1;
     }
 
-   if (questionIndex < questionsPerSet - 1) {
-  await Future.delayed(const Duration(milliseconds: 200)); //  smooth UX
+    if (questionIndex < questionsPerSet - 1) {
+      await Future.delayed(const Duration(milliseconds: 200)); //  smooth UX
 
-  if (!mounted) return;
+      if (!mounted) return;
 
-  setState(() {
-    questionIndex++;
-    isAnswered = false; // unlock next question
-  });
-} else {
-  isFinishing = true; 
-  await finishQuiz();
-}
+      setState(() {
+        questionIndex++;
+        isAnswered = false; // unlock next question
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        playCurrentWord();
+      });
+    } else {
+      if (!mounted) return;
+      setState(() => isFinishing = true);
+      await finishQuiz();
+    }
   }
 
- Future<void> finishQuiz() async {
-  final accuracy = (score / questionsPerSet) * 100;
+  Future<void> finishQuiz() async {
+    final accuracy = (score / questionsPerSet) * 100;
 
-  final currentUser = user;
-if (currentUser == null) return;
+    final currentUser = user;
+    if (currentUser == null) {
+      if (mounted) {
+        setState(() => isFinishing = false);
+      }
+      return;
+    }
 
-//
-final themeProvider = context.read<ThemeProvider>();
+    //
+    final themeProvider = context.read<ThemeProvider>();
 
-// ✅ 1. save quiz 
-await firestoreService.saveQuizAttempt(
-  uid: currentUser.uid,
-  quizId: widget.quizId,
-  score: score,
-  totalQuestions: questionsPerSet,
-  accuracy: accuracy,
-  perSoundAccuracy: soundStats,
-   
-);
-
-// ✅ 2.  from DB
-final summary = await firestoreService.getDashboardSummary(currentUser.uid);
-final testCount = summary['totalQuizzes'] ?? 0;
-
-// ✅ 3. sync theme 
-await themeProvider.syncThemeStatusFromFirestore(currentUser.uid);
-
-// ✅ 4. show popup 
-
-final shouldShowPopup = (testCount % 10 == 0 && testCount != 0);
-
-
-
-if (!mounted) return;
-
-Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (_) => QuizResultPage(
+    // ✅ 1. save quiz
+    await firestoreService.saveQuizAttempt(
+      uid: currentUser.uid,
+      quizId: widget.quizId,
       score: score,
-      total: questionsPerSet,
+      totalQuestions: questionsPerSet,
       accuracy: accuracy,
       perSoundAccuracy: soundStats,
-      showUnlockPopup: shouldShowPopup 
-    ),
-  ),
-);
-}
+    );
 
-/* fix code 24/04   
+    // ✅ 2.  from DB
+    final summary = await firestoreService.getDashboardSummary(currentUser.uid);
+    final testCount = summary['totalQuizzes'] ?? 0;
+
+    // ✅ 3. sync theme
+    await themeProvider.syncThemeStatusFromFirestore(currentUser.uid);
+
+    // ✅ 4. show popup
+
+    final shouldShowPopup = (testCount % 10 == 0 && testCount != 0);
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => QuizResultPage(
+          score: score,
+          total: questionsPerSet,
+          accuracy: accuracy,
+          perSoundAccuracy: soundStats,
+          showUnlockPopup: shouldShowPopup,
+        ),
+      ),
+    );
+  }
+
+  /* fix code 24/04   
   Future<void> playCurrentWord() async {
     final audioPath = questions[questionIndex]["audio"]!;
     await _player.play(AssetSource(audioPath));
   }*/
 
-//add new
+  //add new
   Future<void> playCurrentWord() async {
-  try {
-    if (!mounted) return;
+    try {
+      if (!mounted) return;
 
-    final audioPath = questions[questionIndex]["audio"];
+      final audioPath = questions[questionIndex]["audio"];
 
-    if (audioPath == null || audioPath.isEmpty) return;
+      if (audioPath == null || audioPath.isEmpty) return;
 
-    await _player.stop(); // prevent overlap crash
-    await _player.play(AssetSource(audioPath));
-  } catch (e) {
-    debugPrint("Audio error: $e");
+      await _player.stop(); // prevent overlap crash
+      await _player.play(AssetSource(audioPath));
+    } catch (e) {
+      debugPrint("Audio error: $e");
+    }
   }
-}
-// end add new 
+  // end add new
 
   Widget _buildQuestionBubble(ThemeProvider themeProvider) {
     final selectedCharacter = themeProvider.selectedCharacter;
@@ -256,51 +268,125 @@ Navigator.pushReplacement(
     );
   }
 
-//buildAnswerTile 
+  //buildAnswerTile
   Widget _buildAnswerTile({
     required bool isCheck,
     required Color color,
     required IconData icon,
   }) {
     return Expanded(
-  child: Material(
-    color: Colors.transparent,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(28),
-      onTap: (isAnswered || isFinishing)
-    ? null
-    : () => onAnswer(isCheck: isCheck),
-      child: Ink(
-        decoration: BoxDecoration(
-          color: color,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(28),
-        ),
-        child: Center(
-          //fix from Icon(icon, color: Colors.white, size: 108),
-          child: Icon(
-  icon,
-  color: Colors.white,
-  size: MediaQuery.of(context).size.width * 0.12,
-),
+          onTap: (isAnswered || isFinishing)
+              ? null
+              : () => onAnswer(isCheck: isCheck),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Center(
+              //fix from Icon(icon, color: Colors.white, size: 108),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: MediaQuery.of(context).size.width * 0.12,
+              ),
+            ),
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(themeProvider.getWallpaperPath('quiz')),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          },
+        ),
+      );
+    }
+    if (isFinishing) {
+      return Scaffold(
+        body: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            final selectedCharacter = themeProvider.selectedCharacter;
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(themeProvider.getWallpaperPath('quiz')),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 120,
+                      height: 120,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 6,
+                        valueColor: AlwaysStoppedAnimation(
+                          AppColors.blue600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 180,
+                      child: Image.asset(
+                        themeProvider.getCharacterBodyPath(
+                          selectedCharacter,
+                        ),
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.asset(
+                            themeProvider.getDefaultCharacterBodyPath(
+                              selectedCharacter,
+                            ),
+                            fit: BoxFit.contain,
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'กำลังสรุปผลแบบทดสอบ...',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.blue800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
     }
 
     final question = questions[questionIndex];
 
     return Scaffold(
       body: Consumer<ThemeProvider>(
-              builder: (context, themeProvider, _) {
-        
+        builder: (context, themeProvider, _) {
           return Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -373,8 +459,7 @@ Navigator.pushReplacement(
                     const SizedBox(height: 16),
                     _buildQuestionBubble(themeProvider),
 
-//🔥🔥 new code expanded
-
+                    //🔥🔥 new code expanded
                     Flexible(
                       flex: 3,
                       child: Center(
@@ -395,9 +480,7 @@ Navigator.pushReplacement(
                         ),
                       ),
                     ), // 👈 THIS COMMA WAS MISSING
-
-//SizedBox(height: 70),
-
+                    //SizedBox(height: 70),
                     Expanded(
                       flex: 2,
                       child: Row(
@@ -416,14 +499,13 @@ Navigator.pushReplacement(
                         ],
                       ),
                     ),
-
                   ],
                 ),
               ),
             ),
           ); // ✅ closes Container properly
         },
-              ),
+      ),
     );
   }
 }
