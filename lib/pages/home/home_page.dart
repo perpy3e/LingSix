@@ -650,7 +650,7 @@ class _ReminderPopup extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 const Text(
-                  "แจ้งเตือน",
+                  "คำแนะนำ",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
