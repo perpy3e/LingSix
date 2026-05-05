@@ -92,12 +92,17 @@ static const Map<String, Map<String, String>> _themeBackgroundAliases = {
   return;
 }
       
-      if (
-  testCount >= 10 &&
-  testCount % 10 == 0 &&
-  testCount != _lastSyncedTestCount
-) {
-  _rotateTheme();
+ int newThemeIndex = (testCount ~/ 10); // 0,1,2,...
+
+if (newThemeIndex >= _themeRotation.length) {
+  newThemeIndex = _themeRotation.length - 1;
+}
+
+final newTheme = _themeRotation[newThemeIndex];
+
+if (_currentTheme != newTheme) {
+  _currentTheme = newTheme;
+  await _prefs.setString(_themeKey, _currentTheme);
 }
       
       

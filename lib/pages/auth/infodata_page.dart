@@ -9,7 +9,8 @@ import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
 import '../../app/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:provider/provider.dart';
+import 'package:lingsix/providers/theme_provider.dart';
 
 class InfoDataPage extends StatefulWidget {
   const InfoDataPage({super.key});
@@ -99,7 +100,10 @@ class _InfoDataPageState extends State<InfoDataPage> {
 
   if (!mounted) return;
 
-  Navigator.pushReplacementNamed(context, AppRouter.startPage);
+  await context.read<ThemeProvider>()
+    .syncThemeStatusFromFirestore(uid);
+
+Navigator.pushReplacementNamed(context, AppRouter.startPage);
 }
 
 

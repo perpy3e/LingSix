@@ -85,8 +85,9 @@ class _LoginPageState extends State<LoginPage> {
         );
         return;
       }
-      await context.read<ThemeProvider>()
-    .syncThemeStatusFromFirestore(user.uid);
+
+      //await context.read<ThemeProvider>()
+   // .syncThemeStatusFromFirestore(user.uid);
 
       Navigator.pushReplacementNamed(context, AppRouter.startPage);
     } catch (e) {
@@ -139,31 +140,39 @@ Future<void> _googleLogin() async {
 
     final userDoc = await _firestore.getUserByUid(user.uid);
 
-    if (userDoc == null) {
-      await _firestore.addUser(
-        user.uid,
-        user.email ?? '',
-        user.displayName ?? '',
-        isGoogleSignIn: true,
-      );
-await context.read<ThemeProvider>()
-      .syncThemeStatusFromFirestore(user.uid);
-      Navigator.pushReplacementNamed(context, AppRouter.infodata);
-      return;
-    }
 
+//
+   if (userDoc == null) {
+  await _firestore.addUser(
+    user.uid,
+    user.email ?? '',
+    user.displayName ?? '',
+    isGoogleSignIn: true,
+  );
+
+  Navigator.pushReplacementNamed(context, AppRouter.infodata);
+  return;
+}
+
+//
     final data = userDoc.data() as Map<String, dynamic>;
 
-    if (data['profileCompleted'] != true) {
-      Navigator.pushReplacementNamed(context, AppRouter.infodata);
-      return;
-    }
+final hasProfile =
+    data['firstName'] != null &&
+    data['lastName'] != null &&
+    data['gender'] != null &&
+    data['birthday'] != null;
 
-    await context.read<ThemeProvider>()
+if (!hasProfile) {
+  Navigator.pushReplacementNamed(context, AppRouter.infodata);
+  return;
+}
+
+// ✅ sync ตอนเข้า app จริง
+await context.read<ThemeProvider>()
     .syncThemeStatusFromFirestore(user.uid);
 
-
-    Navigator.pushReplacementNamed(context, AppRouter.startPage);
+Navigator.pushReplacementNamed(context, AppRouter.startPage);
 
   } catch (e) {
     print("❌ ERROR: $e");
