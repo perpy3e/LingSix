@@ -162,7 +162,21 @@ class _LessonsPageState extends State<LessonsPage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(themeProvider.getWallpaperPath('lesson')),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          },
+        ),
+      );
     }
 
     if (vocabulary.isEmpty) {

@@ -25,7 +25,6 @@ class QuizResultPage extends StatefulWidget {
 }
 
 class _QuizResultPageState extends State<QuizResultPage> {
-
   @override
   void initState() {
     super.initState();
@@ -61,7 +60,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
       clipBehavior: Clip.none,
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(14, 10, 24, 10),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
@@ -120,7 +119,9 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.blue700.withValues(alpha: 0.18),
+                                color: AppColors.blue700.withValues(
+                                  alpha: 0.18,
+                                ),
                                 blurRadius: 18,
                                 offset: const Offset(0, 10),
                               ),
@@ -239,12 +240,18 @@ class _QuizResultPageState extends State<QuizResultPage> {
                           foregroundColor: AppColors.yellow700,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
-                            side: const BorderSide(color: Colors.white, width: 2),
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 2,
+                            ),
                           ),
                         ),
                         child: const Text(
                           "ภาพรวม",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -272,7 +279,10 @@ class _QuizResultPageState extends State<QuizResultPage> {
                         ),
                         child: const Text(
                           "กลับสู่หน้าหลัก",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),

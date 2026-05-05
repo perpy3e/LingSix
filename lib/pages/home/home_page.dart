@@ -25,26 +25,31 @@ class HomePage extends StatelessWidget {
             children: [
               // Top Navigation Bar
               _buildTopBar(context),
-              
+
               // Main Content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      
-                      // Welcome Section
-                      _buildWelcomeSection(context),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Main Feature Cards
-                      _buildFeatureCards(context),
-                      
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final layout = _HomeLayout.fromConstraints(constraints);
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: layout.horizontalPadding),
+                      child: Column(
+                        children: [
+                          SizedBox(height: layout.topSpacing),
+
+                          // Welcome Section
+                          _buildWelcomeSection(context, logoSize: layout.logoSize),
+
+                          SizedBox(height: layout.sectionSpacing),
+
+                          // Main Feature Cards
+                          _buildFeatureCards(context, layout),
+
+                          SizedBox(height: layout.bottomSpacing),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -104,21 +109,21 @@ class HomePage extends StatelessWidget {
   }
 
   /// Welcome Section with Logo/Title
-  Widget _buildWelcomeSection(BuildContext context) {
+  Widget _buildWelcomeSection(BuildContext context, {required double logoSize}) {
     return Column(
       children: [
         // App Logo
         Image.asset(
           'assets/common/logo/app_logo.png',
-          width: 300,
-          height: 300,
+          width: logoSize,
+          height: logoSize,
         ),
       ],
     );
   }
 
   /// Main Feature Cards Grid
-  Widget _buildFeatureCards(BuildContext context) {
+  Widget _buildFeatureCards(BuildContext context, _HomeLayout layout) {
     return Column(
       children: [
         // Row 1: Lessons
@@ -127,6 +132,11 @@ class HomePage extends StatelessWidget {
           imageAsset: 'assets/common/illustrations/home/learn.png',
           title: 'บทเรียน',
           backgroundColor: const Color(0xFFBB240A),
+          height: layout.cardHeight,
+          iconSize: layout.iconSize,
+          titleFontSize: layout.titleFontSize,
+          arrowSize: layout.arrowSize,
+          padding: layout.cardPadding,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
@@ -135,7 +145,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        SizedBox(height: layout.cardSpacing),
 
         // Row 2: Quiz
         _buildFeatureCard(
@@ -143,10 +153,15 @@ class HomePage extends StatelessWidget {
           imageAsset: 'assets/common/illustrations/home/quiz.png',
           title: 'ทดสอบ',
           backgroundColor: const Color(0xFFEDCC4D),
+          height: layout.cardHeight,
+          iconSize: layout.iconSize,
+          titleFontSize: layout.titleFontSize,
+          arrowSize: layout.arrowSize,
+          padding: layout.cardPadding,
           onTap: () => Navigator.pushNamed(context, AppRouter.quiz),
         ),
 
-        const SizedBox(height: 16),
+        SizedBox(height: layout.cardSpacing),
 
         // Row 3: Result
         _buildFeatureCard(
@@ -154,6 +169,11 @@ class HomePage extends StatelessWidget {
           imageAsset: 'assets/common/illustrations/home/result.png',
           title: 'ผลการทดสอบ',
           backgroundColor: const Color(0xFF016FBA),
+          height: layout.cardHeight,
+          iconSize: layout.iconSize,
+          titleFontSize: layout.titleFontSize,
+          arrowSize: layout.arrowSize,
+          padding: layout.cardPadding,
           onTap: () => Navigator.pushNamed(context, AppRouter.dashboard),
         ),
       ],
@@ -166,11 +186,16 @@ class HomePage extends StatelessWidget {
     required String title,
     required Color backgroundColor,
     required VoidCallback onTap,
+    required double height,
+    required double iconSize,
+    required double titleFontSize,
+    required double arrowSize,
+    required double padding,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 100,
+        height: height,
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(20),
@@ -192,12 +217,12 @@ class HomePage extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(20),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(padding),
               child: Row(
                 children: [
                   SizedBox(
-                    width: 56,
-                    height: 56,
+                    width: iconSize,
+                    height: iconSize,
                     child: Image.asset(
                       imageAsset,
                       fit: BoxFit.contain,
@@ -207,11 +232,11 @@ class HomePage extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: titleFontSize,
                         fontWeight: FontWeight.bold,
-                        shadows: [
+                        shadows: const [
                           Shadow(
                             color: AppColors.gray550,
                             blurRadius: 6,
@@ -224,7 +249,7 @@ class HomePage extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.white.withAlpha(220),
-                    size: 20,
+                    size: arrowSize,
                   ),
                 ],
               ),
@@ -445,6 +470,74 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _HomeLayout {
+  final double horizontalPadding;
+  final double topSpacing;
+  final double sectionSpacing;
+  final double cardSpacing;
+  final double bottomSpacing;
+  final double logoSize;
+  final double cardHeight;
+  final double cardPadding;
+  final double iconSize;
+  final double titleFontSize;
+  final double arrowSize;
+
+  const _HomeLayout({
+    required this.horizontalPadding,
+    required this.topSpacing,
+    required this.sectionSpacing,
+    required this.cardSpacing,
+    required this.bottomSpacing,
+    required this.logoSize,
+    required this.cardHeight,
+    required this.cardPadding,
+    required this.iconSize,
+    required this.titleFontSize,
+    required this.arrowSize,
+  });
+
+  factory _HomeLayout.fromConstraints(BoxConstraints constraints) {
+    const baseLogoSize = 220.0;
+    const baseCardHeight = 96.0;
+    const baseTopSpacing = 16.0;
+    const baseSectionSpacing = 28.0;
+    const baseCardSpacing = 12.0;
+    const baseBottomSpacing = 16.0;
+    const baseCardPadding = 12.0;
+    const baseIconSize = 56.0;
+    const baseTitleFontSize = 20.0;
+    const baseArrowSize = 20.0;
+    const maxScale = 1.15;
+
+    final maxHeight = constraints.maxHeight;
+    final maxWidth = constraints.maxWidth;
+    final baseTotal = baseTopSpacing +
+        baseLogoSize +
+        baseSectionSpacing +
+        (baseCardHeight * 3) +
+        (baseCardSpacing * 2) +
+        baseBottomSpacing;
+
+    final scale = baseTotal > 0 ? maxHeight / baseTotal : 1.0;
+    final effectiveScale = scale > maxScale ? maxScale : scale;
+
+    return _HomeLayout(
+      horizontalPadding: (maxWidth * 0.06).clamp(16.0, 32.0),
+      topSpacing: baseTopSpacing * effectiveScale,
+      sectionSpacing: baseSectionSpacing * effectiveScale,
+      cardSpacing: baseCardSpacing * effectiveScale,
+      bottomSpacing: baseBottomSpacing * effectiveScale,
+      logoSize: baseLogoSize * effectiveScale,
+      cardHeight: baseCardHeight * effectiveScale,
+      cardPadding: baseCardPadding * effectiveScale,
+      iconSize: baseIconSize * effectiveScale,
+      titleFontSize: baseTitleFontSize * effectiveScale,
+      arrowSize: baseArrowSize * effectiveScale,
     );
   }
 }
