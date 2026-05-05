@@ -100,6 +100,7 @@ if (newThemeIndex >= _themeRotation.length) {
 
 final newTheme = _themeRotation[newThemeIndex];
 
+/*
 if (_currentTheme != newTheme) {
   _currentTheme = newTheme;
   await _prefs.setString(_themeKey, _currentTheme);
@@ -110,6 +111,25 @@ if (_currentTheme != newTheme) {
       await _prefs.setInt(_lastTestCountKey, testCount);
 
       notifyListeners();
+      */
+
+      bool hasChanged = false;
+
+if (_currentTheme != newTheme) {
+  _currentTheme = newTheme;
+  await _prefs.setString(_themeKey, _currentTheme);
+  hasChanged = true;
+}
+
+if (_lastSyncedTestCount != testCount) {
+  _lastSyncedTestCount = testCount;
+  await _prefs.setInt(_lastTestCountKey, testCount);
+  hasChanged = true;
+}
+
+if (hasChanged) {
+  notifyListeners();
+}
     } catch (e) {
       debugPrint('Error syncing theme status: $e');
     }
