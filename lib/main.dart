@@ -9,6 +9,8 @@ import 'package:lingsix/providers/theme_provider.dart';
 
 import 'pages/auth/login_page.dart';
 import 'pages/home/start_page.dart';
+import 'services/firestore_service.dart';
+import 'pages/auth/infodata_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +60,8 @@ class _AuthGateState extends State<AuthGate> {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Loading
+
+        // 🔹 Loading
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -67,12 +70,12 @@ class _AuthGateState extends State<AuthGate> {
 
         final user = snapshot.data;
 
-        // Not logged in
+        // 🔹 Not logged in
         if (user == null) {
           return const LoginPage();
         }
 
-        // Not verified
+        // 🔹 Not verified
         if (!user.emailVerified) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pushReplacementNamed(
@@ -87,18 +90,45 @@ class _AuthGateState extends State<AuthGate> {
           );
         }
 
-        // sync theme 
-        if (!_synced) {
-          _synced = true;
+        // 🔥 MAIN FIX
+        return FutureBuilder(
+          future: FirestoreService().getUserByUid(user.uid),
+          builder: (context, snapshot) {
 
-          Future.microtask(() {
-            context.read<ThemeProvider>()
-                .syncThemeStatusFromFirestore(user.uid);
-          });
-        }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-        // Go to app
-        return const StartPage();
+            final doc = snapshot.data;
+            final data = doc?.data() as Map<String, dynamic>?;
+
+            final hasProfile =
+                data != null &&
+                data['firstName'] != null &&
+                data['lastName'] != null &&
+                data['gender'] != null &&
+                data['birthday'] != null;
+
+            // 
+            if (!hasProfile) {
+              return const InfoDataPage();
+            }
+
+            //
+            if (!_synced) {
+              _synced = true;
+
+              Future.microtask(() {
+                context.read<ThemeProvider>()
+                    .syncThemeStatusFromFirestore(user.uid);
+              });
+            }
+
+            return const StartPage();
+          },
+        );
       },
     );
   }

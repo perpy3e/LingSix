@@ -363,15 +363,19 @@ void _showThemeUnlockedPopup(BuildContext context) {
 
               SizedBox(
                 width: double.infinity,
+
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.blue600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+  onPressed: () => Navigator.pop(context),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: AppColors.blue600,
+    foregroundColor: Colors.white, 
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    padding: const EdgeInsets.symmetric(vertical: 12),
+  ),
+
+
                   child: const Text(
                     "ไปต่อเลย!",
                     style: TextStyle(fontWeight: FontWeight.bold),
