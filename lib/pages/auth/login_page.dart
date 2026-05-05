@@ -85,8 +85,9 @@ class _LoginPageState extends State<LoginPage> {
         );
         return;
       }
-      await context.read<ThemeProvider>()
-    .syncThemeStatusFromFirestore(user.uid);
+
+      //await context.read<ThemeProvider>()
+   // .syncThemeStatusFromFirestore(user.uid);
 
       Navigator.pushReplacementNamed(context, AppRouter.startPage);
     } catch (e) {

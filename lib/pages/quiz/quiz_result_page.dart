@@ -37,6 +37,20 @@ class _QuizResultPageState extends State<QuizResultPage> {
     }
   }
 
+  // ✅ FIX: dynamic theme text
+  String _getThemeUnlockText(String theme) {
+    switch (theme) {
+      case 'summer':
+        return "เก่งมาก! ☀️🌊\nคุณทำแบบทดสอบครบ 10 ครั้งแล้ว\nปลดล็อกธีมหน้าร้อนแล้วนะ\nไปเที่ยวทะเลกันต่อเลย!";
+
+      case 'winter':
+        return "สุดยอด! ❄️⛄\nคุณทำแบบทดสอบครบ 20 ครั้งแล้ว\nปลดล็อกธีมฤดูหนาวแล้ว\nไปเล่นหิมะกันเถอะ!";
+
+      default:
+        return "เก่งมาก!\nคุณปลดล็อกธีมใหม่แล้ว!";
+    }
+  }
+
   double _soundPercent(String sound) {
     final stat = widget.perSoundAccuracy[sound];
     if (stat == null) return 0;
@@ -56,28 +70,23 @@ class _QuizResultPageState extends State<QuizResultPage> {
     return "ลองใหม่นะ!";
   }
 
-  Widget _buildFeedbackBubble(ThemeProvider themeProvider) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(14, 10, 24, 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black87, width: 2.5),
-          ),
-          child: Text(
-            _feedbackText(),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.blue800,
-            ),
-          ),
+  Widget _buildFeedbackBubble() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 24, 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black87, width: 2.5),
+      ),
+      child: Text(
+        _feedbackText(),
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: AppColors.blue800,
         ),
-      ],
+      ),
     );
   }
 
@@ -91,7 +100,9 @@ class _QuizResultPageState extends State<QuizResultPage> {
           return Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(themeProvider.getWallpaperPath('quiz')),
+                image: AssetImage(
+                  themeProvider.getWallpaperPath('quiz'),
+                ),
                 fit: BoxFit.cover,
               ),
             ),
@@ -103,10 +114,11 @@ class _QuizResultPageState extends State<QuizResultPage> {
                     Text(
                       "ผลการทดสอบ",
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.blue800,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: AppColors.blue800,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
+
                     const SizedBox(height: 16),
 
                     Expanded(
@@ -130,21 +142,24 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Center(
-                                  child: _buildFeedbackBubble(themeProvider),
-                                ),
+                                Center(child: _buildFeedbackBubble()),
+
                                 const SizedBox(height: 8),
 
+                                // ✅ FIX: body follows selected character
                                 Center(
                                   child: Image.asset(
-                                    'assets/themes/${themeProvider.currentTheme}/characters/rabbit/body.png',
+                                    themeProvider.getCharacterBodyPath(
+                                      themeProvider.selectedCharacter,
+                                    ),
                                     height: 120,
                                     fit: BoxFit.contain,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Image.asset(
-                                        'assets/themes/default/characters/rabbit/body.png',
+                                        themeProvider.getDefaultCharacterBodyPath(
+                                          themeProvider.selectedCharacter,
+                                        ),
                                         height: 120,
-                                        fit: BoxFit.contain,
                                       );
                                     },
                                   ),
@@ -196,18 +211,11 @@ class _QuizResultPageState extends State<QuizResultPage> {
                                           Text(
                                             sound.toUpperCase(),
                                             style: const TextStyle(
-                                              fontSize: 13,
                                               fontWeight: FontWeight.w700,
-                                              color: AppColors.blue800,
                                             ),
                                           ),
                                           Text(
                                             "${percent.toStringAsFixed(1)}%",
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.blue700,
-                                            ),
                                           ),
                                         ],
                                       ),
@@ -223,6 +231,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
 
                     const SizedBox(height: 16),
 
+                    // 🔘 Dashboard
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -237,20 +246,14 @@ class _QuizResultPageState extends State<QuizResultPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.yellow200,
                           foregroundColor: AppColors.yellow700,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            side: const BorderSide(color: Colors.white, width: 2),
-                          ),
                         ),
-                        child: const Text(
-                          "ภาพรวม",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
+                        child: const Text("ภาพรวม"),
                       ),
                     ),
 
                     const SizedBox(height: 12),
 
+                    // 🔘 Home
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -262,18 +265,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             (route) => false,
                           );
                         },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.yellow700,
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          backgroundColor: AppColors.yellow200,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text(
-                          "กลับสู่หน้าหลัก",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
+                        child: const Text("กลับสู่หน้าหลัก"),
                       ),
                     ),
                   ],
@@ -285,107 +277,80 @@ class _QuizResultPageState extends State<QuizResultPage> {
       ),
     );
   }
-}
 
-void _showThemeUnlockedPopup(BuildContext context) {
-  final themeProvider = context.read<ThemeProvider>();
+  // ✅ FULL FIX POPUP
+  void _showThemeUnlockedPopup(BuildContext context) {
+    final themeProvider = context.read<ThemeProvider>();
 
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      shape: BoxShape.circle,
+    showDialog(
+      context: context,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(Icons.close),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                const Text(
+                  "ปลดล็อกธีมใหม่!",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ✅ FIX: head uses selected character
+                Image.asset(
+                  themeProvider.getCharacterHeadPath(
+                    themeProvider.selectedCharacter,
+                  ),
+                  height: 80,
+                ),
+
+                const SizedBox(height: 16),
+
+                // ✅ FIX: dynamic text (NO const)
+                Text(
+                  _getThemeUnlockText(themeProvider.currentTheme),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(height: 1.5),
+                ),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.blue600,
+                      foregroundColor: Colors.white,
                     ),
-                    padding: const EdgeInsets.all(6),
-                    child: const Icon(Icons.close, size: 18),
+                    child: const Text("ไปต่อเลย!"),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 8),
-
-              const Text(
-                "ปลดล็อกธีมใหม่!",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.blue800,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Image.asset(
-                themeProvider.getCharacterHeadPath(
-                  themeProvider.selectedCharacter,
-                ),
-                height: 80,
-              ),
-
-              const SizedBox(height: 16),
-
-              const Text(
-                "เก่งมาก! ☀️🌊\nคุณทำแบบทดสอบครบ 10 ครั้งแล้ว\nปลดล็อกธีมใหม่แล้วนะ\nไปเที่ยวทะเลกันต่อเลย!",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.gray700,
-                  height: 1.5,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-
-                child: ElevatedButton(
-  onPressed: () => Navigator.pop(context),
-  style: ElevatedButton.styleFrom(
-    backgroundColor: AppColors.blue600,
-    foregroundColor: Colors.white, 
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    padding: const EdgeInsets.symmetric(vertical: 12),
-  ),
-
-
-                  child: const Text(
-                    "ไปต่อเลย!",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
+  }
 }
