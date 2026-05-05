@@ -5,9 +5,74 @@ import 'package:lingsix/app/router.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/pages/lessons/category_page.dart';
 
-class HomePage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:lingsix/app/theme.dart';
+import 'package:lingsix/app/router.dart';
+import 'package:lingsix/providers/theme_provider.dart';
+import 'package:lingsix/pages/lessons/category_page.dart';
+
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+
+  bool _popupShown = false;
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    );
+
+    // ✅ Show popup AFTER page rendered (no lag)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showReminderPopup();
+    });
+  }
+
+  void _showReminderPopup() {
+    if (_popupShown) return;
+    _popupShown = true;
+
+    _controller.forward();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withAlpha(80),
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: _ReminderPopup(controller: _controller),
+        );
+      },
+    );
+
+    // auto close after 7 sec
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // ✅ ONLY ONE BUILD METHOD (this was your main bug)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,46 +85,46 @@ class HomePage extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Top Navigation Bar
-              _buildTopBar(context),
-
-              // Main Content
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final layout = _HomeLayout.fromConstraints(constraints);
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: layout.horizontalPadding),
-                      child: Column(
-                        children: [
-                          SizedBox(height: layout.topSpacing),
-
-                          // Welcome Section
-                          _buildWelcomeSection(context, logoSize: layout.logoSize),
-
-                          SizedBox(height: layout.sectionSpacing),
-
-                          // Main Feature Cards
-                          _buildFeatureCards(context, layout),
-
-                          SizedBox(height: layout.bottomSpacing),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildTopBar(context),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final layout =
+                            _HomeLayout.fromConstraints(constraints);
+                        return Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: layout.horizontalPadding,
+                          ),
+                          child: Column(
+                            children: [
+                              SizedBox(height: layout.topSpacing),
+                              _buildWelcomeSection(
+                                context,
+                                logoSize: layout.logoSize,
+                              ),
+                              SizedBox(height: layout.sectionSpacing),
+                              _buildFeatureCards(context, layout),
+                              SizedBox(height: layout.bottomSpacing),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
           );
         },
       ),
     );
   }
+}
+
+  
 
   /// Top Navigation Bar with Settings, Help, and Profile
   Widget _buildTopBar(BuildContext context) {
@@ -472,7 +537,7 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
-}
+
 
 class _HomeLayout {
   final double horizontalPadding;
@@ -538,6 +603,133 @@ class _HomeLayout {
       iconSize: baseIconSize * effectiveScale,
       titleFontSize: baseTitleFontSize * effectiveScale,
       arrowSize: baseArrowSize * effectiveScale,
+    );
+  }
+}
+
+class _ReminderPopup extends StatelessWidget {
+  final AnimationController controller;
+
+  const _ReminderPopup({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 300,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(60),
+              blurRadius: 25,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            /// 🔔 ICON + TITLE
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFE5E5), // soft red bg
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.notifications_active,
+                    color: Color(0xFFD64545), // red muted
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  "แจ้งเตือน",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFB23A3A), // darker red
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            /// 📌 MESSAGE
+            const Text(
+              "อย่าลืมตั้งค่าเสียงก่อนเริ่มแบบทดสอบทุกครั้งน้า",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.gray700,
+                height: 1.4,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            /// 🔴 PROGRESS BAR (RED SOFT)
+            AnimatedBuilder(
+              animation: controller,
+              builder: (context, _) {
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    children: [
+                      // background
+                      Container(
+                        height: 10,
+                        width: double.infinity,
+                        color: Colors.grey.shade300,
+                      ),
+
+                      // animated fill
+                      FractionallySizedBox(
+                        widthFactor: 1 - controller.value,
+                        child: Container(
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFFFF6B6B), // soft red
+                                Color(0xFFD64545), // deeper muted red
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 8),
+
+            /// ⏱ OPTIONAL TEXT (UX เพิ่ม clarity)
+            AnimatedBuilder(
+              animation: controller,
+              builder: (context, _) {
+                final secondsLeft = (7 * (1 - controller.value)).ceil();
+                return Text(
+                  "ปิดอัตโนมัติใน $secondsLeft วินาที",
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade600,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
