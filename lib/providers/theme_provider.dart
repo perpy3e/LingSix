@@ -49,6 +49,10 @@ static const Map<String, Map<String, String>> _themeBackgroundAliases = {
     return 'assets/themes/$_currentTheme/bg/$mappedPageType.png';
   }
 
+  String getStartCharacterPath() {
+    return 'assets/themes/$_currentTheme/characters/start.png';
+  }
+
   String getCharacterHeadPath(String character) {
     return 'assets/themes/$_currentTheme/characters/$character/head.png';
   }
