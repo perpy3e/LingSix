@@ -62,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
     userData = data;
     _firstNameController.text = data['firstName'] ?? '';
     _lastNameController.text = data['lastName'] ?? '';
-    _gender = data['gender'] ?? 'Other';
+    _gender = data['gender'];
     _birthday = (data['birthday'] as Timestamp?)?.toDate();
   });
 }
@@ -79,13 +79,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   String displayGender(String? gender) {
-  switch (gender) {
-    case 'Male':
+  switch (gender?.toLowerCase()) {
+    case 'male':
       return 'ชาย';
-    case 'Female':
+    case 'female':
       return 'หญิง';
-    case 'Other':
-      return 'อื่น ๆ';
     default:
       return '-';
   }
@@ -419,10 +417,9 @@ class _ProfilePageState extends State<ProfilePage> {
 Widget _buildGenderDropdown() {
   // 
   final genderMap = {
-    'Male': 'ชาย',
-    'Female': 'หญิง',
-    'Other': 'อื่น ๆ',
-  };
+  'male': 'ชาย',
+  'female': 'หญิง',
+};
 
   // 🔹 VIEW MODE
   if (!_edit) {
@@ -463,7 +460,7 @@ Widget _buildGenderDropdown() {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: DropdownButtonFormField<String>(
-      initialValue: ['Male', 'Female', 'Other'].contains(_gender) ? _gender : null,
+      initialValue: ['male', 'female'].contains(_gender) ? _gender : null,
       items: genderMap.entries.map((entry) {
         return DropdownMenuItem(
           value: entry.key,        // English → DB
