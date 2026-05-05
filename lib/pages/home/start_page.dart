@@ -16,7 +16,7 @@ class StartPage extends StatelessWidget {
           return Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(themeProvider.getWallpaperPath('home')),
+                image: AssetImage(themeProvider.getWallpaperPath('start')),
                 fit: BoxFit.cover,
                 onError: (error, stackTrace) {},
               ),
