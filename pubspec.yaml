@@ -102,6 +102,7 @@ flutter:
     - assets/themes/winter/characters/dino/
     - assets/themes/winter/characters/rabbit/
     - assets/data/vocabulary.json
+    - assets/content/tutorials
     - assets/content/vocabulary/ah/ban/
     - assets/content/vocabulary/ah/chan/
     - assets/content/vocabulary/ah/fa/
