@@ -90,7 +90,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -267,7 +267,6 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        child: const Text("ภาพรวม"),
                       ),
                     ),
 
@@ -383,8 +382,8 @@ class _QuizResultPageState extends State<QuizResultPage> {
               ],
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
+  }
 }
