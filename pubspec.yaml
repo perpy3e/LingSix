@@ -93,15 +93,19 @@ flutter:
     - assets/themes/default/characters/cat/
     - assets/themes/default/characters/dino/
     - assets/themes/default/characters/rabbit/
+    - assets/themes/default/characters/start.png
     - assets/themes/summer/bg/
     - assets/themes/summer/characters/cat/
     - assets/themes/summer/characters/dino/
     - assets/themes/summer/characters/rabbit/
+    - assets/themes/summer/characters/start.png
     - assets/themes/winter/bg/
     - assets/themes/winter/characters/cat/
     - assets/themes/winter/characters/dino/
     - assets/themes/winter/characters/rabbit/
+    - assets/themes/winter/characters/start.png
     - assets/data/vocabulary.json
+    - assets/content/tutorials/
     - assets/content/vocabulary/ah/ban/
     - assets/content/vocabulary/ah/chan/
     - assets/content/vocabulary/ah/fa/

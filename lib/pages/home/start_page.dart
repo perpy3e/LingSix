@@ -29,7 +29,7 @@ class StartPage extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Image.asset(
-                      'assets/common/illustrations/start_character.png',
+                      themeProvider.getStartCharacterPath(),
                       fit: BoxFit.contain,
                     ),
                   ),
