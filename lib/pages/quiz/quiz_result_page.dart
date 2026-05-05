@@ -148,7 +148,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Center(child: _buildFeedbackBubble()),
+                                Center(child: _buildFeedbackBubble(themeProvider)),
 
                                 const SizedBox(height: 8),
 
