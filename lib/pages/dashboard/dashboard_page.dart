@@ -634,15 +634,15 @@ class _DashboardPageState extends State<DashboardPage> {
     if (!mounted) return;
 
     //add theme
-   // final themeProvider = context.read<ThemeProvider>();
+    // final themeProvider = context.read<ThemeProvider>();
     //await themeProvider.syncThemeStatusFromFirestore(user.uid);
 
     final themeProvider = context.read<ThemeProvider>();
 
-//  no await, no UI block
-Future.microtask(() {
-  themeProvider.syncThemeStatusFromFirestore(user.uid);
-});
+    //  no await, no UI block
+    Future.microtask(() {
+      themeProvider.syncThemeStatusFromFirestore(user.uid);
+    });
 
     // add 23/04‼️‼️
     recentScores = List<Map<String, dynamic>>.from(
@@ -792,18 +792,14 @@ Future.microtask(() {
                       height: 120,
                       child: CircularProgressIndicator(
                         strokeWidth: 6,
-                        valueColor: AlwaysStoppedAnimation(
-                          AppColors.blue600,
-                        ),
+                        valueColor: AlwaysStoppedAnimation(AppColors.blue600),
                       ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
                       height: 180,
                       child: Image.asset(
-                        themeProvider.getCharacterBodyPath(
-                          selectedCharacter,
-                        ),
+                        themeProvider.getCharacterBodyPath(selectedCharacter),
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           return Image.asset(
@@ -883,11 +879,7 @@ Future.microtask(() {
               size: 28,
               color: AppColors.blue800,
             ),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
-            },
+            onPressed: () => Navigator.pop(context),
           ),
           const Spacer(),
 
