@@ -28,6 +28,7 @@ class _LessonsPageState extends State<LessonsPage> {
   @override
   void initState() {
     super.initState();
+    _player.setReleaseMode(ReleaseMode.stop);
     loadVocabulary();
   }
 
@@ -87,6 +88,7 @@ class _LessonsPageState extends State<LessonsPage> {
   }
 
   Future<void> playSound(String path) async {
+    await _player.stop();
     await _player.play(AssetSource(path));
   }
 
