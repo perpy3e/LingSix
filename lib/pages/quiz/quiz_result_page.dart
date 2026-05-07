@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:lingsix/app/router.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/providers/theme_provider.dart';
+import 'package:lingsix/pages/home/home_page.dart';
 
 class QuizResultPage extends StatefulWidget {
   final int score;
@@ -277,13 +278,17 @@ class _QuizResultPageState extends State<QuizResultPage> {
                       width: double.infinity,
                       height: 52,
                       child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            AppRouter.homePage,
-                            (route) => false,
-                          );
-                        },
+                       onPressed: () {
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const HomePage(
+        showReminderPopup: false,
+      ),
+    ),
+    (route) => false,
+  );
+},
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.yellow700,
                           side: const BorderSide(color: Colors.white, width: 2),

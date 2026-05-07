@@ -3,6 +3,7 @@ import 'package:lingsix/app/router.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:lingsix/pages/home/home_page.dart';
 
 class AvatarSelectedPage extends StatefulWidget {
 	const AvatarSelectedPage({super.key});
@@ -88,16 +89,21 @@ class _AvatarSelectedPageState extends State<AvatarSelectedPage> {
 													elevation: 0,
 												),
 												onPressed: () async {
-													await themeProvider.setSelectedCharacter(
-														_selectedCharacter,
-													);
+  await themeProvider.setSelectedCharacter(
+    _selectedCharacter,
+  );
 
-													if (!context.mounted) return;
-													Navigator.pushReplacementNamed(
-														context,
-														AppRouter.homePage,
-													);
-												},
+  if (!context.mounted) return;
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const HomePage(
+        showReminderPopup: true,
+      ),
+    ),
+  );
+},
 												child: const Text(
 													'เลือกตัวละคร',
 													style: TextStyle(

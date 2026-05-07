@@ -6,7 +6,12 @@ import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/pages/lessons/category_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final bool showReminderPopup;
+
+  const HomePage({
+    super.key,
+    this.showReminderPopup = false,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -18,20 +23,22 @@ class _HomePageState extends State<HomePage>
   bool _popupShown = false;
   late AnimationController _controller;
 
-  @override
-  void initState() {
-    super.initState();
+ @override
+void initState() {
+  super.initState();
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 7),
-    );
+  _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 7),
+  );
 
-    // ✅ Show popup AFTER page rendered (no lag)
+  // ✅ Show popup ONLY when allowed
+  if (widget.showReminderPopup) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showReminderPopup();
     });
   }
+}
 
   void _showReminderPopup() {
     if (_popupShown) return;
@@ -52,11 +59,15 @@ class _HomePageState extends State<HomePage>
     );
 
     // auto close after 7 sec
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-    });
+ Future.delayed(const Duration(seconds: 5), () {
+  if (!mounted) return;
+
+  final navigator = Navigator.of(context, rootNavigator: true);
+
+  if (navigator.canPop()) {
+    navigator.pop();
+  }
+});
   }
 
   @override
