@@ -47,7 +47,7 @@ class FirestoreService {
   String? firstName,
   String? lastName,
   String? gender,
-  DateTime? birthday,
+  int? birthYear,
 }) async {
   await _db.collection('users').doc(uid).set({
     'email': email,
@@ -57,15 +57,13 @@ class FirestoreService {
     'firstName': firstName,
     'lastName': lastName,
     'gender': gender,
-    'birthday': birthday != null
-        ? Timestamp.fromDate(birthday)
-        : null,
+    'birthYear': birthYear,
 
-    // profile completed
-    'profileCompleted': firstName != null &&
-        lastName != null &&
-        gender != null &&
-        birthday != null,
+'profileCompleted':
+    firstName != null &&
+    firstName.trim().isNotEmpty &&
+    lastName != null &&
+    lastName.trim().isNotEmpty,
 
     'createdAt': FieldValue.serverTimestamp(),
     'updatedAt': FieldValue.serverTimestamp(),

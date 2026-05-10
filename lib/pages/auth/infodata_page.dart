@@ -25,31 +25,89 @@ class _InfoDataPageState extends State<InfoDataPage> {
   final _lastName = TextEditingController();
 
   String? _gender;
-  DateTime? _birthday;
+  int? _birthYear;
 
   String? _firstNameError;
   String? _lastNameError;
   String? _genderError;
-  String? _birthdayError;
+  String? _birthYearError;
 
   final _firestore = FirestoreService();
 
-  Future<void> _pickBirthday() async {
+Future<void> _pickBirthYear() async {
+  final currentYear = DateTime.now().year;
 
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(24),
+      ),
+    ),
+    builder: (context) {
+      return SizedBox(
+        height: 400,
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
 
-    if (date != null) {
-      setState(() {
-        _birthday = date;
-        _birthdayError = null;
-      });
-    }
-  }
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'เลือกปีเกิด',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Expanded(
+              child: ListView.builder(
+                itemCount: 100,
+                itemBuilder: (context, index) {
+                  final year = currentYear - index;
+                  final thaiYear = year + 543;
+
+                  return ListTile(
+                    title: Center(
+                      child: Text(
+                        thaiYear.toString(),
+                        style: const TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+
+                    onTap: () {
+                      setState(() {
+                        _birthYear = year; // store ค.ศ.
+                        _birthYearError = null;
+                      });
+
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   Future<void> _save() async {
 
@@ -57,7 +115,7 @@ class _InfoDataPageState extends State<InfoDataPage> {
     _firstNameError = null;
     _lastNameError = null;
     _genderError = null;
-    _birthdayError = null;
+    _birthYearError = null;
   });
 
   if (_firstName.text.trim().isEmpty) {
@@ -68,18 +126,13 @@ class _InfoDataPageState extends State<InfoDataPage> {
     setState(() => _lastNameError = "กรุณากรอกนามสกุล");
   }
 
-  if (_gender == null) {
-    setState(() => _genderError = "กรุณาเลือกเพศ");
-  }
-
-  if (_birthday == null) {
-    setState(() => _birthdayError = "กรุณาเลือกวันเกิด");
-  }
+  
+  
 
   if (_firstNameError != null ||
       _lastNameError != null ||
       _genderError != null ||
-      _birthdayError != null) {
+      _birthYearError != null) {
     return;
   }
 
@@ -92,8 +145,7 @@ class _InfoDataPageState extends State<InfoDataPage> {
     'gender': _gender,
 
     // birthday fix
-    'birthday': Timestamp.fromDate(_birthday!),
-
+    'birthYear': _birthYear,
     'profileCompleted': true,
 
   });
@@ -201,7 +253,7 @@ Navigator.pushReplacementNamed(context, AppRouter.startPage);
                         children: [
 
                           const Text(
-                            "เพศ",
+                            "เพศ (ไม่บังคับ)",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -344,7 +396,7 @@ Navigator.pushReplacementNamed(context, AppRouter.startPage);
 
                       // BIRTHDAY
                       GestureDetector(
-                        onTap: _pickBirthday,
+                        onTap: _pickBirthYear,
                         child: Container(
 
                           padding: const EdgeInsets.all(16),
@@ -354,7 +406,7 @@ Navigator.pushReplacementNamed(context, AppRouter.startPage);
                             borderRadius: BorderRadius.circular(12),
 
                             border: Border.all(
-                              color: _birthdayError != null
+                              color: _birthYearError != null
                                   ? AppColors.error
                                   : AppColors.gray300,
                             ),
@@ -369,9 +421,9 @@ Navigator.pushReplacementNamed(context, AppRouter.startPage);
                               const SizedBox(width: 12),
 
                               Text(
-                                _birthday == null
-                                    ? "เลือกวันเกิด"
-                                    : "${_birthday!.day}/${_birthday!.month}/${_birthday!.year}",
+                                _birthYear == null
+    ? "เลือกปีเกิด (ไม่บังคับ)"
+    : "${_birthYear! + 543}",
                               ),
 
                             ],
@@ -379,11 +431,11 @@ Navigator.pushReplacementNamed(context, AppRouter.startPage);
                         ),
                       ),
 
-                      if (_birthdayError != null)
+                      if (_birthYearError != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 6, left: 12),
                           child: Text(
-                            _birthdayError!,
+                            _birthYearError!,
                             style: const TextStyle(
                               color: AppColors.error,
                               fontSize: 12,

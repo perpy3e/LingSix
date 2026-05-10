@@ -159,10 +159,9 @@ Future<void> _googleLogin() async {
 
 final hasProfile =
     data['firstName'] != null &&
+    data['firstName'].toString().trim().isNotEmpty &&
     data['lastName'] != null &&
-    data['gender'] != null &&
-    data['birthday'] != null;
-
+    data['lastName'].toString().trim().isNotEmpty;
 if (!hasProfile) {
   Navigator.pushReplacementNamed(context, AppRouter.infodata);
   return;

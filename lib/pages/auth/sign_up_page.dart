@@ -29,10 +29,10 @@ class _SignUpPageState extends State<SignUpPage> {
   String? _firstNameError;
   String? _lastNameError;
   String? _genderError;
-  String? _birthdayError;
+  String? _birthYearError;
 
   String? _gender;
-  DateTime? _birthday;
+  int? _birthYear;
 
   // PASSWORD STATE
   double _passwordStrength = 0;
@@ -65,7 +65,7 @@ class _SignUpPageState extends State<SignUpPage> {
       _firstNameError = null;
       _lastNameError = null;
       _genderError = null;
-      _birthdayError = null;
+     _birthYearError = null;
     });
   }
 
@@ -123,20 +123,80 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  Future<void> _pickBirthday() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (date != null) {
-      setState(() {
-        _birthday = date;
-        _birthdayError = null;
-      });
-    }
-  }
+Future<void> _pickBirthYear() async {
+  final currentYear = DateTime.now().year;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(24),
+      ),
+    ),
+    builder: (context) {
+      return SizedBox(
+        height: 400,
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'เลือกปีเกิด',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Expanded(
+              child: ListView.builder(
+                itemCount: 100,
+                itemBuilder: (context, index) {
+                  final year = currentYear - index;
+                  final thaiYear = year + 543;
+
+                  return ListTile(
+                    title: Center(
+                      child: Text(
+                        thaiYear.toString(),
+                        style: const TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+
+                    onTap: () {
+                      setState(() {
+                        _birthYear = year; // store ค.ศ.
+                        _birthYearError = null;
+                      });
+
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   Future<void> _signup() async {
     _clearErrors();
@@ -179,15 +239,7 @@ class _SignUpPageState extends State<SignUpPage> {
       hasError = true;
     }
 
-    if (_gender == null) {
-      setState(() => _genderError = 'กรุณาเลือกเพศ');
-      hasError = true;
-    }
-
-    if (_birthday == null) {
-      setState(() => _birthdayError = 'กรุณาเลือกวันเกิด');
-      hasError = true;
-    }
+   
 
     if (hasError) return;
 
@@ -198,8 +250,8 @@ class _SignUpPageState extends State<SignUpPage> {
         password: password,
         firstName: firstName,
         lastName: lastName,
-        gender: _gender!,
-        birthday: _birthday!,
+        gender: _gender,
+        birthYear: _birthYear,
       );
 
       if (!mounted || user == null) return;
@@ -390,7 +442,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            "เพศ",
+                            "เพศ (ไม่บังคับ)",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -545,13 +597,13 @@ class _SignUpPageState extends State<SignUpPage> {
                       const SizedBox(height: 16),
 
                       GestureDetector(
-                        onTap: _pickBirthday,
+                        onTap: _pickBirthYear,
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: _birthdayError != null
+                            border: _birthYearError != null
                                 ? Border.all(color: AppColors.error)
                                 : null,
                           ),
@@ -560,9 +612,9 @@ class _SignUpPageState extends State<SignUpPage> {
                               const Icon(Icons.calendar_today),
                               const SizedBox(width: 12),
                               Text(
-                                _birthday == null
-                                    ? "เลือกวันเกิด"
-                                    : "${_birthday!.day}/${_birthday!.month}/${_birthday!.year}",
+                                _birthYear == null
+    ? "เลือกปีเกิด (ไม่บังคับ)"
+    : "${_birthYear! + 543}",
                               ),
                             ],
                           ),

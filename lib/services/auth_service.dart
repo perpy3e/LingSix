@@ -68,8 +68,8 @@ class AuthService {
     required String password,
     required String firstName,
     required String lastName,
-    required String gender,
-    required DateTime birthday,
+    String? gender,
+    int? birthYear,
   }) async {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
@@ -85,7 +85,7 @@ class AuthService {
         firstName: firstName,
         lastName: lastName,
         gender: gender,
-        birthday: birthday,
+        birthYear: birthYear,
       );
 
       await cred.user!.sendEmailVerification();

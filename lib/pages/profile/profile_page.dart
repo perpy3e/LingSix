@@ -21,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   String? _gender;
-  DateTime? _birthday;
+  int? _birthYear;
 
   @override
   void initState() {
@@ -63,20 +63,21 @@ class _ProfilePageState extends State<ProfilePage> {
     _firstNameController.text = data['firstName'] ?? '';
     _lastNameController.text = data['lastName'] ?? '';
     _gender = data['gender'];
-    _birthday = (data['birthday'] as Timestamp?)?.toDate();
+    _birthYear = data['birthYear'];
   });
 }
 
-  String _age(DateTime b) {
-    final now = DateTime.now();
-    int y = now.year - b.year;
-    int m = now.month - b.month;
-    if (m < 0) {
-      y--;
-      m += 12;
-    }
-    return "$y ปี $m เดือน";
+ String _age(int year) {
+  final now = DateTime.now();
+
+  int age = now.year - year;
+
+  if (age < 0) {
+    age = 0;
   }
+
+  return "$age ปี";
+}
 
   String displayGender(String? gender) {
   switch (gender?.toLowerCase()) {
@@ -90,13 +91,13 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
   Future<void> _saveProfile() async {
-    if (_birthday == null) return;
+   
 
     final updatedData = {
       'firstName': _firstNameController.text.trim(),
       'lastName': _lastNameController.text.trim(),
       'gender': _gender,
-      'birthday': _birthday,
+      'birthYear': _birthYear,
     };
 
     await _firestore.updateUser(
@@ -113,32 +114,79 @@ class _ProfilePageState extends State<ProfilePage> {
     SnackBarHelper.showSuccess(context, "อัปเดตโปรไฟล์สำเร็จ");
   }
 
-  Future<void> _pickBirthday() async {
-    final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _birthday ?? DateTime(now.year - 20),
-      firstDate: DateTime(now.year - 100),
-      lastDate: now,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.blue600,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.gray700,
+Future<void> _pickBirthYear() async {
+  final currentYear = DateTime.now().year;
+
+  final selectedYear = await showModalBottomSheet<int>(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(24),
+      ),
+    ),
+    builder: (context) {
+      return SizedBox(
+        height: 400,
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (!mounted) return;
-    if (date != null) {
-      setState(() => _birthday = date);
-    }
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "เลือกปีเกิด",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Expanded(
+              child: ListView.builder(
+                itemCount: currentYear - 1899,
+                itemBuilder: (context, index) {
+                  final year = currentYear - index;
+
+                  return ListTile(
+                    title: Text(
+                      "${year + 543}",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context, year);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  if (selectedYear != null) {
+    setState(() {
+      _birthYear = selectedYear;
+     
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -513,7 +561,7 @@ Widget _buildGenderDropdown() {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _birthday != null ? _age(_birthday!) : '-',
+                  _birthYear != null ? _age(_birthYear!) : '-',
                   style: const TextStyle(
                     fontSize: 16,
                     color: AppColors.gray700,
@@ -530,11 +578,11 @@ Widget _buildGenderDropdown() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: InkWell(
-        onTap: _pickBirthday,
+        onTap: _pickBirthYear,
         borderRadius: BorderRadius.circular(16),
         child: InputDecorator(
           decoration: InputDecoration(
-            labelText: "วันเกิด",
+            labelText: "ปีเกิด",
             labelStyle: const TextStyle(color: AppColors.gray550),
             prefixIcon: const Icon(Icons.cake_outlined, color: AppColors.blue400),
             suffixIcon: const Icon(Icons.calendar_today_rounded, color: AppColors.blue400),
@@ -546,12 +594,12 @@ Widget _buildGenderDropdown() {
             ),
           ),
           child: Text(
-            _birthday != null
-                ? "${_birthday!.day}/${_birthday!.month}/${_birthday!.year}"
-                : "เลือกวันเกิด",
+            _birthYear != null
+    ? "${_birthYear! + 543}"
+    : "เลือกปีเกิด",
             style: TextStyle(
               fontSize: 16,
-              color: _birthday != null ? AppColors.gray700 : AppColors.gray550,
+              color: _birthYear != null ? AppColors.gray700 : AppColors.gray550,
             ),
           ),
         ),
@@ -606,7 +654,21 @@ Widget _buildGenderDropdown() {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              onPressed: () => setState(() => _edit = false),
+              onPressed: () {
+  setState(() {
+    _edit = false;
+
+    _firstNameController.text =
+        userData?['firstName'] ?? '';
+
+    _lastNameController.text =
+        userData?['lastName'] ?? '';
+
+    _gender = userData?['gender'];
+
+    _birthYear = userData?['birthYear'];
+  });
+},
             ),
           ),
         ),
