@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lingsix/app/router.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
