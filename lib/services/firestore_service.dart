@@ -23,16 +23,16 @@ class FirestoreService {
     return doc.exists ? doc : null;
   }
 
-  Future<void> addUser(
-    String uid,
-    String email,
-    String username, {
-    bool isGoogleSignIn = false,
-  }) async {
-    await _db.collection('users').doc(uid).set({
-      'email': email,
-      'username': username,
-      'isGoogleSignIn': isGoogleSignIn,
+Future<void> addUser(
+  String uid,
+  String email,
+  String username, {
+  String authProvider = 'email',
+}) async {
+  await _db.collection('users').doc(uid).set({
+    'email': email,
+    'username': username,
+    'authProvider': authProvider,
       'profileCompleted': false,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -43,7 +43,7 @@ class FirestoreService {
   required String uid,
   required String email,
   required String username,
-  required bool isGoogleSignIn,
+  required String authProvider,
   String? firstName,
   String? lastName,
   String? gender,
@@ -52,7 +52,7 @@ class FirestoreService {
   await _db.collection('users').doc(uid).set({
     'email': email,
     'username': username,
-    'isGoogleSignIn': isGoogleSignIn,
+    'authProvider': authProvider,
 
     'firstName': firstName,
     'lastName': lastName,

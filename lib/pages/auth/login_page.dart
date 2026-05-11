@@ -12,6 +12,7 @@ import '../../components/button/button.dart';
 import '../../utils/snackbar_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:lingsix/providers/theme_provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -147,7 +148,7 @@ Future<void> _googleLogin() async {
     user.uid,
     user.email ?? '',
     user.displayName ?? '',
-    isGoogleSignIn: true,
+     authProvider: 'google',
   );
 
   Navigator.pushReplacementNamed(context, AppRouter.infodata);
@@ -184,6 +185,91 @@ Navigator.pushReplacementNamed(context, AppRouter.startPage);
   // GOOGLE SIGN-IN (END)
 //-------------------------------------------------------------
   
+
+
+// -------------------------------------------------------------
+// APPLE SIGN-IN
+
+Future<void> _appleLogin() async {
+  setState(() => _isGoogleLoading = true);
+
+  try {
+    final appleCredential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+
+    final oauthCredential = OAuthProvider("apple.com").credential(
+      idToken: appleCredential.identityToken,
+      accessToken: appleCredential.authorizationCode,
+    );
+
+    final userCred = await FirebaseAuth.instance
+        .signInWithCredential(oauthCredential);
+
+    final user = userCred.user;
+
+    if (user == null) {
+      throw Exception("Apple user is null");
+    }
+
+    final userDoc = await _firestore.getUserByUid(user.uid);
+
+    if (userDoc == null) {
+      final fullName =
+          "${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}"
+              .trim();
+
+      await _firestore.addUser(
+        user.uid,
+        user.email ?? '',
+        fullName,
+        authProvider: 'apple',
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacementNamed(context, AppRouter.infodata);
+      return;
+    }
+
+    final data = userDoc.data() as Map<String, dynamic>;
+
+    final hasProfile =
+        data['firstName'] != null &&
+        data['firstName'].toString().trim().isNotEmpty &&
+        data['lastName'] != null &&
+        data['lastName'].toString().trim().isNotEmpty;
+
+    if (!hasProfile) {
+      if (!mounted) return;
+
+      Navigator.pushReplacementNamed(context, AppRouter.infodata);
+      return;
+    }
+
+    await context.read<ThemeProvider>()
+        .syncThemeStatusFromFirestore(user.uid);
+
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(context, AppRouter.startPage);
+  } catch (e) {
+    print("APPLE SIGN IN ERROR: $e");
+
+    _showError('เข้าสู่ระบบด้วย Apple ไม่สำเร็จ');
+  } finally {
+    if (mounted) {
+      setState(() => _isGoogleLoading = false);
+    }
+  }
+}
+// -----------------------------------------------------------
+
+
+
   void _showError(String message) {
     SnackBarHelper.showError(context, message);
   }
@@ -285,6 +371,17 @@ Navigator.pushReplacementNamed(context, AppRouter.startPage);
                           ),
                         ),
                   const SizedBox(height: 32),
+
+                  const SizedBox(height: 12),
+
+SizedBox(
+  height: 50,
+  child: SignInButton(
+    Buttons.apple,
+    text: "เข้าสู่ระบบด้วย Apple",
+    onPressed: _appleLogin,
+  ),
+),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

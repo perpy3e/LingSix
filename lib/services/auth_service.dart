@@ -81,7 +81,7 @@ class AuthService {
         uid: cred.user!.uid,
         email: email,
         username: username,
-        isGoogleSignIn: false,
+        authProvider: 'email',
         firstName: firstName,
         lastName: lastName,
         gender: gender,
