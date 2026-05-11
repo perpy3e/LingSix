@@ -4,7 +4,6 @@ import '../../services/firestore_service.dart';
 import '../../services/auth_service.dart';
 import '../../app/theme.dart';
 import '../../utils/snackbar_helper.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

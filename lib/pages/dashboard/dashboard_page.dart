@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lingsix/app/theme.dart';
-import 'package:lingsix/pages/home/home_page.dart';
 import 'package:lingsix/services/firestore_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:io';
