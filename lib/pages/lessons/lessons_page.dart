@@ -227,7 +227,7 @@ class _LessonsPageState extends State<LessonsPage> {
                         IconButton(
                           icon: Icon(
                             Icons.arrow_back,
-                            size: r.icon(28),
+                            size: r.icon(30),
                             color: AppColors.blue800,
                           ),
                           onPressed: () => Navigator.pop(context),

@@ -96,7 +96,7 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
                     IconButton(
                       icon: Icon(
                         Icons.arrow_back,
-                        size: r.icon(28),
+                        size: r.icon(30),
                         color: AppColors.blue800,
                       ),
                       onPressed: () async {

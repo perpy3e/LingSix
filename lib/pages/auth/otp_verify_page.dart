@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lingsix/app/theme.dart';
 import '../../app/router.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
 import '../../utils/snackbar_helper.dart';
 import '../../utils/responsive.dart';
+
 
 class OtpVerifyPage extends StatefulWidget {
   const OtpVerifyPage({super.key});
@@ -93,7 +95,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
                 top: r.spacing(8),
                 left: r.spacing(8),
                 child: IconButton(
-                  icon: Icon(Icons.arrow_back, size: r.icon(28)),
+                  icon: Icon(Icons.arrow_back, size: r.icon(30)), color: AppColors.blue800,
                   onPressed: () => Navigator.pop(context),
                 ),
               ),

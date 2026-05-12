@@ -38,7 +38,7 @@ class CategoryPage extends StatelessWidget {
                         IconButton(
                           icon: Icon(
                             Icons.arrow_back,
-                            size: r.icon(28),
+                            size: r.icon(30),
                             color: AppColors.blue800,
                           ),
                           onPressed: () => Navigator.pop(context),
@@ -60,18 +60,19 @@ class CategoryPage extends StatelessWidget {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final crossAxisCount = r.isTablet ? 3 : 2;
-                        final spacing = r.spacing(16);
-                        final padding = r.spacing(24);
+                        final spacing = r.spacing(r.isTablet ? 14 : 12);
+                        final padding = r.spacing(r.isTablet ? 20 : 16);
                         final rows = (categories.length / crossAxisCount)
                             .ceil();
-                        final availableHeight = constraints.maxHeight -
+                        final availableHeight =
+                            constraints.maxHeight -
                             (padding * 2) -
                             spacing * (rows - 1);
                         final rawRowHeight = availableHeight / rows;
                         final rowHeight =
                             rawRowHeight.isFinite && rawRowHeight > 0
-                                ? rawRowHeight
-                                : r.spacing(120);
+                            ? rawRowHeight
+                            : r.spacing(120);
 
                         List<Widget> rowWidgets = [];
                         for (var row = 0; row < rows; row++) {
@@ -79,7 +80,9 @@ class CategoryPage extends StatelessWidget {
                           for (var col = 0; col < crossAxisCount; col++) {
                             final index = row * crossAxisCount + col;
                             if (index >= categories.length) {
-                              rowChildren.add(const Expanded(child: SizedBox()));
+                              rowChildren.add(
+                                const Expanded(child: SizedBox()),
+                              );
                             } else {
                               final category = categories[index];
                               rowChildren.add(
@@ -96,8 +99,9 @@ class CategoryPage extends StatelessWidget {
                                     },
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.85),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.85,
+                                        ),
                                         borderRadius: BorderRadius.circular(
                                           r.spacing(24),
                                         ),
@@ -133,9 +137,7 @@ class CategoryPage extends StatelessWidget {
                           rowWidgets.add(
                             SizedBox(
                               height: rowHeight,
-                              child: Row(
-                                children: rowChildren,
-                              ),
+                              child: Row(children: rowChildren),
                             ),
                           );
 
@@ -146,9 +148,7 @@ class CategoryPage extends StatelessWidget {
 
                         return Padding(
                           padding: EdgeInsets.all(padding),
-                          child: Column(
-                            children: rowWidgets,
-                          ),
+                          child: Column(children: rowWidgets),
                         );
                       },
                     ),

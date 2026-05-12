@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lingsix/app/theme.dart';
 import '../../services/auth_service.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
@@ -72,7 +73,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 top: r.spacing(8),
                 left: r.spacing(8),
                 child: IconButton(
-                  icon: Icon(Icons.arrow_back, size: r.icon(30)),
+                  icon: Icon(Icons.arrow_back, size: r.icon(30)), color: AppColors.blue800,
                   onPressed: () => Navigator.pop(context),
                 ),
               ),

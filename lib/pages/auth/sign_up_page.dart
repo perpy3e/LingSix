@@ -303,7 +303,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back, size: r.icon(28)),
+                      icon: Icon(Icons.arrow_back, size: r.icon(30)), color: AppColors.blue800,
                       onPressed: () {
                         Navigator.pushReplacementNamed(context, '/login');
                       },

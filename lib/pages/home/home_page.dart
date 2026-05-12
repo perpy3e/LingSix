@@ -199,6 +199,67 @@ Widget _buildWelcomeSection(BuildContext context, {required double logoSize}) {
 
 /// Main Feature Cards Grid
 Widget _buildFeatureCards(BuildContext context, _HomeLayout layout) {
+  final r = context.responsive;
+  if (r.isTablet) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final spacing = layout.cardSpacing;
+        final cardSize = ((constraints.maxWidth - (spacing * 2)) / 3)
+            .clamp(120.0, 260.0);
+        return SizedBox(
+          height: cardSize,
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildFeatureCard(
+                  context: context,
+                  imageAsset: 'assets/common/illustrations/home/learn.png',
+                  title: 'บทเรียน',
+                  backgroundColor: const Color(0xFFFF7D98),
+                  height: cardSize,
+                  iconSize: layout.iconSize,
+                  titleFontSize: layout.titleFontSize,
+                  padding: layout.cardPadding,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CategoryPage()),
+                  ),
+                ),
+              ),
+              SizedBox(width: spacing),
+              Expanded(
+                child: _buildFeatureCard(
+                  context: context,
+                  imageAsset: 'assets/common/illustrations/home/quiz.png',
+                  title: 'ทดสอบ',
+                  backgroundColor: const Color(0xFFFFB033),
+                  height: cardSize,
+                  iconSize: layout.iconSize,
+                  titleFontSize: layout.titleFontSize,
+                  padding: layout.cardPadding,
+                  onTap: () => Navigator.pushNamed(context, AppRouter.quiz),
+                ),
+              ),
+              SizedBox(width: spacing),
+              Expanded(
+                child: _buildFeatureCard(
+                  context: context,
+                  imageAsset: 'assets/common/illustrations/home/result.png',
+                  title: 'ผลการทดสอบ',
+                  backgroundColor: const Color(0xFFDEB1FD),
+                  height: cardSize,
+                  iconSize: layout.iconSize,
+                  titleFontSize: layout.titleFontSize,
+                  padding: layout.cardPadding,
+                  onTap: () => Navigator.pushNamed(context, AppRouter.dashboard),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
   return Column(
     children: [
       // Row 1: Lessons
@@ -210,7 +271,6 @@ Widget _buildFeatureCards(BuildContext context, _HomeLayout layout) {
         height: layout.cardHeight,
         iconSize: layout.iconSize,
         titleFontSize: layout.titleFontSize,
-        arrowSize: layout.arrowSize,
         padding: layout.cardPadding,
         onTap: () => Navigator.push(
           context,
@@ -229,7 +289,6 @@ Widget _buildFeatureCards(BuildContext context, _HomeLayout layout) {
         height: layout.cardHeight,
         iconSize: layout.iconSize,
         titleFontSize: layout.titleFontSize,
-        arrowSize: layout.arrowSize,
         padding: layout.cardPadding,
         onTap: () => Navigator.pushNamed(context, AppRouter.quiz),
       ),
@@ -245,7 +304,6 @@ Widget _buildFeatureCards(BuildContext context, _HomeLayout layout) {
         height: layout.cardHeight,
         iconSize: layout.iconSize,
         titleFontSize: layout.titleFontSize,
-        arrowSize: layout.arrowSize,
         padding: layout.cardPadding,
         onTap: () => Navigator.pushNamed(context, AppRouter.dashboard),
       ),
@@ -262,9 +320,22 @@ Widget _buildFeatureCard({
   required double height,
   required double iconSize,
   required double titleFontSize,
-  required double arrowSize,
   required double padding,
 }) {
+  final r = context.responsive;
+  final titleStyle = TextStyle(
+    color: Colors.white,
+    fontSize: titleFontSize,
+    fontWeight: FontWeight.bold,
+    shadows: const [
+      Shadow(
+        color: AppColors.gray550,
+        blurRadius: 6,
+        offset: Offset(0, 2),
+      ),
+    ],
+  );
+
   return GestureDetector(
     onTap: onTap,
     child: Container(
@@ -288,38 +359,48 @@ Widget _buildFeatureCard({
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: EdgeInsets.all(padding),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: iconSize,
-                  height: iconSize,
-                  child: Image.asset(imageAsset, fit: BoxFit.contain),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: titleFontSize,
-                      fontWeight: FontWeight.bold,
-                      shadows: const [
-                        Shadow(
-                          color: AppColors.gray550,
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
+            child: r.isTablet
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: iconSize,
+                        height: iconSize,
+                        child: Image.asset(imageAsset, fit: BoxFit.contain),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: titleStyle,
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      SizedBox(
+                        width: iconSize,
+                        height: iconSize,
+                        child: Image.asset(imageAsset, fit: BoxFit.contain),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: titleStyle,
                         ),
-                      ],
-                    ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white.withAlpha(220),
+                        size: titleFontSize * 0.9,
+                      ),
+                    ],
                   ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white.withAlpha(220),
-                  size: arrowSize,
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -327,7 +408,6 @@ Widget _buildFeatureCard({
   );
 }
 
-/// Show Guide Dialog
 /// Show Guide Dialog
 void _showGuideDialog(BuildContext context) {
   String? selectedImagePath;
@@ -347,158 +427,163 @@ void _showGuideDialog(BuildContext context) {
           ),
           elevation: 8,
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 24,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             constraints: const BoxConstraints(maxWidth: 360),
             child: SizedBox(
               height: effectiveHeight,
               child: selectedImagePath == null
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Header
-                        Column(
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        final availableHeight = constraints.maxHeight;
+                        final headerHeight = 64.0;
+                        final subtitleHeight = 28.0;
+                        final closeButtonHeight = 48.0;
+                        final spacingTotal = 20.0 + 10.0 + 20.0;
+                        final cardsHeight =
+                            (availableHeight -
+                                    headerHeight -
+                                    subtitleHeight -
+                                    closeButtonHeight -
+                                    spacingTotal)
+                                .clamp(200.0, 360.0);
+                        final cardHeight =
+                            (cardsHeight - 30) / 4; // 3 gaps of 10
+
+                        return Column(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            // Header
+                            Column(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(9),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppColors.blue600.withAlpha(26),
-                                        AppColors.blue500.withAlpha(13),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(9),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.blue600.withAlpha(26),
+                                            AppColors.blue500.withAlpha(13),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.info_outline,
+                                        color: AppColors.blue600,
+                                        size: 26,
+                                      ),
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.info_outline,
-                                    color: AppColors.blue600,
-                                    size: 26,
-                                  ),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      'คู่มือการใช้งาน',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.blue800,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  'คู่มือการใช้งาน',
+                                const SizedBox(height: 12),
+                                Text(
+                                  'เรียนรู้วิธีการใช้งานแอปพลิเคชัน',
                                   style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.blue800,
+                                    fontSize: 12,
+                                    color: AppColors.gray550,
+                                    fontWeight: FontWeight.w400,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'เรียนรู้วิธีการใช้งานแอปพลิเคชัน',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.gray550,
-                                fontWeight: FontWeight.w400,
+
+                            const SizedBox(height: 20),
+
+                            _buildGuideCard(
+                              imagePath:
+                                  'assets/common/illustrations/home/learn.png',
+                              title: 'บทเรียน',
+                              description: 'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
+                              accentColor: AppColors.blue600,
+                              height: cardHeight,
+                              onTap: () => setState(() {
+                                selectedImagePath =
+                                    'assets/content/tutorials/lesson.png';
+                              }),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildGuideCard(
+                              imagePath:
+                                  'assets/common/illustrations/home/quiz.png',
+                              title: 'แบบทดสอบ',
+                              description:
+                                  'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
+                              accentColor: AppColors.yellow600,
+                              height: cardHeight,
+                              onTap: () => setState(() {
+                                selectedImagePath =
+                                    'assets/content/tutorials/quiz.png';
+                              }),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildGuideCard(
+                              imagePath:
+                                  'assets/common/illustrations/home/result.png',
+                              title: 'ผลการทดสอบ',
+                              description: 'ดูสถิติและความก้าวหน้าของคุณ',
+                              accentColor: AppColors.blue500,
+                              height: cardHeight,
+                              onTap: () => setState(() {
+                                selectedImagePath =
+                                    'assets/content/tutorials/dashboard.png';
+                              }),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildGuideCard(
+                              icon: Icons.settings,
+                              title: 'การตั้งค่า',
+                              description:
+                                  'ปรับและล็อคระดับเสียงตามความต้องการ',
+                              accentColor: AppColors.yellow500,
+                              height: cardHeight,
+                              onTap: () => setState(() {
+                                selectedImagePath =
+                                    'assets/content/tutorials/settings.png';
+                              }),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(dialogContext),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.blue600,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 2,
+                                ),
+                                child: const Text(
+                                  'เข้าใจแล้ว',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Guide Cards
-                        _buildGuideCard(
-                          imagePath:
-                              'assets/common/illustrations/home/learn.png',
-                          title: 'บทเรียน',
-                          description:
-                              'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
-                          accentColor: AppColors.blue600,
-                          height: 84,
-                          onTap: () => setState(() {
-                            selectedImagePath =
-                                'assets/content/tutorials/lesson.png';
-                          }),
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        _buildGuideCard(
-                          imagePath:
-                              'assets/common/illustrations/home/quiz.png',
-                          title: 'แบบทดสอบ',
-                          description:
-                              'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
-                          accentColor: AppColors.yellow600,
-                          height: 84,
-                          onTap: () => setState(() {
-                            selectedImagePath =
-                                'assets/content/tutorials/quiz.png';
-                          }),
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        _buildGuideCard(
-                          imagePath:
-                              'assets/common/illustrations/home/result.png',
-                          title: 'ผลการทดสอบ',
-                          description: 'ดูสถิติและความก้าวหน้าของคุณ',
-                          accentColor: AppColors.blue500,
-                          height: 84,
-                          onTap: () => setState(() {
-                            selectedImagePath =
-                                'assets/content/tutorials/dashboard.png';
-                          }),
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        _buildGuideCard(
-                          icon: Icons.settings,
-                          title: 'การตั้งค่า',
-                          description:
-                              'ปรับและล็อคระดับเสียงตามความต้องการ',
-                          accentColor: AppColors.yellow500,
-                          height: 84,
-                          onTap: () => setState(() {
-                            selectedImagePath =
-                                'assets/content/tutorials/settings.png';
-                          }),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Close Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () =>
-                                Navigator.pop(dialogContext),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.blue600,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                            ),
-                            child: const Text(
-                              'เข้าใจแล้ว',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     )
                   : Column(
                       children: [
@@ -634,7 +719,6 @@ class _HomeLayout {
   final double cardPadding;
   final double iconSize;
   final double titleFontSize;
-  final double arrowSize;
 
   const _HomeLayout({
     required this.horizontalPadding,
@@ -647,47 +731,73 @@ class _HomeLayout {
     required this.cardPadding,
     required this.iconSize,
     required this.titleFontSize,
-    required this.arrowSize,
   });
 
   factory _HomeLayout.fromConstraints(BoxConstraints constraints) {
-    const baseLogoSize = 220.0;
-    const baseCardHeight = 96.0;
-    const baseTopSpacing = 16.0;
-    const baseSectionSpacing = 28.0;
-    const baseCardSpacing = 12.0;
-    const baseBottomSpacing = 16.0;
-    const baseCardPadding = 12.0;
-    const baseIconSize = 56.0;
-    const baseTitleFontSize = 20.0;
-    const baseArrowSize = 20.0;
-    const maxScale = 1.15;
-
     final maxHeight = constraints.maxHeight;
     final maxWidth = constraints.maxWidth;
+    final isTablet = maxWidth >= 600;
+    final baseLogoSize = isTablet ? 240.0 : 220.0;
+    final baseCardHeight = isTablet ? 128.0 : 96.0;
+    final baseTopSpacing = 16.0;
+    final isTabletPortrait = isTablet && maxHeight > maxWidth;
+    final baseSectionSpacing = isTablet
+        ? (isTabletPortrait ? 56.0 : 32.0)
+        : 28.0;
+    final baseCardSpacing = 12.0;
+    final baseBottomSpacing = isTablet ? 0.0 : 16.0;
+    final baseCardPadding = isTablet ? 14.0 : 12.0;
+    final baseIconSize = isTablet ? 64.0 : 56.0;
+    final baseTitleFontSize = isTablet ? 22.0 : 20.0;
+    final maxScale = isTablet ? 1.3 : 1.15;
+
+    final cardRows = isTablet ? 1 : 3;
+    final cardGaps = isTablet ? 0 : 2;
     final baseTotal =
         baseTopSpacing +
         baseLogoSize +
         baseSectionSpacing +
-        (baseCardHeight * 3) +
-        (baseCardSpacing * 2) +
+        (baseCardHeight * cardRows) +
+        (baseCardSpacing * cardGaps) +
         baseBottomSpacing;
 
     final scale = baseTotal > 0 ? maxHeight / baseTotal : 1.0;
     final effectiveScale = scale > maxScale ? maxScale : scale;
 
+    final topSpacing = baseTopSpacing * effectiveScale;
+    final sectionSpacing = baseSectionSpacing * effectiveScale;
+    final cardSpacing = baseCardSpacing * effectiveScale;
+    final bottomSpacing = baseBottomSpacing * effectiveScale;
+    final logoSize = baseLogoSize * effectiveScale;
+    final cardPadding = baseCardPadding * effectiveScale;
+    final iconSize = baseIconSize * effectiveScale;
+    final titleFontSize = baseTitleFontSize * effectiveScale;
+
+    var cardHeight = baseCardHeight * effectiveScale;
+    if (isTablet) {
+      final availableForCards =
+          maxHeight - (topSpacing + logoSize + sectionSpacing + bottomSpacing);
+      if (availableForCards.isFinite && availableForCards > 0) {
+        final desiredHeight = availableForCards * 0.9;
+        cardHeight =
+            desiredHeight < cardHeight ? cardHeight : desiredHeight;
+        if (cardHeight > availableForCards) {
+          cardHeight = availableForCards;
+        }
+      }
+    }
+
     return _HomeLayout(
       horizontalPadding: (maxWidth * 0.06).clamp(16.0, 32.0),
-      topSpacing: baseTopSpacing * effectiveScale,
-      sectionSpacing: baseSectionSpacing * effectiveScale,
-      cardSpacing: baseCardSpacing * effectiveScale,
-      bottomSpacing: baseBottomSpacing * effectiveScale,
-      logoSize: baseLogoSize * effectiveScale,
-      cardHeight: baseCardHeight * effectiveScale,
-      cardPadding: baseCardPadding * effectiveScale,
-      iconSize: baseIconSize * effectiveScale,
-      titleFontSize: baseTitleFontSize * effectiveScale,
-      arrowSize: baseArrowSize * effectiveScale,
+      topSpacing: topSpacing,
+      sectionSpacing: sectionSpacing,
+      cardSpacing: cardSpacing,
+      bottomSpacing: bottomSpacing,
+      logoSize: logoSize,
+      cardHeight: cardHeight,
+      cardPadding: cardPadding,
+      iconSize: iconSize,
+      titleFontSize: titleFontSize,
     );
   }
 }
