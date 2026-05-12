@@ -328,8 +328,10 @@ Widget _buildFeatureCard({
 }
 
 /// Show Guide Dialog
+/// Show Guide Dialog
 void _showGuideDialog(BuildContext context) {
   String? selectedImagePath;
+
   showDialog(
     context: context,
     barrierColor: Colors.black.withAlpha(102),
@@ -345,169 +347,158 @@ void _showGuideDialog(BuildContext context) {
           ),
           elevation: 8,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
             constraints: const BoxConstraints(maxWidth: 360),
             child: SizedBox(
               height: effectiveHeight,
               child: selectedImagePath == null
-                  ? LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Align(
-                          alignment: Alignment.topCenter,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.topCenter,
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: constraints.maxWidth,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Header - Icon and Title
-                                  Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(9),
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  AppColors.blue600.withAlpha(
-                                                    26,
-                                                  ),
-                                                  AppColors.blue500.withAlpha(
-                                                    13,
-                                                  ),
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: const Icon(
-                                              Icons.info_outline,
-                                              color: AppColors.blue600,
-                                              size: 26,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          const Text(
-                                            'คู่มือการใช้งาน',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.blue800,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'เรียนรู้วิธีการใช้งานแอปพลิเคชัน',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.gray550,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  // Guide Items as Cards
-                                  _buildGuideCard(
-                                    imagePath:
-                                        'assets/common/illustrations/home/learn.png',
-                                    title: 'บทเรียน',
-                                    description:
-                                        'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
-                                    accentColor: AppColors.blue600,
-                                    height: 84,
-                                    onTap: () => setState(() {
-                                      selectedImagePath =
-                                          'assets/content/tutorials/lesson.png';
-                                    }),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildGuideCard(
-                                    imagePath:
-                                        'assets/common/illustrations/home/quiz.png',
-                                    title: 'แบบทดสอบ',
-                                    description:
-                                        'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
-                                    accentColor: AppColors.yellow600,
-                                    height: 84,
-                                    onTap: () => setState(() {
-                                      selectedImagePath =
-                                          'assets/content/tutorials/quiz.png';
-                                    }),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildGuideCard(
-                                    imagePath:
-                                        'assets/common/illustrations/home/result.png',
-                                    title: 'ผลการทดสอบ',
-                                    description: 'ดูสถิติและความก้าวหน้าของคุณ',
-                                    accentColor: AppColors.blue500,
-                                    height: 84,
-                                    onTap: () => setState(() {
-                                      selectedImagePath =
-                                          'assets/content/tutorials/dashboard.png';
-                                    }),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  _buildGuideCard(
-                                    icon: Icons.settings,
-                                    title: 'การตั้งค่า',
-                                    description:
-                                        'ปรับและล็อคระดับเสียงตามความต้องการ',
-                                    accentColor: AppColors.yellow500,
-                                    height: 84,
-                                    onTap: () => setState(() {
-                                      selectedImagePath =
-                                          'assets/content/tutorials/settings.png';
-                                    }),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  // Close Button
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dialogContext),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.blue600,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        elevation: 2,
-                                      ),
-                                      child: const Text(
-                                        'เข้าใจแล้ว',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header
+                        Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(9),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.blue600.withAlpha(26),
+                                        AppColors.blue500.withAlpha(13),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                ],
+                                  child: const Icon(
+                                    Icons.info_outline,
+                                    color: AppColors.blue600,
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'คู่มือการใช้งาน',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.blue800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'เรียนรู้วิธีการใช้งานแอปพลิเคชัน',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.gray550,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Guide Cards
+                        _buildGuideCard(
+                          imagePath:
+                              'assets/common/illustrations/home/learn.png',
+                          title: 'บทเรียน',
+                          description:
+                              'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
+                          accentColor: AppColors.blue600,
+                          height: 84,
+                          onTap: () => setState(() {
+                            selectedImagePath =
+                                'assets/content/tutorials/lesson.png';
+                          }),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        _buildGuideCard(
+                          imagePath:
+                              'assets/common/illustrations/home/quiz.png',
+                          title: 'แบบทดสอบ',
+                          description:
+                              'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
+                          accentColor: AppColors.yellow600,
+                          height: 84,
+                          onTap: () => setState(() {
+                            selectedImagePath =
+                                'assets/content/tutorials/quiz.png';
+                          }),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        _buildGuideCard(
+                          imagePath:
+                              'assets/common/illustrations/home/result.png',
+                          title: 'ผลการทดสอบ',
+                          description: 'ดูสถิติและความก้าวหน้าของคุณ',
+                          accentColor: AppColors.blue500,
+                          height: 84,
+                          onTap: () => setState(() {
+                            selectedImagePath =
+                                'assets/content/tutorials/dashboard.png';
+                          }),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        _buildGuideCard(
+                          icon: Icons.settings,
+                          title: 'การตั้งค่า',
+                          description:
+                              'ปรับและล็อคระดับเสียงตามความต้องการ',
+                          accentColor: AppColors.yellow500,
+                          height: 84,
+                          onTap: () => setState(() {
+                            selectedImagePath =
+                                'assets/content/tutorials/settings.png';
+                          }),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Close Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () =>
+                                Navigator.pop(dialogContext),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.blue600,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: const Text(
+                              'เข้าใจแล้ว',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     )
                   : Column(
                       children: [
