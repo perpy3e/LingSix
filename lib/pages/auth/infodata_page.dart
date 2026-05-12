@@ -152,7 +152,7 @@ class _InfoDataPageState extends State<InfoDataPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(Icons.arrow_back,color: Colors.black,size: r.icon(30)),
           onPressed: () async {
             await FirebaseAuth.instance.signOut();
 
