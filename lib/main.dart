@@ -104,12 +104,12 @@ class _AuthGateState extends State<AuthGate> {
             final doc = snapshot.data;
             final data = doc?.data() as Map<String, dynamic>?;
 
-            final hasProfile =
-                data != null &&
-                data['firstName'] != null &&
-                data['lastName'] != null &&
-                data['gender'] != null &&
-                data['birthday'] != null;
+           final hasProfile =
+    data != null &&
+    data['firstName'] != null &&
+    data['firstName'].toString().trim().isNotEmpty &&
+    data['lastName'] != null &&
+    data['lastName'].toString().trim().isNotEmpty;
 
             // 
             if (!hasProfile) {
