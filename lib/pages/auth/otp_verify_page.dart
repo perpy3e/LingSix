@@ -3,6 +3,7 @@ import '../../app/router.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
 import '../../utils/snackbar_helper.dart';
+import '../../utils/responsive.dart';
 
 class OtpVerifyPage extends StatefulWidget {
   const OtpVerifyPage({super.key});
@@ -75,6 +76,8 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -87,72 +90,75 @@ class _OtpVerifyPageState extends State<OtpVerifyPage> {
           child: Stack(
             children: [
               Positioned(
-                top: 8,
-                left: 8,
+                top: r.spacing(8),
+                left: r.spacing(8),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 28),
+                  icon: Icon(Icons.arrow_back, size: r.icon(28)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
               // Main content
               Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 40),
-                      Text(
-                        "OTP Verification",
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        "Enter the 6-digit code sent to your email",
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 40),
-                      CustomTextField(
-                        controller: _otpController,
-                        hintText: "Enter OTP Code",
-                        prefixIcon: Icons.lock_outline,
-                        keyboardType: TextInputType.number,
-                        errorText: _otpError,
-                      ),
-                      const SizedBox(height: 24),
-                      CustomButton(
-                        text: "Verify",
-                        onPressed: _verifyOtp,
-                        isLoading: _isLoading,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Didn't receive the code? ",
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          GestureDetector(
-                            onTap: _resendOtp,
-                            child: Text(
-                              'Resend',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.color,
-                                  ),
+                  padding: r.pagePadding(horizontal: 20),
+                  child: ResponsiveContent(
+                    maxWidth: r.contentMaxWidth(phone: 500, tablet: 620),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(height: r.spacing(32)),
+                        Text(
+                          "OTP Verification",
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        SizedBox(height: r.spacing(10)),
+                        Text(
+                          "Enter the 6-digit code sent to your email",
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        SizedBox(height: r.spacing(28)),
+                        CustomTextField(
+                          controller: _otpController,
+                          hintText: "Enter OTP Code",
+                          prefixIcon: Icons.lock_outline,
+                          keyboardType: TextInputType.number,
+                          errorText: _otpError,
+                        ),
+                        SizedBox(height: r.spacing(20)),
+                        CustomButton(
+                          text: "Verify",
+                          onPressed: _verifyOtp,
+                          isLoading: _isLoading,
+                        ),
+                        SizedBox(height: r.spacing(16)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Didn't receive the code? ",
+                              style: Theme.of(context).textTheme.bodyMedium,
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            GestureDetector(
+                              onTap: _resendOtp,
+                              child: Text(
+                                'Resend',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

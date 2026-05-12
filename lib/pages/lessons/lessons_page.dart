@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class LessonsPage extends StatefulWidget {
   final String category;
@@ -92,38 +93,48 @@ class _LessonsPageState extends State<LessonsPage> {
     await _player.play(AssetSource(path));
   }
 
-  Widget _buildQuestionBubble(ThemeProvider themeProvider, String displayWord) {
+  Widget _buildQuestionBubble(
+    BuildContext context,
+    ThemeProvider themeProvider,
+    String displayWord,
+  ) {
+    final r = context.responsive;
     final selectedCharacter = themeProvider.selectedCharacter;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(24, 20, 40, 20),
+          padding: EdgeInsets.fromLTRB(
+            r.spacing(24),
+            r.spacing(20),
+            r.spacing(40),
+            r.spacing(20),
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.black87, width: 3),
+            borderRadius: BorderRadius.circular(r.spacing(28)),
+            border: Border.all(color: Colors.black87, width: r.spacing(3)),
           ),
           child: Text(
             'ออกเสียงตามนะว่า "$displayWord"',
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: r.text(28), fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
         ),
         Positioned(
-          right: -14,
-          top: -12,
+          right: -r.spacing(14),
+          top: -r.spacing(12),
           child: Transform.rotate(
             angle: 0.2,
             child: Image.asset(
               themeProvider.getCharacterHeadPath(selectedCharacter),
-              width: 50,
-              height: 50,
+              width: r.spacing(50),
+              height: r.spacing(50),
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Image.asset(
                 themeProvider.getDefaultCharacterHeadPath(selectedCharacter),
-                width: 50,
-                height: 50,
+                width: r.spacing(50),
+                height: r.spacing(50),
                 fit: BoxFit.contain,
                 errorBuilder: (context, fallbackError, fallbackStackTrace) {
                   return const SizedBox.shrink();
@@ -163,6 +174,8 @@ class _LessonsPageState extends State<LessonsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     if (isLoading) {
       return Scaffold(
         body: Consumer<ThemeProvider>(
@@ -205,16 +218,16 @@ class _LessonsPageState extends State<LessonsPage> {
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: r.spacing(24),
+                      vertical: r.spacing(16),
                     ),
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_back,
-                            size: 28,
+                            size: r.icon(28),
                             color: AppColors.blue800,
                           ),
                           onPressed: () => Navigator.pop(context),
@@ -227,9 +240,9 @@ class _LessonsPageState extends State<LessonsPage> {
                         ),
                         const Spacer(),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.settings,
-                            size: 28,
+                            size: r.icon(28),
                             color: AppColors.blue800,
                           ),
                           onPressed: () => Navigator.pushNamed(
@@ -248,30 +261,37 @@ class _LessonsPageState extends State<LessonsPage> {
                         GestureDetector(
                           onTap: () => playSound(item["sound"]!),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(r.spacing(16)),
                             decoration: BoxDecoration(
                               color: AppColors.yellow200,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: r.spacing(2),
+                              ),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.volume_up,
                               color: AppColors.yellow800,
-                              size: 30,
+                              size: r.icon(30),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 16),
-                        _buildQuestionBubble(themeProvider, displayWord),
-                        const SizedBox(height: 24),
+                        SizedBox(height: r.spacing(16)),
+                        _buildQuestionBubble(
+                          context,
+                          themeProvider,
+                          displayWord,
+                        ),
+                        SizedBox(height: r.spacing(24)),
                         Image.asset(
                           item["image"]!,
-                          height: 250,
+                          height: r.spacing(250).clamp(180, 320),
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              height: 250,
+                              height: r.spacing(250).clamp(180, 320),
                               color: Colors.grey[300],
                               child: const Center(
                                 child: Text('Image not found'),
@@ -284,9 +304,9 @@ class _LessonsPageState extends State<LessonsPage> {
                   ),
                   // Footer buttons
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 20,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: r.spacing(24),
+                      vertical: r.spacing(20),
                     ),
                     child: currentIndex == vocabulary.length - 1
                         ? Row(
@@ -300,7 +320,7 @@ class _LessonsPageState extends State<LessonsPage> {
                                   onPressed: back,
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              SizedBox(width: r.spacing(16)),
                               Flexible(
                                 flex: 1,
                                 child: CustomButton(
@@ -322,7 +342,7 @@ class _LessonsPageState extends State<LessonsPage> {
                                       )
                                     : const SizedBox(width: 80),
                               ),
-                              const SizedBox(width: 16),
+                              SizedBox(width: r.spacing(16)),
                               Flexible(
                                 flex: 1,
                                 child: CustomButton(

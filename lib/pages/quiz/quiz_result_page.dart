@@ -4,6 +4,7 @@ import 'package:lingsix/app/router.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/pages/home/home_page.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class QuizResultPage extends StatefulWidget {
   final int score;
@@ -97,6 +98,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
     const orderedSounds = ["ah", "ee", "m", "oo", "s", "sh"];
 
     return Scaffold(
@@ -105,208 +107,229 @@ class _QuizResultPageState extends State<QuizResultPage> {
           return Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                  themeProvider.getWallpaperPath('quiz'),
-                ),
+                image: AssetImage(themeProvider.getWallpaperPath('quiz')),
                 fit: BoxFit.cover,
               ),
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Text(
-                      "ผลการทดสอบ",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.blue800,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
+                padding: r.pagePadding(horizontal: 20, vertical: 16),
+                child: ResponsiveContent(
+                  maxWidth: r.contentMaxWidth(phone: 560, tablet: 760),
+                  child: Column(
+                    children: [
+                      Text(
+                        "ผลการทดสอบ",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.blue800,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
 
-                    const SizedBox(height: 16),
+                      SizedBox(height: r.spacing(16)),
 
-                    Expanded(
-                      child: Center(
-                        child: Container(
-                          width: double.infinity,
-                          constraints: const BoxConstraints(maxWidth: 480),
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.blue700.withValues(
-                                  alpha: 0.18,
-                                ),
-                                blurRadius: 18,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Center(child: _buildFeedbackBubble(themeProvider)),
-
-                                const SizedBox(height: 8),
-
-                                // ✅ FIX: body follows selected character
-                                Center(
-                                  child: Image.asset(
-                                    themeProvider.getCharacterBodyPath(
-                                      themeProvider.selectedCharacter,
-                                    ),
-                                    height: 120,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Image.asset(
-                                        themeProvider.getDefaultCharacterBodyPath(
-                                          themeProvider.selectedCharacter,
-                                        ),
-                                        height: 120,
-                                      );
-                                    },
+                      Expanded(
+                        child: Center(
+                          child: Container(
+                            width: double.infinity,
+                            constraints: BoxConstraints(
+                              maxWidth: r.isTablet ? 640 : 480,
+                            ),
+                            padding: EdgeInsets.all(r.spacing(20)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.blue700.withValues(
+                                    alpha: 0.18,
                                   ),
+                                  blurRadius: 18,
+                                  offset: const Offset(0, 10),
                                 ),
-
-                                const SizedBox(height: 10),
-
-                                Text(
-                                  "คะแนน ${widget.score}/${widget.total}",
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 34,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.blue800,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Text(
-                                  "ความถูกต้อง ${widget.accuracy.toStringAsFixed(1)}%",
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.gray700,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 14),
-
-                                ...orderedSounds.map((sound) {
-                                  final percent = _soundPercent(sound);
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 7,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.blue100,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            sound.toUpperCase(),
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          Text(
-                                            "${percent.toStringAsFixed(1)}%",
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }),
                               ],
+                            ),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Center(
+                                    child: _buildFeedbackBubble(themeProvider),
+                                  ),
+
+                                  SizedBox(height: r.spacing(8)),
+
+                                  // ✅ FIX: body follows selected character
+                                  Center(
+                                    child: Image.asset(
+                                      themeProvider.getCharacterBodyPath(
+                                        themeProvider.selectedCharacter,
+                                      ),
+                                      height: r.spacing(120).clamp(90, 180),
+                                      fit: BoxFit.contain,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Image.asset(
+                                              themeProvider
+                                                  .getDefaultCharacterBodyPath(
+                                                    themeProvider
+                                                        .selectedCharacter,
+                                                  ),
+                                              height: r
+                                                  .spacing(120)
+                                                  .clamp(90, 180),
+                                            );
+                                          },
+                                    ),
+                                  ),
+
+                                  SizedBox(height: r.spacing(10)),
+
+                                  Text(
+                                    "คะแนน ${widget.score}/${widget.total}",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: r.text(34),
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.blue800,
+                                    ),
+                                  ),
+
+                                  SizedBox(height: r.spacing(8)),
+
+                                  Text(
+                                    "ความถูกต้อง ${widget.accuracy.toStringAsFixed(1)}%",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: r.text(18),
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.gray700,
+                                    ),
+                                  ),
+
+                                  SizedBox(height: r.spacing(14)),
+
+                                  ...orderedSounds.map((sound) {
+                                    final percent = _soundPercent(sound);
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: r.spacing(8),
+                                      ),
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: r.spacing(12),
+                                          vertical: r.spacing(7),
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.blue100,
+                                          borderRadius: BorderRadius.circular(
+                                            r.spacing(12),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              sound.toUpperCase(),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: r.text(14),
+                                              ),
+                                            ),
+                                            Text(
+                                              "${percent.toStringAsFixed(1)}%",
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 16),
+                      SizedBox(height: r.spacing(16)),
 
-                    // 🔘 Dashboard
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            AppRouter.dashboard,
-                            (route) => false,
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.yellow200,
-                          foregroundColor: AppColors.yellow700,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                      // 🔘 Dashboard
+                      SizedBox(
+                        width: double.infinity,
+                        height: r.buttonHeight(52),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              AppRouter.dashboard,
+                              (route) => false,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.yellow200,
+                            foregroundColor: AppColors.yellow700,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                r.spacing(14),
+                              ),
+                              side: const BorderSide(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            "ภาพรวม",
+                            style: TextStyle(
+                              fontSize: r.text(18),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: r.spacing(12)),
+
+                      // 🔘 Home
+                      SizedBox(
+                        width: double.infinity,
+                        height: r.buttonHeight(52),
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const HomePage(showReminderPopup: false),
+                              ),
+                              (route) => false,
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.yellow700,
                             side: const BorderSide(
                               color: Colors.white,
                               width: 2,
                             ),
+                            backgroundColor: AppColors.yellow200,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                r.spacing(14),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          "ภาพรวม",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // 🔘 Home
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: OutlinedButton(
-                       onPressed: () {
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const HomePage(
-        showReminderPopup: false,
-      ),
-    ),
-    (route) => false,
-  );
-},
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.yellow700,
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          backgroundColor: AppColors.yellow200,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text(
-                          "กลับสู่หน้าหลัก",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          child: Text(
+                            "กลับสู่หน้าหลัก",
+                            style: TextStyle(
+                              fontSize: r.text(18),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -346,10 +369,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
 
                 const Text(
                   "ปลดล็อกธีมใหม่!",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
 
                 const SizedBox(height: 16),

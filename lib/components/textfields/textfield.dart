@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lingsix/app/theme.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class CustomTextField extends StatelessWidget {
-
   final TextEditingController controller;
   final String hintText;
   final bool obscureText;
@@ -13,7 +13,7 @@ class CustomTextField extends StatelessWidget {
   final Function(String)? onChanged;
   final FocusNode? focusNode;
 
-  // ADD 
+  // ADD
   final Widget? suffixIcon;
 
   const CustomTextField({
@@ -28,25 +28,21 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.focusNode,
 
-    // ADD 
+    // ADD
     this.suffixIcon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
 
-    final hasError =
-        errorText != null && errorText!.isNotEmpty;
+    final hasError = errorText != null && errorText!.isNotEmpty;
 
     return Column(
-
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
       children: [
-
         TextFormField(
-
           controller: controller,
 
           focusNode: focusNode,
@@ -59,30 +55,24 @@ class CustomTextField extends StatelessWidget {
 
           onChanged: onChanged,
 
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.yellow900,
-          ),
+          style: TextStyle(fontSize: r.text(16), color: AppColors.yellow900),
 
           decoration: InputDecoration(
-
             hintText: hintText,
 
-            hintStyle: const TextStyle(
+            hintStyle: TextStyle(
               color: AppColors.gray300,
-              fontSize: 16,
+              fontSize: r.text(16),
             ),
 
             prefixIcon: prefixIcon != null
                 ? Icon(
                     prefixIcon,
-                    color: hasError
-                        ? AppColors.error
-                        : AppColors.gray550,
+                    color: hasError ? AppColors.error : AppColors.gray550,
                   )
                 : null,
 
-            // ADD 
+            // ADD
             suffixIcon: suffixIcon,
 
             filled: true,
@@ -90,85 +80,53 @@ class CustomTextField extends StatelessWidget {
             fillColor: Colors.white,
 
             border: OutlineInputBorder(
-              borderRadius:
-              BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(r.spacing(12)),
               borderSide: BorderSide.none,
             ),
 
             enabledBorder: OutlineInputBorder(
-              borderRadius:
-              BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(r.spacing(12)),
               borderSide: hasError
-                  ? const BorderSide(
-                      color: AppColors.error,
-                      width: 1)
+                  ? const BorderSide(color: AppColors.error, width: 1)
                   : BorderSide.none,
             ),
 
             focusedBorder: OutlineInputBorder(
-              borderRadius:
-              BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(r.spacing(12)),
               borderSide: BorderSide(
-                color: hasError
-                    ? AppColors.error
-                    : AppColors.yellow800,
-                width: 2,
+                color: hasError ? AppColors.error : AppColors.yellow800,
+                width: r.spacing(2),
               ),
             ),
 
             errorBorder: OutlineInputBorder(
-              borderRadius:
-              BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                  color: AppColors.error,
-                  width: 1),
+              borderRadius: BorderRadius.circular(r.spacing(12)),
+              borderSide: const BorderSide(color: AppColors.error, width: 1),
             ),
 
-            focusedErrorBorder:
-            OutlineInputBorder(
-              borderRadius:
-              BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                  color: AppColors.error,
-                  width: 2),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(r.spacing(12)),
+              borderSide: const BorderSide(color: AppColors.error, width: 2),
             ),
 
-            contentPadding:
-            const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 18,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: r.spacing(20),
+              vertical: r.spacing(18),
             ),
-
           ),
-
         ),
 
         if (hasError)
-
           Padding(
-
-            padding: const EdgeInsets.only(
-              top: 6,
-              left: 12,
-            ),
+            padding: EdgeInsets.only(top: r.spacing(6), left: r.spacing(12)),
 
             child: Text(
-
               errorText!,
 
-              style: const TextStyle(
-                color: AppColors.error,
-                fontSize: 12,
-              ),
-
+              style: TextStyle(color: AppColors.error, fontSize: r.text(12)),
             ),
-
           ),
-
       ],
-
     );
-
   }
-
 }

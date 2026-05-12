@@ -4,12 +4,15 @@ import 'package:lingsix/app/router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return Scaffold(
       body: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -27,19 +30,19 @@ class StartPage extends StatelessWidget {
                   const Spacer(flex: 2),
                   // Character image
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: EdgeInsets.symmetric(horizontal: r.spacing(24)),
                     child: Image.asset(
                       themeProvider.getStartCharacterPath(),
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: r.spacing(40)),
                   // Button
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 48),
+                    padding: EdgeInsets.symmetric(horizontal: r.spacing(48)),
                     child: SizedBox(
                       width: double.infinity,
-                      height: 60,
+                      height: r.buttonHeight(60),
                       child: ElevatedButton(
                         onPressed: () {
                           final user = FirebaseAuth.instance.currentUser;
@@ -58,13 +61,13 @@ class StartPage extends StatelessWidget {
                           side: const BorderSide(color: Colors.white, width: 2),
                           backgroundColor: AppColors.yellow200,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(r.spacing(14)),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           "แตะเพื่อเริ่ม",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: r.text(18),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

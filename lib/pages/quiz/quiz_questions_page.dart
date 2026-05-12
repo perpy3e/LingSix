@@ -10,6 +10,7 @@ import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/services/firestore_service.dart';
 import 'package:lingsix/pages/quiz/quiz_result_page.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class QuizQuestionsPage extends StatefulWidget {
   final String quizId;
@@ -224,38 +225,47 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
   }
   // end add new
 
-  Widget _buildQuestionBubble(ThemeProvider themeProvider) {
+  Widget _buildQuestionBubble(
+    BuildContext context,
+    ThemeProvider themeProvider,
+  ) {
+    final r = context.responsive;
     final selectedCharacter = themeProvider.selectedCharacter;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(24, 20, 40, 20),
+          padding: EdgeInsets.fromLTRB(
+            r.spacing(24),
+            r.spacing(20),
+            r.spacing(40),
+            r.spacing(20),
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.black87, width: 3),
+            borderRadius: BorderRadius.circular(r.spacing(28)),
+            border: Border.all(color: Colors.black87, width: r.spacing(3)),
           ),
-          child: const Text(
+          child: Text(
             "ออกเสียงถูกไหม ?",
-            style: TextStyle(fontSize: 38, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: r.text(38), fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
         ),
         Positioned(
-          right: -14,
-          top: -12,
+          right: -r.spacing(14),
+          top: -r.spacing(12),
           child: Transform.rotate(
             angle: 0.2,
             child: Image.asset(
               themeProvider.getCharacterHeadPath(selectedCharacter),
-              width: 50,
-              height: 50,
+              width: r.spacing(50),
+              height: r.spacing(50),
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Image.asset(
                 themeProvider.getDefaultCharacterHeadPath(selectedCharacter),
-                width: 50,
-                height: 50,
+                width: r.spacing(50),
+                height: r.spacing(50),
                 fit: BoxFit.contain,
                 errorBuilder: (context, fallbackError, fallbackStackTrace) {
                   return const SizedBox.shrink();
@@ -274,6 +284,8 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
     required Color color,
     required IconData icon,
   }) {
+    final r = context.responsive;
+
     return Expanded(
       child: Material(
         color: Colors.transparent,
@@ -289,11 +301,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
             ),
             child: Center(
               //fix from Icon(icon, color: Colors.white, size: 108),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: MediaQuery.of(context).size.width * 0.12,
-              ),
+              child: Icon(icon, color: Colors.white, size: r.icon(48)),
             ),
           ),
         ),
@@ -303,6 +311,8 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     if (isLoading) {
       return Scaffold(
         body: Consumer<ThemeProvider>(
@@ -341,18 +351,14 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                       height: 120,
                       child: CircularProgressIndicator(
                         strokeWidth: 6,
-                        valueColor: AlwaysStoppedAnimation(
-                          AppColors.blue600,
-                        ),
+                        valueColor: AlwaysStoppedAnimation(AppColors.blue600),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: r.spacing(12)),
                     SizedBox(
-                      height: 180,
+                      height: r.spacing(180).clamp(120, 240),
                       child: Image.asset(
-                        themeProvider.getCharacterBodyPath(
-                          selectedCharacter,
-                        ),
+                        themeProvider.getCharacterBodyPath(selectedCharacter),
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           return Image.asset(
@@ -364,11 +370,11 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
+                    SizedBox(height: r.spacing(16)),
+                    Text(
                       'กำลังสรุปผลแบบทดสอบ...',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: r.text(20),
                         fontWeight: FontWeight.w600,
                         color: AppColors.blue800,
                       ),
@@ -396,17 +402,17 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(r.spacing(20)),
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: EdgeInsets.symmetric(vertical: r.spacing(6)),
                       child: Row(
                         children: [
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.settings,
-                              size: 28,
+                              size: r.icon(28),
                               color: AppColors.blue800,
                             ),
                             onPressed: () {
@@ -419,17 +425,17 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                           const Spacer(),
                           Text(
                             "${widget.title} (${questionIndex + 1}/$questionsPerSet)",
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: r.text(18),
                               fontWeight: FontWeight.w700,
                               color: AppColors.blue800,
                             ),
                           ),
                           const Spacer(),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.close,
-                              size: 30,
+                              size: r.icon(30),
                               color: AppColors.blue800,
                             ),
                             onPressed: () => Navigator.pop(context),
@@ -437,27 +443,30 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: r.spacing(20)),
 
                     GestureDetector(
                       onTap: () => playCurrentWord(),
                       child: Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(r.spacing(16)),
                         decoration: BoxDecoration(
                           color: AppColors.yellow200,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: r.spacing(2),
+                          ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.volume_up,
                           color: AppColors.yellow800,
-                          size: 30,
+                          size: r.icon(30),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 16),
-                    _buildQuestionBubble(themeProvider),
+                    SizedBox(height: r.spacing(16)),
+                    _buildQuestionBubble(context, themeProvider),
 
                     //🔥🔥 new code expanded
                     Flexible(
@@ -490,7 +499,7 @@ class _QuizQuestionsPageState extends State<QuizQuestionsPage> {
                             color: AppColors.success,
                             icon: Icons.check_rounded,
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: r.spacing(12)),
                           _buildAnswerTile(
                             isCheck: false,
                             color: AppColors.error,

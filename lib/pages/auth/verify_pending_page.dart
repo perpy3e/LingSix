@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../services/auth_service.dart';
 import '../../utils/snackbar_helper.dart';
 import '../../components/button/button.dart';
+import '../../utils/responsive.dart';
 
 class VerifyPendingPage extends StatefulWidget {
   const VerifyPendingPage({super.key});
@@ -72,6 +73,8 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -84,13 +87,16 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: r.spacing(8),
+                  vertical: r.spacing(8),
+                ),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.arrow_back,
-                        size: 28,
+                        size: r.icon(28),
                         color: AppColors.blue800,
                       ),
                       onPressed: () async {
@@ -112,7 +118,7 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 48),
+                    SizedBox(width: r.spacing(48)),
                   ],
                 ),
               ),
@@ -125,63 +131,66 @@ class _VerifyPendingPageState extends State<VerifyPendingPage> {
                     );
 
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SizedBox(height: topSpacing),
-                            Image.asset(
-                              'assets/common/illustrations/mail.png',
-                              height: 120,
-                            ),
-                            const SizedBox(height: 40),
-                            Text(
-                              'เราได้ส่งลิงก์ยืนยันไปที่:',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyLarge?.copyWith(
-                                fontSize: 22,
-                                color: AppColors.yellow800,
+                      padding: r.pagePadding(horizontal: 20),
+                      child: ResponsiveContent(
+                        maxWidth: r.contentMaxWidth(phone: 520, tablet: 640),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SizedBox(height: topSpacing),
+                              Image.asset(
+                                'assets/common/illustrations/mail.png',
+                                height: r.spacing(120).clamp(90, 170),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                _email ?? '',
+                              SizedBox(height: r.spacing(32)),
+                              Text(
+                                'เราได้ส่งลิงก์ยืนยันไปที่:',
                                 textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.headlineLarge
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.yellow900,
+                                      fontSize: r.text(22),
+                                      color: AppColors.yellow800,
                                     ),
                               ),
-                            ),
-                            const SizedBox(height: 30),
-                            CustomButton(
-                              text: 'ส่งอีเมลยืนยันอีกครั้ง',
-                              onPressed: _resendEmail,
-                              isLoading: _isResending,
-                            ),
-                            const SizedBox(height: 26),
-                            Text(
-                              'กำลังรอการยืนยัน...',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyLarge?.copyWith(
-                                fontSize: 20,
-                                color: AppColors.gray550,
+                              SizedBox(height: r.spacing(10)),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  _email ?? '',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineLarge
+                                      ?.copyWith(
+                                        fontSize: r.text(22),
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.yellow900,
+                                      ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 40),
-                          ],
+                              SizedBox(height: r.spacing(24)),
+                              CustomButton(
+                                text: 'ส่งอีเมลยืนยันอีกครั้ง',
+                                onPressed: _resendEmail,
+                                isLoading: _isResending,
+                              ),
+                              SizedBox(height: r.spacing(22)),
+                              Text(
+                                'กำลังรอการยืนยัน...',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      fontSize: r.text(20),
+                                      color: AppColors.gray550,
+                                    ),
+                              ),
+                              SizedBox(height: r.spacing(32)),
+                            ],
+                          ),
                         ),
                       ),
                     );

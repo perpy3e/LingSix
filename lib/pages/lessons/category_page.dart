@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/pages/lessons/lessons_page.dart';
 import 'package:lingsix/providers/theme_provider.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class CategoryPage extends StatelessWidget {
   const CategoryPage({super.key});
@@ -11,6 +12,8 @@ class CategoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return Scaffold(
       body: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -26,16 +29,16 @@ class CategoryPage extends StatelessWidget {
                 children: [
                   /// 🔹 HEADER with Back Button
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: r.spacing(24),
+                      vertical: r.spacing(16),
                     ),
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_back,
-                            size: 28,
+                            size: r.icon(28),
                             color: AppColors.blue800,
                           ),
                           onPressed: () => Navigator.pop(context),
@@ -43,63 +46,108 @@ class CategoryPage extends StatelessWidget {
                         const Spacer(),
                         Text(
                           "เลือกหมวด",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.blue800,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(color: AppColors.blue800),
                         ),
                         const Spacer(),
-                        const SizedBox(width: 48),
+                        SizedBox(width: r.spacing(48)),
                       ],
                     ),
                   ),
 
                   /// 🔸 GRID
                   Expanded(
-                    child: GridView.builder(
-                      padding: const EdgeInsets.all(24),
-                      itemCount: categories.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                      itemBuilder: (context, index) {
-                        final category = categories[index];
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final crossAxisCount = r.isTablet ? 3 : 2;
+                        final spacing = r.spacing(16);
+                        final padding = r.spacing(24);
+                        final rows = (categories.length / crossAxisCount)
+                            .ceil();
+                        final availableHeight = constraints.maxHeight -
+                            (padding * 2) -
+                            spacing * (rows - 1);
+                        final rawRowHeight = availableHeight / rows;
+                        final rowHeight =
+                            rawRowHeight.isFinite && rawRowHeight > 0
+                                ? rawRowHeight
+                                : r.spacing(120);
 
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => LessonsPage(
-                                  category: category,
+                        List<Widget> rowWidgets = [];
+                        for (var row = 0; row < rows; row++) {
+                          final rowChildren = <Widget>[];
+                          for (var col = 0; col < crossAxisCount; col++) {
+                            final index = row * crossAxisCount + col;
+                            if (index >= categories.length) {
+                              rowChildren.add(const Expanded(child: SizedBox()));
+                            } else {
+                              final category = categories[index];
+                              rowChildren.add(
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              LessonsPage(category: category),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.85),
+                                        borderRadius: BorderRadius.circular(
+                                          r.spacing(24),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: r.spacing(6),
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          category.toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: r.text(28),
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.blue800,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
+                              );
+                            }
+
+                            if (col != crossAxisCount - 1) {
+                              rowChildren.add(SizedBox(width: spacing));
+                            }
+                          }
+
+                          rowWidgets.add(
+                            SizedBox(
+                              height: rowHeight,
+                              child: Row(
+                                children: rowChildren,
                               ),
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.85),
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
                             ),
-                            child: Center(
-                              child: Text(
-                                category.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.blue800,
-                                ),
-                              ),
-                            ),
+                          );
+
+                          if (row != rows - 1) {
+                            rowWidgets.add(SizedBox(height: spacing));
+                          }
+                        }
+
+                        return Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: Column(
+                            children: rowWidgets,
                           ),
                         );
                       },

@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 
-
 import '../../app/router.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
@@ -13,6 +12,7 @@ import '../../utils/snackbar_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import '../../utils/responsive.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -56,7 +56,10 @@ class _LoginPageState extends State<LoginPage> {
     // Validate fields
     bool hasError = false;
     if (emailOrUsername.isEmpty) {
-      setState(() => _emailOrUsernameError = 'โปรดกรอกอีเมลหรือชื่อบัญชีผู้ใช้ที่ลงทะเบียนไว้');
+      setState(
+        () => _emailOrUsernameError =
+            'โปรดกรอกอีเมลหรือชื่อบัญชีผู้ใช้ที่ลงทะเบียนไว้',
+      );
       hasError = true;
     }
     if (password.isEmpty) {
@@ -88,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       //await context.read<ThemeProvider>()
-   // .syncThemeStatusFromFirestore(user.uid);
+      // .syncThemeStatusFromFirestore(user.uid);
 
       Navigator.pushReplacementNamed(context, AppRouter.startPage);
     } catch (e) {
@@ -113,162 +116,158 @@ class _LoginPageState extends State<LoginPage> {
   // -------------------------------------------------------------
   // GOOGLE SIGN-IN
   // -------------------------------------------------------------
-final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-Future<void> _googleLogin() async {
-  setState(() => _isGoogleLoading = true);
+  Future<void> _googleLogin() async {
+    setState(() => _isGoogleLoading = true);
 
-  try {
-    final googleUser = await _googleSignIn.signIn();
+    try {
+      final googleUser = await _googleSignIn.signIn();
 
-    if (googleUser == null) {
-      print("❌ User cancelled");
-      return;
-    }
+      if (googleUser == null) {
+        print("❌ User cancelled");
+        return;
+      }
 
-    final googleAuth = await googleUser.authentication;
+      final googleAuth = await googleUser.authentication;
 
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-    final userCred =
-        await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCred = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
 
-    final user = userCred.user;
-    if (user == null) throw Exception('Google user is null');
+      final user = userCred.user;
+      if (user == null) throw Exception('Google user is null');
 
-    final userDoc = await _firestore.getUserByUid(user.uid);
+      final userDoc = await _firestore.getUserByUid(user.uid);
 
+      //
+      if (userDoc == null) {
+        await _firestore.addUser(
+          user.uid,
+          user.email ?? '',
+          user.displayName ?? '',
+          authProvider: 'google',
+        );
 
-//
-   if (userDoc == null) {
-  await _firestore.addUser(
-    user.uid,
-    user.email ?? '',
-    user.displayName ?? '',
-     authProvider: 'google',
-  );
+        Navigator.pushReplacementNamed(context, AppRouter.infodata);
+        return;
+      }
 
-  Navigator.pushReplacementNamed(context, AppRouter.infodata);
-  return;
-}
+      //
+      final data = userDoc.data() as Map<String, dynamic>;
 
-//
-    final data = userDoc.data() as Map<String, dynamic>;
+      final hasProfile =
+          data['firstName'] != null &&
+          data['firstName'].toString().trim().isNotEmpty &&
+          data['lastName'] != null &&
+          data['lastName'].toString().trim().isNotEmpty;
+      if (!hasProfile) {
+        Navigator.pushReplacementNamed(context, AppRouter.infodata);
+        return;
+      }
 
-final hasProfile =
-    data['firstName'] != null &&
-    data['firstName'].toString().trim().isNotEmpty &&
-    data['lastName'] != null &&
-    data['lastName'].toString().trim().isNotEmpty;
-if (!hasProfile) {
-  Navigator.pushReplacementNamed(context, AppRouter.infodata);
-  return;
-}
-
-// ✅ sync ตอนเข้า app จริง
-await context.read<ThemeProvider>()
-    .syncThemeStatusFromFirestore(user.uid);
-
-Navigator.pushReplacementNamed(context, AppRouter.startPage);
-
-  } catch (e) {
-    print("❌ ERROR: $e");
-    _showError('เข้าสู่ระบบด้วย Google ไม่สำเร็จ');
-  } finally {
-    if (mounted) setState(() => _isGoogleLoading = false);
-  }
-}
-// -------------------------------------------------------------
-  // GOOGLE SIGN-IN (END)
-//-------------------------------------------------------------
-  
-
-
-// -------------------------------------------------------------
-// APPLE SIGN-IN
-
-Future<void> _appleLogin() async {
-  setState(() => _isGoogleLoading = true);
-
-  try {
-    final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [
-        AppleIDAuthorizationScopes.email,
-        AppleIDAuthorizationScopes.fullName,
-      ],
-    );
-
-    final oauthCredential = OAuthProvider("apple.com").credential(
-      idToken: appleCredential.identityToken,
-      accessToken: appleCredential.authorizationCode,
-    );
-
-    final userCred = await FirebaseAuth.instance
-        .signInWithCredential(oauthCredential);
-
-    final user = userCred.user;
-
-    if (user == null) {
-      throw Exception("Apple user is null");
-    }
-
-    final userDoc = await _firestore.getUserByUid(user.uid);
-
-    if (userDoc == null) {
-      final fullName =
-          "${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}"
-              .trim();
-
-      await _firestore.addUser(
+      // ✅ sync ตอนเข้า app จริง
+      await context.read<ThemeProvider>().syncThemeStatusFromFirestore(
         user.uid,
-        user.email ?? '',
-        fullName,
-        authProvider: 'apple',
+      );
+
+      Navigator.pushReplacementNamed(context, AppRouter.startPage);
+    } catch (e) {
+      print("❌ ERROR: $e");
+      _showError('เข้าสู่ระบบด้วย Google ไม่สำเร็จ');
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
+  }
+  // -------------------------------------------------------------
+  // GOOGLE SIGN-IN (END)
+  //-------------------------------------------------------------
+
+  // -------------------------------------------------------------
+  // APPLE SIGN-IN
+
+  Future<void> _appleLogin() async {
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final oauthCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final userCred = await FirebaseAuth.instance.signInWithCredential(
+        oauthCredential,
+      );
+
+      final user = userCred.user;
+
+      if (user == null) {
+        throw Exception("Apple user is null");
+      }
+
+      final userDoc = await _firestore.getUserByUid(user.uid);
+
+      if (userDoc == null) {
+        final fullName =
+            "${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}"
+                .trim();
+
+        await _firestore.addUser(
+          user.uid,
+          user.email ?? '',
+          fullName,
+          authProvider: 'apple',
+        );
+
+        if (!mounted) return;
+
+        Navigator.pushReplacementNamed(context, AppRouter.infodata);
+        return;
+      }
+
+      final data = userDoc.data() as Map<String, dynamic>;
+
+      final hasProfile =
+          data['firstName'] != null &&
+          data['firstName'].toString().trim().isNotEmpty &&
+          data['lastName'] != null &&
+          data['lastName'].toString().trim().isNotEmpty;
+
+      if (!hasProfile) {
+        if (!mounted) return;
+
+        Navigator.pushReplacementNamed(context, AppRouter.infodata);
+        return;
+      }
+
+      await context.read<ThemeProvider>().syncThemeStatusFromFirestore(
+        user.uid,
       );
 
       if (!mounted) return;
 
-      Navigator.pushReplacementNamed(context, AppRouter.infodata);
-      return;
-    }
-
-    final data = userDoc.data() as Map<String, dynamic>;
-
-    final hasProfile =
-        data['firstName'] != null &&
-        data['firstName'].toString().trim().isNotEmpty &&
-        data['lastName'] != null &&
-        data['lastName'].toString().trim().isNotEmpty;
-
-    if (!hasProfile) {
-      if (!mounted) return;
-
-      Navigator.pushReplacementNamed(context, AppRouter.infodata);
-      return;
-    }
-
-    await context.read<ThemeProvider>()
-        .syncThemeStatusFromFirestore(user.uid);
-
-    if (!mounted) return;
-
-    Navigator.pushReplacementNamed(context, AppRouter.startPage);
-  } catch (e) {
-    print("APPLE SIGN IN ERROR: $e");
-
-    _showError('เข้าสู่ระบบด้วย Apple ไม่สำเร็จ');
-  } finally {
-    if (mounted) {
-      setState(() => _isGoogleLoading = false);
+      Navigator.pushReplacementNamed(context, AppRouter.startPage);
+    } catch (e) {
+      _showError('เข้าสู่ระบบด้วย Apple ไม่สำเร็จ');
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
+      }
     }
   }
-}
-// -----------------------------------------------------------
-
-
+  // -----------------------------------------------------------
 
   void _showError(String message) {
     SnackBarHelper.showError(context, message);
@@ -277,6 +276,8 @@ Future<void> _appleLogin() async {
   // -------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -288,134 +289,146 @@ Future<void> _appleLogin() async {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 40),
+              padding: r.pagePadding(horizontal: 20, min: 10, maxPhone: 22),
+              child: ResponsiveContent(
+                maxWidth: r.contentMaxWidth(phone: 480, tablet: 620),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: r.spacing(20)),
 
-                  Image.asset(
-                    'assets/common/logo/app_logo.png',
-                    height: 200,
-                    width: 200,
-                  ),
+                    Image.asset(
+                      'assets/common/logo/app_logo.png',
+                      height: r.spacing(180).clamp(110, 240),
+                      width: r.spacing(180).clamp(110, 240),
+                    ),
 
-                  const SizedBox(height: 60),
-                  CustomTextField(
-                    controller: _emailOrUsernameController,
-                    hintText: 'อีเมล หรือ ชื่อผู้ใช้',
-                    prefixIcon: Icons.person_outline,
-                    keyboardType: TextInputType.emailAddress,
-                    errorText: _emailOrUsernameError,
-                  ),
-                  const SizedBox(height: 16),
+                    SizedBox(height: r.spacing(24)),
+                    CustomTextField(
+                      controller: _emailOrUsernameController,
+                      hintText: 'อีเมล หรือ ชื่อผู้ใช้',
+                      prefixIcon: Icons.person_outline,
+                      keyboardType: TextInputType.emailAddress,
+                      errorText: _emailOrUsernameError,
+                    ),
+                    SizedBox(height: r.spacing(14)),
 
-                  CustomTextField(
-                    controller: _passwordController,
-                    hintText: 'รหัสผ่าน',
-                    obscureText: true,
-                    prefixIcon: Icons.lock_outline,
-                    errorText: _passwordError,
-                  ),
-                  const SizedBox(height: 12),
+                    CustomTextField(
+                      controller: _passwordController,
+                      hintText: 'รหัสผ่าน',
+                      obscureText: true,
+                      prefixIcon: Icons.lock_outline,
+                      errorText: _passwordError,
+                    ),
+                    SizedBox(height: r.spacing(10)),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AppRouter.forgotPassword),
-                      child: Text(
-                        'ลืมรหัสผ่าน?',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          AppRouter.forgotPassword,
+                        ),
+                        child: Text(
+                          'ลืมรหัสผ่าน?',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 24),
+                    SizedBox(height: r.spacing(16)),
 
-                  CustomButton(
-                    text: 'เข้าสู่ระบบ',
-                    onPressed: _login,
-                    isLoading: _isLoading,
-                  ),
-                  const SizedBox(height: 20),
+                    CustomButton(
+                      text: 'เข้าสู่ระบบ',
+                      onPressed: _login,
+                      isLoading: _isLoading,
+                    ),
+                    SizedBox(height: r.spacing(12)),
 
-                  Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'หรือ',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(context).dividerColor,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  _isGoogleLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : SizedBox(
-                          height: 50,
-                          child: SignInButton(
-                            Buttons.google,
-                            text: "เข้าสู่ระบบด้วยบัญชี Google",
-                            onPressed: _googleLogin,
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: r.spacing(12),
+                          ),
+                          child: Text(
+                            'หรือ',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).dividerColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
-                  const SizedBox(height: 32),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    SizedBox(height: r.spacing(12)),
 
-                  const SizedBox(height: 12),
+                    _isGoogleLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : SizedBox(
+                            height: r.buttonHeight(48),
+                            child: SignInButton(
+                              Buttons.google,
+                              text: "เข้าสู่ระบบด้วยบัญชี Google",
+                              onPressed: _googleLogin,
+                            ),
+                          ),
+                    SizedBox(height: r.spacing(16)),
 
-SizedBox(
-  height: 50,
-  child: SignInButton(
-    Buttons.apple,
-    text: "เข้าสู่ระบบด้วย Apple",
-    onPressed: _appleLogin,
-  ),
-),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "ยังไม่มีบัญชี? ",
-                        style: Theme.of(context).textTheme.bodyMedium,
+                    SizedBox(
+                      height: r.buttonHeight(48),
+                      child: SignInButton(
+                        Buttons.apple,
+                        text: "เข้าสู่ระบบด้วย Apple",
+                        onPressed: _appleLogin,
                       ),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, AppRouter.signup),
-                        child: Text(
-                          'ลงทะเบียน',
-                          style: (() {
-                            final base = Theme.of(context).textTheme.bodyMedium;
-                            final color = base?.color ?? Theme.of(context).colorScheme.onSurface;
-                            return base?.copyWith(
-                                  color: color,
-                                  fontWeight: FontWeight.bold,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: color,
-                                ) ??
-                                TextStyle(
-                                  color: color,
-                                  fontWeight: FontWeight.bold,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: color,
-                                );
-                          })(),
+                    ),
+
+                    SizedBox(height: r.spacing(16)),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "ยังไม่มีบัญชี? ",
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                        GestureDetector(
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRouter.signup),
+                          child: Text(
+                            'ลงทะเบียน',
+                            style: (() {
+                              final base = Theme.of(
+                                context,
+                              ).textTheme.bodyMedium;
+                              final color =
+                                  base?.color ??
+                                  Theme.of(context).colorScheme.onSurface;
+                              return base?.copyWith(
+                                    color: color,
+                                    fontWeight: FontWeight.bold,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: color,
+                                  ) ??
+                                  TextStyle(
+                                    color: color,
+                                    fontWeight: FontWeight.bold,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: color,
+                                  );
+                            })(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: r.spacing(20)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -424,4 +437,3 @@ SizedBox(
     );
   }
 }
-

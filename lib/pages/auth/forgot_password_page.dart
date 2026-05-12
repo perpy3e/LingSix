@@ -3,6 +3,7 @@ import '../../services/auth_service.dart';
 import '../../components/textfields/textfield.dart';
 import '../../components/button/button.dart';
 import '../../utils/snackbar_helper.dart';
+import '../../utils/responsive.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -38,7 +39,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     try {
       await _authService.sendPasswordReset(input);
       if (!mounted) return;
-      SnackBarHelper.showSuccess(context, "ส่งอีเมลรีเซ็ตรหัสผ่านไปที่ $input แล้ว");
+      SnackBarHelper.showSuccess(
+        context,
+        "ส่งอีเมลรีเซ็ตรหัสผ่านไปที่ $input แล้ว",
+      );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
@@ -51,6 +55,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -63,48 +69,51 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Stack(
             children: [
               Positioned(
-                top: 8,
-                left: 8,
+                top: r.spacing(8),
+                left: r.spacing(8),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 30),
+                  icon: Icon(Icons.arrow_back, size: r.icon(30)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
               // Main content
               Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 40),
-                      Text(
-                        "ลืมรหัสผ่าน",
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        "กรอกอีเมลหรือชื่อผู้ใช้ของคุณ เพื่อรับลิงก์สำหรับรีเซ็ตรหัสผ่าน",
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 40),
-                      CustomTextField(
-                        controller: _controller,
-                        hintText: "อีเมล หรือ ชื่อผู้ใช้",
-                        prefixIcon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        errorText: _emailError,
-                      ),
-                      const SizedBox(height: 24),
-                      CustomButton(
-                        text: "ส่งลิงก์รีเซ็ตรหัสผ่าน",
-                        onPressed: _resetPassword,
-                        isLoading: _isLoading,
-                      ),
-                    ],
+                  padding: r.pagePadding(horizontal: 20),
+                  child: ResponsiveContent(
+                    maxWidth: r.contentMaxWidth(phone: 500, tablet: 620),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(height: r.spacing(32)),
+                        Text(
+                          "ลืมรหัสผ่าน",
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        SizedBox(height: r.spacing(10)),
+                        Text(
+                          "กรอกอีเมลหรือชื่อผู้ใช้ของคุณ เพื่อรับลิงก์สำหรับรีเซ็ตรหัสผ่าน",
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        SizedBox(height: r.spacing(28)),
+                        CustomTextField(
+                          controller: _controller,
+                          hintText: "อีเมล หรือ ชื่อผู้ใช้",
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          errorText: _emailError,
+                        ),
+                        SizedBox(height: r.spacing(20)),
+                        CustomButton(
+                          text: "ส่งลิงก์รีเซ็ตรหัสผ่าน",
+                          onPressed: _resetPassword,
+                          isLoading: _isLoading,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

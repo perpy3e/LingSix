@@ -15,6 +15,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:flutter/services.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -768,6 +769,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     if (isLoading) {
       return Scaffold(
         body: Consumer<ThemeProvider>(
@@ -794,9 +797,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         valueColor: AlwaysStoppedAnimation(AppColors.blue600),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: r.spacing(12)),
                     SizedBox(
-                      height: 180,
+                      height: r.spacing(180).clamp(120, 240),
                       child: Image.asset(
                         themeProvider.getCharacterBodyPath(selectedCharacter),
                         fit: BoxFit.contain,
@@ -810,11 +813,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
+                    SizedBox(height: r.spacing(16)),
+                    Text(
                       'กำลังสรุปผลแบบทดสอบ...',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: r.text(20),
                         fontWeight: FontWeight.w600,
                         color: AppColors.blue800,
                       ),
@@ -845,15 +848,18 @@ class _DashboardPageState extends State<DashboardPage> {
 
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          _buildSummaryCard(),
-                          const SizedBox(height: 20),
-                          _buildPerSoundCard(),
-                          const SizedBox(height: 20),
-                          _buildQuizCard(),
-                        ],
+                      padding: r.pagePadding(horizontal: 20, vertical: 16),
+                      child: ResponsiveContent(
+                        maxWidth: r.contentMaxWidth(phone: 560, tablet: 760),
+                        child: Column(
+                          children: [
+                            _buildSummaryCard(),
+                            SizedBox(height: r.spacing(20)),
+                            _buildPerSoundCard(),
+                            SizedBox(height: r.spacing(20)),
+                            _buildQuizCard(),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -867,15 +873,20 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildHeader() {
+    final r = context.responsive;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: r.spacing(24),
+        vertical: r.spacing(16),
+      ),
 
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back,
-              size: 28,
+              size: r.icon(28),
               color: AppColors.blue800,
             ),
             onPressed: () => Navigator.pop(context),
@@ -889,7 +900,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ).textTheme.titleLarge?.copyWith(color: AppColors.blue800),
           ),
           const Spacer(),
-          const SizedBox(width: 48),
+          SizedBox(width: r.spacing(48)),
         ],
       ),
     );

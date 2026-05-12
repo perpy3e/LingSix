@@ -4,14 +4,12 @@ import 'package:lingsix/app/theme.dart';
 import 'package:lingsix/app/router.dart';
 import 'package:lingsix/providers/theme_provider.dart';
 import 'package:lingsix/pages/lessons/category_page.dart';
+import 'package:lingsix/utils/responsive.dart';
 
 class HomePage extends StatefulWidget {
   final bool showReminderPopup;
 
-  const HomePage({
-    super.key,
-    this.showReminderPopup = false,
-  });
+  const HomePage({super.key, this.showReminderPopup = false});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,26 +17,25 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-
   bool _popupShown = false;
   late AnimationController _controller;
 
- @override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 7),
-  );
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    );
 
-  // ✅ Show popup ONLY when allowed
-  if (widget.showReminderPopup) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showReminderPopup();
-    });
+    // ✅ Show popup ONLY when allowed
+    if (widget.showReminderPopup) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showReminderPopup();
+      });
+    }
   }
-}
 
   void _showReminderPopup() {
     if (_popupShown) return;
@@ -59,15 +56,15 @@ void initState() {
     );
 
     // auto close after 7 sec
- Future.delayed(const Duration(seconds: 5), () {
-  if (!mounted) return;
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted) return;
 
-  final navigator = Navigator.of(context, rootNavigator: true);
+      final navigator = Navigator.of(context, rootNavigator: true);
 
-  if (navigator.canPop()) {
-    navigator.pop();
-  }
-});
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    });
   }
 
   @override
@@ -96,8 +93,7 @@ void initState() {
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final layout =
-                            _HomeLayout.fromConstraints(constraints);
+                        final layout = _HomeLayout.fromConstraints(constraints);
                         return Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: layout.horizontalPadding,
@@ -128,504 +124,513 @@ void initState() {
   }
 }
 
-  
+/// Top Navigation Bar with Settings, Help, and Profile
+Widget _buildTopBar(BuildContext context) {
+  final r = context.responsive;
 
-  /// Top Navigation Bar with Settings, Help, and Profile
-  Widget _buildTopBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          // Settings Button
-          _buildIconButton(
-            icon: Icons.settings,
-            tooltip: 'การตั้งค่า',
-            onPressed: () => Navigator.pushNamed(context, AppRouter.soundSettings),
-          ),
-          
-          const Spacer(),
-          
-          // Help/Guide Button
-          _buildIconButton(
-            icon: Icons.help_outline,
-            tooltip: 'คู่มือการใช้งาน',
-            onPressed: () => _showGuideDialog(context),
-          ),
-          
-          const SizedBox(width: 8),
-          
-          // Profile Button
-          _buildIconButton(
-            icon: Icons.account_circle,
-            tooltip: 'โปรไฟล์',
-            onPressed: () => Navigator.pushNamed(context, AppRouter.profile),
+  return Padding(
+    padding: EdgeInsets.symmetric(
+      horizontal: r.spacing(16),
+      vertical: r.spacing(12),
+    ),
+    child: Row(
+      children: [
+        // Settings Button
+        _buildIconButton(
+          context: context,
+          icon: Icons.settings,
+          tooltip: 'การตั้งค่า',
+          onPressed: () =>
+              Navigator.pushNamed(context, AppRouter.soundSettings),
+        ),
+
+        const Spacer(),
+
+        // Help/Guide Button
+        _buildIconButton(
+          context: context,
+          icon: Icons.help_outline,
+          tooltip: 'คู่มือการใช้งาน',
+          onPressed: () => _showGuideDialog(context),
+        ),
+
+        SizedBox(width: r.spacing(8)),
+
+        // Profile Button
+        _buildIconButton(
+          context: context,
+          icon: Icons.account_circle,
+          tooltip: 'โปรไฟล์',
+          onPressed: () => Navigator.pushNamed(context, AppRouter.profile),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildIconButton({
+  required BuildContext context,
+  required IconData icon,
+  required String tooltip,
+  required VoidCallback onPressed,
+}) {
+  final r = context.responsive;
+
+  return IconButton(
+    icon: Icon(icon, color: AppColors.blue800, size: r.icon(28)),
+    tooltip: tooltip,
+    onPressed: onPressed,
+  );
+}
+
+/// Welcome Section with Logo/Title
+Widget _buildWelcomeSection(BuildContext context, {required double logoSize}) {
+  return Column(
+    children: [
+      // App Logo
+      Image.asset(
+        'assets/common/logo/app_logo.png',
+        width: logoSize,
+        height: logoSize,
+      ),
+    ],
+  );
+}
+
+/// Main Feature Cards Grid
+Widget _buildFeatureCards(BuildContext context, _HomeLayout layout) {
+  return Column(
+    children: [
+      // Row 1: Lessons
+      _buildFeatureCard(
+        context: context,
+        imageAsset: 'assets/common/illustrations/home/learn.png',
+        title: 'บทเรียน',
+        backgroundColor: const Color(0xFFFF7D98),
+        height: layout.cardHeight,
+        iconSize: layout.iconSize,
+        titleFontSize: layout.titleFontSize,
+        arrowSize: layout.arrowSize,
+        padding: layout.cardPadding,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CategoryPage()),
+        ),
+      ),
+
+      SizedBox(height: layout.cardSpacing),
+
+      // Row 2: Quiz
+      _buildFeatureCard(
+        context: context,
+        imageAsset: 'assets/common/illustrations/home/quiz.png',
+        title: 'ทดสอบ',
+        backgroundColor: const Color(0xFFFFB033),
+        height: layout.cardHeight,
+        iconSize: layout.iconSize,
+        titleFontSize: layout.titleFontSize,
+        arrowSize: layout.arrowSize,
+        padding: layout.cardPadding,
+        onTap: () => Navigator.pushNamed(context, AppRouter.quiz),
+      ),
+
+      SizedBox(height: layout.cardSpacing),
+
+      // Row 3: Result
+      _buildFeatureCard(
+        context: context,
+        imageAsset: 'assets/common/illustrations/home/result.png',
+        title: 'ผลการทดสอบ',
+        backgroundColor: const Color(0xFFDEB1FD),
+        height: layout.cardHeight,
+        iconSize: layout.iconSize,
+        titleFontSize: layout.titleFontSize,
+        arrowSize: layout.arrowSize,
+        padding: layout.cardPadding,
+        onTap: () => Navigator.pushNamed(context, AppRouter.dashboard),
+      ),
+    ],
+  );
+}
+
+Widget _buildFeatureCard({
+  required BuildContext context,
+  required String imageAsset,
+  required String title,
+  required Color backgroundColor,
+  required VoidCallback onTap,
+  required double height,
+  required double iconSize,
+  required double titleFontSize,
+  required double arrowSize,
+  required double padding,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withAlpha(100),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildIconButton({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onPressed,
-  }) {
-    return IconButton(
-      icon: Icon(icon, color: AppColors.blue800, size: 28),
-      tooltip: tooltip,
-      onPressed: onPressed,
-    );
-  }
-
-  /// Welcome Section with Logo/Title
-  Widget _buildWelcomeSection(BuildContext context, {required double logoSize}) {
-    return Column(
-      children: [
-        // App Logo
-        Image.asset(
-          'assets/common/logo/app_logo.png',
-          width: logoSize,
-          height: logoSize,
-        ),
-      ],
-    );
-  }
-
-  /// Main Feature Cards Grid
-  Widget _buildFeatureCards(BuildContext context, _HomeLayout layout) {
-    return Column(
-      children: [
-        // Row 1: Lessons
-        _buildFeatureCard(
-          context: context,
-          imageAsset: 'assets/common/illustrations/home/learn.png',
-          title: 'บทเรียน',
-          backgroundColor: const Color(0xFFFF7D98),
-          height: layout.cardHeight,
-          iconSize: layout.iconSize,
-          titleFontSize: layout.titleFontSize,
-          arrowSize: layout.arrowSize,
-          padding: layout.cardPadding,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const CategoryPage(),
-            ),
-          ),
-        ),
-
-        SizedBox(height: layout.cardSpacing),
-
-        // Row 2: Quiz
-        _buildFeatureCard(
-          context: context,
-          imageAsset: 'assets/common/illustrations/home/quiz.png',
-          title: 'ทดสอบ',
-          backgroundColor: const Color(0xFFFFB033),
-          height: layout.cardHeight,
-          iconSize: layout.iconSize,
-          titleFontSize: layout.titleFontSize,
-          arrowSize: layout.arrowSize,
-          padding: layout.cardPadding,
-          onTap: () => Navigator.pushNamed(context, AppRouter.quiz),
-        ),
-
-        SizedBox(height: layout.cardSpacing),
-
-        // Row 3: Result
-        _buildFeatureCard(
-          context: context,
-          imageAsset: 'assets/common/illustrations/home/result.png',
-          title: 'ผลการทดสอบ',
-          backgroundColor: const Color(0xFFDEB1FD),
-          height: layout.cardHeight,
-          iconSize: layout.iconSize,
-          titleFontSize: layout.titleFontSize,
-          arrowSize: layout.arrowSize,
-          padding: layout.cardPadding,
-          onTap: () => Navigator.pushNamed(context, AppRouter.dashboard),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFeatureCard({
-    required BuildContext context,
-    required String imageAsset,
-    required String title,
-    required Color backgroundColor,
-    required VoidCallback onTap,
-    required double height,
-    required double iconSize,
-    required double titleFontSize,
-    required double arrowSize,
-    required double padding,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: backgroundColor,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.white,
-            width: 3,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: backgroundColor.withAlpha(100),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: iconSize,
+                  height: iconSize,
+                  child: Image.asset(imageAsset, fit: BoxFit.contain),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.bold,
+                      shadows: const [
+                        Shadow(
+                          color: AppColors.gray550,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white.withAlpha(220),
+                  size: arrowSize,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
+      ),
+    ),
+  );
+}
+
+/// Show Guide Dialog
+void _showGuideDialog(BuildContext context) {
+  String? selectedImagePath;
+  showDialog(
+    context: context,
+    barrierColor: Colors.black.withAlpha(102),
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setState) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        final dialogHeight = screenHeight * 0.8;
+        final effectiveHeight = dialogHeight > 520.0 ? 520.0 : dialogHeight;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: EdgeInsets.all(padding),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: iconSize,
-                    height: iconSize,
-                    child: Image.asset(
-                      imageAsset,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: titleFontSize,
-                        fontWeight: FontWeight.bold,
-                        shadows: const [
-                          Shadow(
-                            color: AppColors.gray550,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
+          ),
+          elevation: 8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: SizedBox(
+              height: effectiveHeight,
+              child: selectedImagePath == null
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Align(
+                          alignment: Alignment.topCenter,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: constraints.maxWidth,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Header - Icon and Title
+                                  Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(9),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  AppColors.blue600.withAlpha(
+                                                    26,
+                                                  ),
+                                                  AppColors.blue500.withAlpha(
+                                                    13,
+                                                  ),
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: const Icon(
+                                              Icons.info_outline,
+                                              color: AppColors.blue600,
+                                              size: 26,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          const Text(
+                                            'คู่มือการใช้งาน',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.blue800,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'เรียนรู้วิธีการใช้งานแอปพลิเคชัน',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.gray550,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  // Guide Items as Cards
+                                  _buildGuideCard(
+                                    imagePath:
+                                        'assets/common/illustrations/home/learn.png',
+                                    title: 'บทเรียน',
+                                    description:
+                                        'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
+                                    accentColor: AppColors.blue600,
+                                    height: 84,
+                                    onTap: () => setState(() {
+                                      selectedImagePath =
+                                          'assets/content/tutorials/lesson.png';
+                                    }),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _buildGuideCard(
+                                    imagePath:
+                                        'assets/common/illustrations/home/quiz.png',
+                                    title: 'แบบทดสอบ',
+                                    description:
+                                        'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
+                                    accentColor: AppColors.yellow600,
+                                    height: 84,
+                                    onTap: () => setState(() {
+                                      selectedImagePath =
+                                          'assets/content/tutorials/quiz.png';
+                                    }),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _buildGuideCard(
+                                    imagePath:
+                                        'assets/common/illustrations/home/result.png',
+                                    title: 'ผลการทดสอบ',
+                                    description: 'ดูสถิติและความก้าวหน้าของคุณ',
+                                    accentColor: AppColors.blue500,
+                                    height: 84,
+                                    onTap: () => setState(() {
+                                      selectedImagePath =
+                                          'assets/content/tutorials/dashboard.png';
+                                    }),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _buildGuideCard(
+                                    icon: Icons.settings,
+                                    title: 'การตั้งค่า',
+                                    description:
+                                        'ปรับและล็อคระดับเสียงตามความต้องการ',
+                                    accentColor: AppColors.yellow500,
+                                    height: 84,
+                                    onTap: () => setState(() {
+                                      selectedImagePath =
+                                          'assets/content/tutorials/settings.png';
+                                    }),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  // Close Button
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.blue600,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        elevation: 2,
+                                      ),
+                                      child: const Text(
+                                        'เข้าใจแล้ว',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
+                        );
+                      },
+                    )
+                  : Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              tooltip: 'ปิด',
+                              icon: const Icon(
+                                Icons.close,
+                                color: AppColors.blue800,
+                              ),
+                              onPressed: () => setState(() {
+                                selectedImagePath = null;
+                              }),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: Image.asset(
+                            selectedImagePath!,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Widget _buildGuideCard({
+  String? imagePath,
+  IconData? icon,
+  required String title,
+  required String description,
+  required Color accentColor,
+  double? height,
+  VoidCallback? onTap,
+}) {
+  final card = Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [accentColor.withAlpha(20), accentColor.withAlpha(8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: accentColor.withAlpha(38), width: 1),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: imagePath != null ? Colors.white : accentColor,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withAlpha(51),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: imagePath != null
+                  ? Image.asset(imagePath, fit: BoxFit.contain)
+                  : Icon(icon, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.blue800,
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white.withAlpha(220),
-                    size: arrowSize,
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.gray550,
+                      fontWeight: FontWeight.w400,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
-    );
+    ),
+  );
+
+  if (height == null) {
+    return card;
   }
 
-  /// Show Guide Dialog
-  void _showGuideDialog(BuildContext context) {
-    String? selectedImagePath;
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withAlpha(102),
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) {
-          final screenHeight = MediaQuery.of(context).size.height;
-          final dialogHeight = screenHeight * 0.8;
-          final effectiveHeight = dialogHeight > 520.0 ? 520.0 : dialogHeight;
-
-          return Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: SizedBox(
-                height: effectiveHeight,
-                child: selectedImagePath == null
-                    ? SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Header - Icon and Title
-                            Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(9),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            AppColors.blue600.withAlpha(26),
-                                            AppColors.blue500.withAlpha(13),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.info_outline,
-                                        color: AppColors.blue600,
-                                        size: 26,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Text(
-                                      'คู่มือการใช้งาน',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.blue800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'เรียนรู้วิธีการใช้งานแอปพลิเคชัน',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.gray550,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            // Guide Items as Cards
-                            _buildGuideCard(
-                              imagePath:
-                                  'assets/common/illustrations/home/learn.png',
-                              title: 'บทเรียน',
-                              description: 'ฝึกฟังและทำความรู้จักเสียงต่าง ๆ',
-                              accentColor: AppColors.blue600,
-                              height: 84,
-                              onTap: () => setState(() {
-                                selectedImagePath =
-                                    'assets/content/tutorials/lesson.png';
-                              }),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildGuideCard(
-                              imagePath:
-                                  'assets/common/illustrations/home/quiz.png',
-                              title: 'แบบทดสอบ',
-                              description:
-                                  'ทดสอบความรู้ผ่านแบบทดสอบที่หลากหลาย',
-                              accentColor: AppColors.yellow600,
-                              height: 84,
-                              onTap: () => setState(() {
-                                selectedImagePath =
-                                    'assets/content/tutorials/quiz.png';
-                              }),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildGuideCard(
-                              imagePath:
-                                  'assets/common/illustrations/home/result.png',
-                              title: 'ผลการทดสอบ',
-                              description: 'ดูสถิติและความก้าวหน้าของคุณ',
-                              accentColor: AppColors.blue500,
-                              height: 84,
-                              onTap: () => setState(() {
-                                selectedImagePath =
-                                    'assets/content/tutorials/dashboard.png';
-                              }),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildGuideCard(
-                              icon: Icons.settings,
-                              title: 'การตั้งค่า',
-                              description:
-                                  'ปรับและล็อคระดับเสียงตามความต้องการ',
-                              accentColor: AppColors.yellow500,
-                              height: 84,
-                              onTap: () => setState(() {
-                                selectedImagePath =
-                                    'assets/content/tutorials/settings.png';
-                              }),
-                            ),
-                            const SizedBox(height: 20),
-                            // Close Button
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () =>
-                                    Navigator.pop(dialogContext),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.blue600,
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 2,
-                                ),
-                                child: const Text(
-                                  'เข้าใจแล้ว',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IconButton(
-                                tooltip: 'ปิด',
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: AppColors.blue800,
-                                ),
-                                onPressed: () => setState(() {
-                                  selectedImagePath = null;
-                                }),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Expanded(
-                            child: Image.asset(
-                              selectedImagePath!,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildGuideCard({
-    String? imagePath,
-    IconData? icon,
-    required String title,
-    required String description,
-    required Color accentColor,
-    double? height,
-    VoidCallback? onTap,
-  }) {
-    final card = Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                accentColor.withAlpha(20),
-                accentColor.withAlpha(8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: accentColor.withAlpha(38),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: imagePath != null ? Colors.white : accentColor,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accentColor.withAlpha(51),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: imagePath != null
-                    ? Image.asset(
-                        imagePath,
-                        fit: BoxFit.contain,
-                      )
-                    : Icon(
-                        icon,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: AppColors.blue800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.gray550,
-                        fontWeight: FontWeight.w400,
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (height == null) {
-      return card;
-    }
-
-    return SizedBox(
-      height: height,
-      child: card,
-    );
-  }
-
+  return SizedBox(height: height, child: card);
+}
 
 class _HomeLayout {
   final double horizontalPadding;
@@ -669,7 +674,8 @@ class _HomeLayout {
 
     final maxHeight = constraints.maxHeight;
     final maxWidth = constraints.maxWidth;
-    final baseTotal = baseTopSpacing +
+    final baseTotal =
+        baseTopSpacing +
         baseLogoSize +
         baseSectionSpacing +
         (baseCardHeight * 3) +
@@ -702,13 +708,18 @@ class _ReminderPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.responsive;
+
     return Center(
       child: Container(
-        width: 300,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+        width: r.spacing(300).clamp(260, 380),
+        padding: EdgeInsets.symmetric(
+          horizontal: r.spacing(20),
+          vertical: r.spacing(22),
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(r.spacing(22)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(60),
@@ -725,22 +736,22 @@ class _ReminderPopup extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(r.spacing(8)),
                   decoration: BoxDecoration(
                     color: AppColors.white, // soft red bg
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.notifications_active,
                     color: AppColors.error, // red muted
-                    size: 22,
+                    size: r.icon(22),
                   ),
                 ),
-                const SizedBox(width: 10),
-                const Text(
+                SizedBox(width: r.spacing(10)),
+                Text(
                   "คำแนะนำ",
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: r.text(18),
                     fontWeight: FontWeight.bold,
                     color: AppColors.error, // darker red
                   ),
@@ -748,7 +759,7 @@ class _ReminderPopup extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 14),
+            SizedBox(height: r.spacing(14)),
 
             /// 📌 MESSAGE
             const Text(
@@ -761,7 +772,7 @@ class _ReminderPopup extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: r.spacing(20)),
 
             /// 🔴 PROGRESS BAR (RED SOFT)
             AnimatedBuilder(
@@ -773,7 +784,7 @@ class _ReminderPopup extends StatelessWidget {
                     children: [
                       // background
                       Container(
-                        height: 10,
+                        height: r.spacing(10),
                         width: double.infinity,
                         color: Colors.grey.shade300,
                       ),
@@ -782,7 +793,7 @@ class _ReminderPopup extends StatelessWidget {
                       FractionallySizedBox(
                         widthFactor: 1 - controller.value,
                         child: Container(
-                          height: 10,
+                          height: r.spacing(10),
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -799,7 +810,7 @@ class _ReminderPopup extends StatelessWidget {
               },
             ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: r.spacing(8)),
 
             /// ⏱ OPTIONAL TEXT (UX เพิ่ม clarity)
             AnimatedBuilder(
@@ -809,7 +820,7 @@ class _ReminderPopup extends StatelessWidget {
                 return Text(
                   "ปิดอัตโนมัติใน $secondsLeft วินาที",
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: r.text(11),
                     color: AppColors.gray550,
                   ),
                 );
