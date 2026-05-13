@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'firestore_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -172,5 +174,49 @@ Future<void> resendVerification(User user) async {
     // Sign out from Firebase
     await _auth.signOut();
   }
-}
+
+  // ------------------------------
+  // DELETE ACCOUNT
+  // ------------------------------
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception("ไม่พบผู้ใช้งาน");
+    }
+
+    try {
+      // Delete Firestore data first
+      await _firestore.deleteUserData(user.uid);
+
+      // Delete Firebase Authentication account
+      await user.delete();
+
+      // Logout
+      await logout();
+    } on FirebaseAuthException catch (e) {
+      // Apple / Google / old login sessions
+      if (e.code == 'requires-recent-login') {
+        throw Exception(
+          'เพื่อความปลอดภัย กรุณาเข้าสู่ระบบใหม่ก่อนลบบัญชี',
+        );
+      }
+
+      throw Exception(
+        e.message ?? 'ไม่สามารถลบบัญชีได้',
+      );
+    } catch (e) {
+      throw Exception(
+        'เกิดข้อผิดพลาดในการลบบัญชี',
+      );
+    }
+  }
+
+
+
+
+
+} //end
+
+
 

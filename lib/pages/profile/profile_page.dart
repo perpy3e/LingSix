@@ -178,6 +178,93 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+//show dialog confirm delete account
+  Future<void> _showDeleteAccountDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'ยืนยันการลบบัญชี',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            'คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีนี้?\n\nข้อมูลทั้งหมดรวมถึงผลแบบทดสอบจะถูกลบอย่างถาวร และไม่สามารถกู้คืนได้',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text(
+                'ยกเลิก',
+                style: TextStyle(
+                  color: AppColors.gray550,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text(
+                'ลบบัญชี',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await AuthService().deleteAccount();
+
+      if (!mounted) return;
+
+      SnackBarHelper.showSuccess(
+        context,
+        'ลบบัญชีสำเร็จ',
+      );
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (_) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      SnackBarHelper.showError(
+        context,
+        e.toString().replaceFirst("Exception: ", ""),
+      );
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
@@ -728,42 +815,84 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildActionButtons() {
-    return Column(
-      children: [
-        // Logout Button
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-            label: const Text(
-              "ออกจากระบบ",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.error,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              side: const BorderSide(color: AppColors.error, width: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            onPressed: () async {
-              await AuthService().logout();
-              if (!mounted) return;
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                (_) => false,
-              );
-            },
+Widget _buildActionButtons() {
+  return Column(
+    children: [
+      // Logout Button
+      SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: OutlinedButton.icon(
+          icon: const Icon(
+            Icons.logout_rounded,
+            color: AppColors.error,
           ),
+          label: const Text(
+            "ออกจากระบบ",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.error,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            backgroundColor: Colors.white,
+            side: const BorderSide(
+              color: AppColors.error,
+              width: 2,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          onPressed: () async {
+            await AuthService().logout();
+
+            if (!mounted) return;
+
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/login',
+              (_) => false,
+            );
+          },
         ),
-      ],
-    );
-  }
+      ),
+
+      const SizedBox(height: 16),
+
+      // DELETE ACCOUNT BUTTON
+      SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          icon: const Icon(
+            Icons.delete_forever_rounded,
+            color: Colors.white,
+          ),
+          label: const Text(
+            "ลบบัญชีผู้ใช้",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          onPressed: () {
+            _showDeleteAccountDialog();
+          },
+        ),
+      ),
+    ],
+  );
+}
+
+
+
 }

@@ -77,6 +77,25 @@ Future<void> addUser(
     await _db.collection('users').doc(uid).update(data);
   }
 
+    // =============================
+  // DELETE USER DATA
+  // =============================
+
+  Future<void> deleteUserData(String uid) async {
+    final userRef = _db.collection('users').doc(uid);
+
+    // Delete quiz attempts subcollection
+    final quizAttempts =
+        await userRef.collection('quiz_attempts').get();
+
+    for (final doc in quizAttempts.docs) {
+      await doc.reference.delete();
+    }
+
+    // Delete user document
+    await userRef.delete();
+  }
+
   // =============================
   // QUIZ SECTION
   // =============================
