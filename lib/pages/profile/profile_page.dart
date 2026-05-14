@@ -255,16 +255,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     final r = context.responsive;
