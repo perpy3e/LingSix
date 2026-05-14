@@ -188,85 +188,96 @@ class _LoginPageState extends State<LoginPage> {
   // GOOGLE SIGN-IN (END)
   //-------------------------------------------------------------
 
-  // -------------------------------------------------------------
-  // APPLE SIGN-IN
+  
+ // -------------------------------------------------------------
+// APPLE SIGN-IN
 
-  Future<void> _appleLogin() async {
-    setState(() => _isGoogleLoading = true);
+Future<void> _appleLogin() async {
+  setState(() => _isGoogleLoading = true);
 
-    try {
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
+  try {
+    final appleCredential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+
+    final oauthCredential = OAuthProvider("apple.com").credential(
+      idToken: appleCredential.identityToken,
+      accessToken: appleCredential.authorizationCode,
+    );
+
+    final userCred = await FirebaseAuth.instance.signInWithCredential(
+      oauthCredential,
+    );
+
+    final user = userCred.user;
+
+    if (user == null) {
+      throw Exception("Apple user is null");
+    }
+
+    final userDoc = await _firestore.getUserByUid(user.uid);
+
+    // -------------------------------------------------
+    // NEW USER
+    // -------------------------------------------------
+    if (userDoc == null) {
+      final fullName =
+          "${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}"
+              .trim();
+
+      await _firestore.addUser(
+        user.uid,
+        user.email ?? '',
+        fullName,
+        authProvider: 'apple',
       );
 
-      final oauthCredential = OAuthProvider("apple.com").credential(
-        idToken: appleCredential.identityToken,
-        accessToken: appleCredential.authorizationCode,
-      );
-
-      final userCred = await FirebaseAuth.instance.signInWithCredential(
-        oauthCredential,
-      );
-
-      final user = userCred.user;
-
-      if (user == null) {
-        throw Exception("Apple user is null");
-      }
-
-      final userDoc = await _firestore.getUserByUid(user.uid);
-
-      if (userDoc == null) {
-        final fullName =
-            "${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}"
-                .trim();
-
-        await _firestore.addUser(
-          user.uid,
-          user.email ?? '',
-          fullName,
-          authProvider: 'apple',
-        );
-
-        if (!mounted) return;
-
-        Navigator.pushReplacementNamed(context, AppRouter.infodata);
-        return;
-      }
-
-      final data = userDoc.data() as Map<String, dynamic>;
-
-      final hasProfile =
-          data['firstName'] != null &&
-          data['firstName'].toString().trim().isNotEmpty &&
-          data['lastName'] != null &&
-          data['lastName'].toString().trim().isNotEmpty;
-
-      if (!hasProfile) {
-        if (!mounted) return;
-
-        Navigator.pushReplacementNamed(context, AppRouter.infodata);
-        return;
-      }
-
+      // sync theme
       await context.read<ThemeProvider>().syncThemeStatusFromFirestore(
         user.uid,
       );
 
       if (!mounted) return;
 
-      Navigator.pushReplacementNamed(context, AppRouter.startPage);
-    } catch (e) {
-      _showError('เข้าสู่ระบบด้วย Apple ไม่สำเร็จ');
-    } finally {
-      if (mounted) {
-        setState(() => _isGoogleLoading = false);
-      }
+      // ✅ GO DIRECTLY TO START PAGE
+      Navigator.pushReplacementNamed(
+        context,
+        AppRouter.startPage,
+      );
+
+      return;
+    }
+
+    // -------------------------------------------------
+    // EXISTING USER
+    // -------------------------------------------------
+
+    await context.read<ThemeProvider>().syncThemeStatusFromFirestore(
+      user.uid,
+    );
+
+    if (!mounted) return;
+
+    //  GO START PAGE
+    Navigator.pushReplacementNamed(
+      context,
+      AppRouter.startPage,
+    );
+  } catch (e) {
+    print("APPLE LOGIN ERROR: $e");
+
+    _showError('เข้าสู่ระบบด้วย Apple ไม่สำเร็จ');
+  } finally {
+    if (mounted) {
+      setState(() => _isGoogleLoading = false);
     }
   }
+}
+
+// -------------------------------------------------------------
   // -----------------------------------------------------------
 
   void _showError(String message) {
