@@ -891,15 +891,10 @@ class _DashboardPageState extends State<DashboardPage> {
               color: AppColors.blue800,
             ),
             onPressed: () {
-              final navigator = Navigator.of(context);
-              if (navigator.canPop()) {
-                navigator.pop();
-              } else {
-                navigator.pushNamedAndRemoveUntil(
-                  AppRouter.homePage,
-                  (route) => false,
-                );
-              }
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                AppRouter.homePage,
+                (route) => false,
+              );
             },
           ),
           const Spacer(),
