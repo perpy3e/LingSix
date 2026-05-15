@@ -28,16 +28,27 @@ Future<void> addUser(
   String email,
   String username, {
   String authProvider = 'email',
+  String? firstName,
+  String? lastName,
 }) async {
   await _db.collection('users').doc(uid).set({
     'email': email,
     'username': username,
     'authProvider': authProvider,
-      'profileCompleted': false,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-  }
+
+    'firstName': firstName ?? '',
+    'lastName': lastName ?? '',
+
+    'profileCompleted':
+        firstName != null &&
+        firstName.trim().isNotEmpty &&
+        lastName != null &&
+        lastName.trim().isNotEmpty,
+
+    'createdAt': FieldValue.serverTimestamp(),
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+}
 
   Future<void> createUser({
   required String uid,

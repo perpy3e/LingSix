@@ -103,18 +103,32 @@ class _AuthGateState extends State<AuthGate> {
 
             final doc = snapshot.data;
             final data = doc?.data() as Map<String, dynamic>?;
+final authProvider = data?['authProvider'] ?? 'email';
 
-           final hasProfile =
+final hasFirstName =
     data != null &&
     data['firstName'] != null &&
-    data['firstName'].toString().trim().isNotEmpty &&
+    data['firstName'].toString().trim().isNotEmpty;
+
+final hasFullProfile =
+    hasFirstName &&
     data['lastName'] != null &&
     data['lastName'].toString().trim().isNotEmpty;
 
-            // 
-            if (!hasProfile) {
-              return const InfoDataPage();
-            }
+//  Apple special condition
+if (authProvider == 'apple') {
+
+  if (!hasFirstName) {
+    return const InfoDataPage();
+  }
+
+} else {
+
+  if (!hasFullProfile) {
+    return const InfoDataPage();
+  }
+
+}
 
             //
             if (!_synced) {

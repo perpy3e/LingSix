@@ -159,13 +159,14 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       //
-      final data = userDoc.data() as Map<String, dynamic>;
+     final data = userDoc.data() as Map<String, dynamic>?;
 
-      final hasProfile =
-          data['firstName'] != null &&
-          data['firstName'].toString().trim().isNotEmpty &&
-          data['lastName'] != null &&
-          data['lastName'].toString().trim().isNotEmpty;
+final hasProfile =
+    data != null &&
+    data['firstName'] != null &&
+    data['firstName'].toString().trim().isNotEmpty &&
+    data['lastName'] != null &&
+    data['lastName'].toString().trim().isNotEmpty;
       if (!hasProfile) {
         Navigator.pushReplacementNamed(context, AppRouter.infodata);
         return;
@@ -223,34 +224,63 @@ Future<void> _appleLogin() async {
     // -------------------------------------------------
     // NEW USER
     // -------------------------------------------------
-    if (userDoc == null) {
-      final fullName =
-          "${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}"
-              .trim();
+   // -------------------------------------------------
+// NEW USER
+// -------------------------------------------------
+if (userDoc == null) {
 
-      await _firestore.addUser(
-        user.uid,
-        user.email ?? '',
-        fullName,
-        authProvider: 'apple',
-      );
+ final emailPrefix =
+    (user.email != null && user.email!.contains('@'))
+        ? user.email!.split('@').first
+        : 'AppleUser';
 
-      // sync theme
-      await context.read<ThemeProvider>().syncThemeStatusFromFirestore(
-        user.uid,
-      );
+final displayNameParts =
+    (user.displayName ?? '').trim().split(' ');
 
-      if (!mounted) return;
+final safeDisplayFirstName =
+    displayNameParts.isNotEmpty &&
+            displayNameParts.first.trim().isNotEmpty
+        ? displayNameParts.first.trim()
+        : '';
 
-      // ✅ GO DIRECTLY TO START PAGE
-      Navigator.pushReplacementNamed(
-        context,
-        AppRouter.startPage,
-      );
+final firstName =
+    appleCredential.givenName?.trim().isNotEmpty == true
+        ? appleCredential.givenName!.trim()
+        : safeDisplayFirstName.isNotEmpty
+            ? safeDisplayFirstName
+            : emailPrefix;
 
-      return;
-    }
+final safeLastName =
+    displayNameParts.length > 1
+        ? displayNameParts.sublist(1).join(' ').trim()
+        : '';
 
+final lastName =
+    appleCredential.familyName?.trim().isNotEmpty == true
+        ? appleCredential.familyName!.trim()
+        : safeLastName;
+
+  await _firestore.addUser(
+  user.uid,
+  user.email ?? '',
+  user.email ?? '',
+  authProvider: 'apple',
+  firstName: firstName,
+  lastName: lastName,
+);
+
+if (!mounted) return;
+
+await context.read<ThemeProvider>()
+    .syncThemeStatusFromFirestore(user.uid);
+
+Navigator.pushReplacementNamed(
+  context,
+  AppRouter.startPage,
+);
+
+return;
+}
     // -------------------------------------------------
     // EXISTING USER
     // -------------------------------------------------
