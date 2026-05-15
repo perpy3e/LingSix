@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lingsix/app/theme.dart';
+import 'package:lingsix/app/router.dart';
 import 'package:lingsix/services/firestore_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:io';
@@ -889,7 +890,17 @@ class _DashboardPageState extends State<DashboardPage> {
               size: r.icon(30),
               color: AppColors.blue800,
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              final navigator = Navigator.of(context);
+              if (navigator.canPop()) {
+                navigator.pop();
+              } else {
+                navigator.pushNamedAndRemoveUntil(
+                  AppRouter.homePage,
+                  (route) => false,
+                );
+              }
+            },
           ),
           const Spacer(),
 
