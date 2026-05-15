@@ -76,7 +76,12 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         // 🔹 Not verified
-        if (!user.emailVerified) {
+        final provider =
+    user.providerData.isNotEmpty
+        ? user.providerData.first.providerId
+        : '';
+
+if (provider == 'password' && !user.emailVerified) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pushReplacementNamed(
               context,
@@ -90,59 +95,92 @@ class _AuthGateState extends State<AuthGate> {
           );
         }
 
-        // 🔥 MAIN FIX
-        return FutureBuilder(
-          future: FirestoreService().getUserByUid(user.uid),
-          builder: (context, snapshot) {
+       // 🔥 MAIN FIX
+return FutureBuilder(
+  future: FirestoreService().getUserByUid(user.uid),
+  builder: (context, snapshot) {
 
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-            final doc = snapshot.data;
-            final data = doc?.data() as Map<String, dynamic>?;
-final authProvider = data?['authProvider'] ?? 'email';
+    final doc = snapshot.data;
 
-final hasFirstName =
-    data != null &&
-    data['firstName'] != null &&
-    data['firstName'].toString().trim().isNotEmpty;
+    final data = doc?.data() as Map<String, dynamic>?;
 
-final hasFullProfile =
-    hasFirstName &&
-    data['lastName'] != null &&
-    data['lastName'].toString().trim().isNotEmpty;
+    final firebaseProvider =
+    user.providerData.isNotEmpty
+        ? user.providerData.first.providerId
+        : '';
 
-//  Apple special condition
-if (authProvider == 'apple') {
+final authProvider =
+    data?['authProvider'] ??
+    (firebaseProvider == 'apple.com'
+        ? 'apple'
+        : firebaseProvider == 'google.com'
+            ? 'google'
+            : 'email');
 
-  if (!hasFirstName) {
-    return const InfoDataPage();
-  }
+    // --------------------------------------------------
+    // APPLE USERS
+    // ALWAYS SKIP INFODATA
+    // --------------------------------------------------
+    if (authProvider == 'apple') {
 
-} else {
+      if (!_synced) {
+        _synced = true;
 
-  if (!hasFullProfile) {
-    return const InfoDataPage();
-  }
+        Future.microtask(() {
+          context.read<ThemeProvider>()
+              .syncThemeStatusFromFirestore(user.uid);
+        });
+      }
 
-}
+      return const StartPage();
+    }
 
-            //
-            if (!_synced) {
-              _synced = true;
+    // --------------------------------------------------
+    // OTHER USERS
+    // --------------------------------------------------
 
-              Future.microtask(() {
-                context.read<ThemeProvider>()
-                    .syncThemeStatusFromFirestore(user.uid);
-              });
-            }
+    final hasFirstName =
+        data != null &&
+        data['firstName'] != null &&
+        data['firstName']
+            .toString()
+            .trim()
+            .isNotEmpty;
 
-            return const StartPage();
-          },
-        );
+    final hasLastName =
+        data != null &&
+        data['lastName'] != null &&
+        data['lastName']
+            .toString()
+            .trim()
+            .isNotEmpty;
+
+    if (!hasFirstName || !hasLastName) {
+      return const InfoDataPage();
+    }
+
+    // Theme sync
+    if (!_synced) {
+      _synced = true;
+
+      Future.microtask(() {
+        context.read<ThemeProvider>()
+            .syncThemeStatusFromFirestore(user.uid);
+      });
+    }
+
+    return const StartPage();
+  },
+);
+
       },
     );
   }

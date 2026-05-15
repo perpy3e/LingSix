@@ -268,6 +268,7 @@ final lastName =
   firstName: firstName,
   lastName: lastName,
 );
+await FirebaseAuth.instance.currentUser?.reload();
 
 if (!mounted) return;
 
